@@ -445,4 +445,3 @@ def is_update_archive(file_path: str) -> bool:
         return True
 
     return False
-
