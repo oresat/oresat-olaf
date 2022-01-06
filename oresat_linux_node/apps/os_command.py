@@ -71,7 +71,7 @@ class OSCommandApp(App):
             self.command = data.decode()
             self.state = OSCommandState.EXECUTING  # run os command
 
-    def loop(self):
+    def on_loop(self):
         '''Run the command and get the reply'''
 
         if self.state == OSCommandState.EXECUTING:

@@ -182,7 +182,7 @@ class OreSatNode:
 
         while not self.event.is_set():
             try:
-                app.loop()
+                app.on_loop()
             except Exception as exc:  # keep the rest of program from crashing
                 # nothing fancy just end return if the app loop fails
                 logging.error(app.name + ' app raised an uncaught exception: ' + str(exc))

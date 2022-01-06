@@ -36,7 +36,7 @@ class UpdaterApp(App):
 
         node.add_read_callback(self.on_read)
 
-    def loop(self):
+    def on_loop(self):
 
         self.obj[self.subindex_status].value = self._updater.status.value
         self.obj[self.subindex_updates_cached].value = self._updater.updates_cached

@@ -38,7 +38,7 @@ class SystemInfoApp(App):
         obj['Swap total'].value = psutil.swap_memory().total // B_TO_MB
         obj['Root partition total'].value = psutil.disk_usage('/').total // B_TO_MB
 
-    def loop(self):
+    def on_loop(self):
         obj = self.node.object_dictionary[self.index]
 
         obj['Root partition percent'].value = int(psutil.disk_usage('/').percent)

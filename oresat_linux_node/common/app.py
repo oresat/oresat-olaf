@@ -17,7 +17,7 @@ class App:
 
         pass
 
-    def loop(self):
+    def on_loop(self):
         '''This is called all in loop every `delay` seconds.'''
 
         pass
