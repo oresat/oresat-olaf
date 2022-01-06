@@ -12,7 +12,7 @@ from .common.app import App
 from .common.oresat_file_cache import OreSatFileCache
 from .apps.os_command import OSCommandApp
 from .apps.system_info import SystemInfoApp
-from .apps.file_cache import FileCacheApp
+from .apps.file_caches import FileCachesApp
 from .apps.fread import FreadApp
 from .apps.fwrite import FwriteApp
 from .apps.ecss import ECSSApp
@@ -110,10 +110,9 @@ class OreSatNode:
         self.add_app(OSCommandApp(self.node))
         self.add_app(ECSSApp(self.node))
         self.add_app(SystemInfoApp(self.node))
+        self.add_app(FileCachesApp(self.node, self.fread_cache, self.fwrite_cache))
         self.add_app(FreadApp(self.node, self.fread_cache))
-        self.add_app(FileCacheApp(self.node, self.fread_cache, 0x3002, 'Fread Cache'))
         self.add_app(FwriteApp(self.node, self.fwrite_cache))
-        self.add_app(FileCacheApp(self.node, self.fwrite_cache, 0x3004, 'Fwrite Cache'))
         self.add_app(UpdaterApp(self.node,
                                 self.fread_cache,
                                 self.fwrite_cache,
@@ -248,7 +247,7 @@ class OreSatNode:
         try:
             self.network.disconnect()
         except Exception as exc:
-            print(exc)
+            logging.error(exc)
 
     @property
     def od(self):

@@ -74,8 +74,6 @@ class OreSatFile:
         self._keyword = split[1]
         temp = split[2]
 
-        print(temp)
-
         if not self._board or not self._keyword or not temp:
             raise ValueError('invalid OreSat file name')
 

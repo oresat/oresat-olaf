@@ -1,5 +1,7 @@
 
+import logging
 from os.path import basename
+from pathlib import Path
 
 import canopen
 
@@ -12,13 +14,14 @@ class FwriteApp(App):
     def __init__(self,
                  node: canopen.LocalNode,
                  fwrite_cache: OreSatFileCache,
-                 tmp_dir: str = '/tmp/fwrite'):
+                 tmp_dir: str = '/tmp/oresat-fwrite'):
 
         super().__init__('Fwrite', -1.0)
 
         self.node = node
         self.fwrite_cache = fwrite_cache
         self.tmp_dir = tmp_dir
+        Path(self.tmp_dir).mkdir(parents=True, exist_ok=True)
 
         self.index = 0x3004
         self.subindex_file_name = 0x1
@@ -45,16 +48,21 @@ class FwriteApp(App):
 
         if subindex == self.subindex_file_name:
             file_name = data.decode()
-            self.file_path = self.fwrite_cache.get(file_name, self.tmp_dir)
-        elif subindex == self.subindex_file_data and self.file_path:
+            self.file_path = self.tmp_dir + '/' + file_name
+        elif subindex == self.subindex_file_data:
+            if not self.file_path:
+                logging.error('fwrite file path was not set before file data was sent')
+                return
+
             try:
                 with open(self.file_path, 'wb') as f:
                     f.write(data)
-            except FileNotFoundError:
-                pass
+                self.fwrite_cache.add(self.file_path, consume=True)
+            except FileNotFoundError as exc:
+                logging.error(exc)
 
             self.file_path = ''
 
             # clear buffers to not was memory
-            od[index][subindex].value = ''
+            self.node.object_dictionary[index][subindex].value = ''
             self.node.sdo[index][subindex].value = ''

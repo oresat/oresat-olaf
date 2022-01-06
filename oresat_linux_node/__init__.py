@@ -2,7 +2,6 @@ from .node import OreSatNode
 from .common.app import App
 from .common.oresat_file import OreSatFile
 from .common.oresat_file_cache import OreSatFileCache
-from .apps.file_cache import FileCacheApp
 
 MAJOR = 0
 MINOR = 1

@@ -4,6 +4,7 @@ from os import listdir, remove
 from os.path import basename, abspath
 from pathlib import Path
 from threading import Lock
+from copy import deepcopy
 
 from .oresat_file import OreSatFile
 
@@ -112,7 +113,7 @@ class OreSatFileCache:
         '''
 
         if dir_path[-1] != '/':
-            dir_path.append('/')
+            dir_path += '/'
 
         dest = None
         with self._lock:
@@ -126,24 +127,24 @@ class OreSatFileCache:
 
         return dest
 
-    def files(self, keyword='', path=False) -> list:
-        '''Return a list of file_name in the cache.
+    def files(self, keyword='') -> list:
+        '''Return a list of files in the cache.
 
         Parameters
         ----------
         keyword: str
             A keyword to filter by
         path: bool
-            Add the absolute path to all file
+            Add the absolute path to file list
         '''
 
         files = []
 
         with self._lock:
-            for f in listdir(self._dir):
+            for f in self._data:
                 if keyword and f.keyword != keyword:
                     continue
-                files.append(f.name)
+                files.append(deepcopy(f))
 
         return files
 

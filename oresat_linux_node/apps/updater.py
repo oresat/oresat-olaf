@@ -41,8 +41,8 @@ class UpdaterApp(App):
         self.obj[self.subindex_status].value = self._updater.status.value
         self.obj[self.subindex_updates_cached].value = self._updater.updates_cached
 
-        for i in self._fwrite_cache.files('update', path=True):
-            self._updater.add_update(i)
+        for i in self._fwrite_cache.files('update'):
+            self._updater.add_update(self._fwrite_cache.dir + '/' + i)
 
         if self.obj[self.subindex_update].value:
             self._updater.update()
