@@ -73,6 +73,12 @@ class OreSatNode:
         self.node.tpdo.read()
         self.node.rpdo.read()
 
+        # python canopen does not set the value to default for some reason
+        for i in self.od:
+            if not isinstance(self.od[i], canopen.objectdictionary.Variable):
+                for j in self.od[i]:
+                    self.od[i][j].value = self.od[i][j].default
+
         default_rpdos = [
             0x200 + self.node_id,
             0x300 + self.node_id,
@@ -130,26 +136,19 @@ class OreSatNode:
     def send_tpdo(self, tpdo: int):
 
         if self.node.nmt.state != 'OPERATIONAL':
-            return
+            return  # PDOs should not be sent if not in OPERATIONAL state
 
         cob_id = self.od[TPDO_COMM_INDEX + tpdo][1].value
-        if not cob_id:
-            cob_id = self.od[TPDO_COMM_INDEX + tpdo][1].default
-
         maps = self.od[TPDO_MAP_INDEX + tpdo][0].value
-        if not maps:
-            maps = self.od[TPDO_MAP_INDEX + tpdo][0].default
 
         data = b''
         for i in range(maps):
-            pdo_map = self.node.sdo[TPDO_MAP_INDEX + tpdo][i + 1].raw
+            pdo_map = self.od[TPDO_MAP_INDEX + tpdo][i + 1].value
             if pdo_map == 0:
                 break  # nothing todo
             pdo_map_bytes = pdo_map.to_bytes(4, 'big')
             index, subindex, length = struct.unpack('>HBB', pdo_map_bytes)
-            value = self.od[index][subindex].value
-            if value is None:
-                value = self.od[index][subindex].default
+            value = self.node.sdo[index][subindex].phys  # to call sdo callback(s)
             value_bytes = self.od[index][subindex].encode_raw(value)
             data += value_bytes
 
@@ -165,8 +164,6 @@ class OreSatNode:
 
             # get event time
             value = self.od[TPDO_COMM_INDEX + tpdo][5].value
-            if not value:
-                value = self.od[TPDO_COMM_INDEX + tpdo][5].default
 
             # milliseconds as int to seconds as a float
             delay = float(value) / 1000

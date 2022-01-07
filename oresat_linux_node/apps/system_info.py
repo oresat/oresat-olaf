@@ -14,7 +14,7 @@ B_TO_MB = 1024 * 1024
 class SystemInfoApp(App):
 
     def __init__(self, node: canopen.LocalNode):
-        super().__init__('System Info', 10.0)
+        super().__init__('System Info', -1.0)
 
         self.node = node
         self.index = 0x3001
@@ -37,12 +37,6 @@ class SystemInfoApp(App):
         obj['Ram total'].value = psutil.virtual_memory().total // B_TO_MB
         obj['Swap total'].value = psutil.swap_memory().total // B_TO_MB
         obj['Root partition total'].value = psutil.disk_usage('/').total // B_TO_MB
-
-    def on_loop(self):
-        obj = self.node.object_dictionary[self.index]
-
-        obj['Root partition percent'].value = int(psutil.disk_usage('/').percent)
-        obj['Ram percent'].value = psutil.virtual_memory().percent
 
     def on_read(self, index, subindex, od):
         '''Callback for a SDO read from the system info object'''
