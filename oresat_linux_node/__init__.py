@@ -1,7 +1,7 @@
 from .node import OreSatNode
 from .common.app import App
 from .common.ecss import scet_int_from_time, scet_int_to_time, utc_int_from_time, utc_int_to_time
-from .common.oresat_file import OreSatFile
+from .common.oresat_file import OreSatFile, new_oresat_file
 from .common.oresat_file_cache import OreSatFileCache
 
 MAJOR = 0

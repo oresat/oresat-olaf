@@ -16,8 +16,8 @@ def new_oresat_file(keyword: str, board: str = '', date: float = -1.0, ext: str 
         The board name for the file_name. If not set, the hostname will be
         used.
     date: Union(None, float)
-        Unix timestamp the file was made. Set to a `time.time()` value or set to a negative number
-        to use current time.
+        Unix timestamp the file was made. Set to a :py:func:`time.time` value or set to a negative
+        number to use current time.
     ext: str
         The file extension. Optional.
 
@@ -102,19 +102,19 @@ class OreSatFile:
 
     @property
     def name(self) -> str:
-        '''str: The full name for the file.'''
+        '''str: The name of the file.'''
 
         return self._name
 
     @property
     def board(self) -> str:
-        '''str: The board the file is for or from.'''
+        '''str: The board the file is for or is from.'''
 
         return self._board
 
     @property
     def keyword(self) -> str:
-        '''str: The keyword for the file, this is used by OLM to figure out what todo with the
+        '''str: The keyword for the file, this can be used to figure out what todo with the
         file.'''
 
         return self._keyword

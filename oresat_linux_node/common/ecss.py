@@ -33,7 +33,7 @@ def scet_int_from_time(unix_time: float) -> int:
     Parameters
     ----------
     unix_time: float
-        float in the time.time() format
+        time in the :py:func:`time.time` format
 
     Returns
     -------
@@ -62,7 +62,7 @@ def scet_int_to_time(scet: int) -> float:
     Returns
     -------
     float
-        float in the time.time() format
+        time in the :py:func:`time.time` format
     '''
 
     raw = scet.to_bytes(8, 'little')
@@ -79,7 +79,7 @@ def utc_int_from_time(unix_time: float) -> int:
     Parameters
     ----------
     unix_time: float
-        float in the time.time() format
+        time in the :py:func:`time.time` format
 
     Returns
     -------
@@ -112,7 +112,7 @@ def utc_int_to_time(utc: int) -> float:
     Returns
     -------
     float
-        float in the time.time() format
+        time in the :py:func:`time.time` format
     '''
 
     raw = utc.to_bytes(8, 'little')
