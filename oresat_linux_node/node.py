@@ -17,6 +17,7 @@ from .apps.fread import FreadApp
 from .apps.fwrite import FwriteApp
 from .apps.ecss import ECSSApp
 from .apps.updater import UpdaterApp
+from .apps.logs import LogsApp
 
 RPDO_COMM_INDEX = 0x1400
 RPDO_MAP_INDEX = 0x1600
@@ -126,6 +127,7 @@ class OreSatNode:
                                 self.fwrite_cache,
                                 self.work_base_dir + '/updater',
                                 self.cache_base_dir + '/updater'))
+        self.add_app(LogsApp(self.node, self.fread_cache))
 
     def __del__(self):
 
