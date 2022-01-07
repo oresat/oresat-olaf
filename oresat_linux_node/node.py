@@ -25,10 +25,12 @@ TPDO_MAP_INDEX = 0x1A00
 
 
 class OreSatNode:
+    '''The main class that manages the CAN bus, apps, and threads.'''
 
     def __init__(self, eds: str, bus: str, node_id: int = 0):
-
         '''
+        Parameters
+        ----------
         eds: str
             File path to EDS or DCF file.
         bus: str
@@ -129,11 +131,23 @@ class OreSatNode:
 
         self.stop()
 
+        try:
+            self.network.disconnect()
+        except Exception as exc:
+            logging.error(exc)
+
     def _quit(self, signo, _frame):
 
         self.event.set()
 
     def send_tpdo(self, tpdo: int):
+        '''Send a TPDO. Will not be sent if not node is not in operational state.
+
+        Parameters
+        ----------
+        tpdo: int
+            TPDO number to send
+        '''
 
         if self.node.nmt.state != 'OPERATIONAL':
             return  # PDOs should not be sent if not in OPERATIONAL state
@@ -171,6 +185,7 @@ class OreSatNode:
             self.event.wait(delay)
 
     def add_app(self, app):
+        '''Add a app to be manage by `OreSatNode`'''
 
         self.apps.append(app)
 
@@ -189,7 +204,8 @@ class OreSatNode:
             self.event.wait(app.delay)
 
     def run(self):
-        '''Go into operational mode and start all the apps'''
+        '''Go into operational mode, start all the apps, start all the thread, and monitor
+        everything in a loop.'''
 
         self.node.nmt.start_heartbeat(self.od[0x1017].default)
         self.node.nmt.state = 'OPERATIONAL'
@@ -239,14 +255,12 @@ class OreSatNode:
             t.join()
 
     def stop(self):
+        '''End the run loop'''
 
         self.event.set()
-        try:
-            self.network.disconnect()
-        except Exception as exc:
-            logging.error(exc)
 
     @property
     def od(self):
+        '''For convenience. Access to the object dictionary.'''
 
         return self.node.object_dictionary

@@ -10,10 +10,12 @@ from .oresat_file import OreSatFile
 
 
 class OreSatFileCache:
-    '''File cache for OreSat files. Thread safe.'''
+    '''File cache for OreSat files (by use of :py:class:`OresatFile`). Thread safe.'''
 
     def __init__(self, dir_path: str):
         '''
+        Parameters
+        ----------
         dir_path: str
             Directory to use as a OreSat file cache
         '''

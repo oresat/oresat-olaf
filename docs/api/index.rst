@@ -4,6 +4,7 @@ API
 .. toctree::
    :maxdepth: 2
 
+   node
    app
    ecss
    oresat_file

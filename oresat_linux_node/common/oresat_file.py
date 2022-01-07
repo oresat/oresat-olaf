@@ -45,11 +45,7 @@ def new_oresat_file(keyword: str, board: str = '', date: float = -1.0, ext: str 
 
 
 class OreSatFile:
-    '''A class that follows the OreSat file format.
-
-    Can be used in list to sort a list of files following the OreSat file name standards. All field
-    are readonly.
-    '''
+    '''A class that follows the OreSat file format.'''
 
     def __init__(self, file: str):
         '''
@@ -102,31 +98,31 @@ class OreSatFile:
 
     @property
     def name(self) -> str:
-        '''str: The name of the file.'''
+        '''str: The name of the file. Read only.'''
 
         return self._name
 
     @property
     def board(self) -> str:
-        '''str: The board the file is for or is from.'''
+        '''str: The board the file is for or the board the file was made on. Read only.'''
 
         return self._board
 
     @property
     def keyword(self) -> str:
         '''str: The keyword for the file, this can be used to figure out what todo with the
-        file.'''
+        file. Read only.'''
 
         return self._keyword
 
     @property
     def date(self) -> float:
-        '''float: The Unix time the file was made.'''
+        '''float: The Unix time the file was made. Read only.'''
 
         return self._date
 
     @property
     def extension(self) -> str:
-        '''str: The file extension.'''
+        '''str: The file extension. Can be an empty string. Read only.'''
 
         return self._extension
