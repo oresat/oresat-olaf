@@ -1,6 +1,6 @@
-import logging
 
 import canopen
+from loguru import logger
 
 from ..common.app import App
 from ..common.oresat_file_cache import OreSatFileCache
@@ -62,7 +62,7 @@ class FileCachesApp(App):
             elif subindex == self.subindex_file_size:
                 ret = self.file_caches[self.selector].files(self.filter)[self.iter].size
         except Exception as exc:
-            logging.error(exc)
+            logger.error(exc)
 
         return ret
 

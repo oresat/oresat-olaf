@@ -2,6 +2,7 @@
 from os.path import basename
 
 import canopen
+from loguru import logger
 
 from ..common.app import App
 from ..common.oresat_file_cache import OreSatFileCache
@@ -42,8 +43,8 @@ class FreadApp(App):
             try:
                 with open(self.file_path, 'rb') as f:
                     ret = f.read()
-            except FileNotFoundError:
-                pass
+            except FileNotFoundError as exc:
+                logger.error(exc)
 
         return ret
 
@@ -55,5 +56,8 @@ class FreadApp(App):
         if subindex == self.subindex_file_name:
             file_name = data.decode()
             self.file_path = self.fread_cache.get(file_name, self.tmp_dir)
-        elif subindex == self.subindex_delete_file and self.file_path:
-            self.fwrite_cache.remove(basename(self.file_path))
+        elif subindex == self.subindex_delete_file:
+            if not self.file_path:
+                logger.error('fread file path was not set before delete file was called')
+            else:
+                self.fread_cache.remove(basename(self.file_path))

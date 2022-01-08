@@ -1,10 +1,10 @@
 '''App for running OS (bash) commands over CAN bus'''
 
-import logging
 import subprocess
 from enum import IntEnum
 
 import canopen
+from loguru import logger
 
 from ..common.app import App
 
@@ -75,7 +75,7 @@ class OSCommandApp(App):
         '''Run the command and get the reply'''
 
         if self.state == OSCommandState.EXECUTING:
-            logging.info('Running OS command: ' + self.command)
+            logger.info('Running OS command: ' + self.command)
 
             out = subprocess.run(self.command, capture_output=True, shell=True)
             if out.returncode != 0:  # error

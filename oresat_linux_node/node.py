@@ -1,12 +1,13 @@
+import sys
 import struct
 import signal
-import logging
 from os import geteuid
 from pathlib import Path
 from threading import Thread, Event
 
 import canopen
 import psutil
+from loguru import logger
 
 from .common.app import App
 from .common.oresat_file_cache import OreSatFileCache
@@ -18,11 +19,6 @@ from .apps.fwrite import FwriteApp
 from .apps.ecss import ECSSApp
 from .apps.updater import UpdaterApp
 from .apps.logs import LogsApp
-
-RPDO_COMM_INDEX = 0x1400
-RPDO_MAP_INDEX = 0x1600
-TPDO_COMM_INDEX = 0x1800
-TPDO_MAP_INDEX = 0x1A00
 
 
 class OreSatNode:
@@ -56,8 +52,8 @@ class OreSatNode:
         self.fwrite_cache = OreSatFileCache(self.cache_base_dir + '/fwrite')
 
         # setup event
-        for sig in ('TERM', 'HUP', 'INT'):
-            signal.signal(getattr(signal, 'SIG' + sig), self._quit)
+        for sig in ['SIGTERM', 'SIGHUP', 'SIGINT']:
+            signal.signal(getattr(signal, sig), self._quit)
 
         self.network = canopen.Network()
         self.network.connect(bustype='socketcan', channel=self.bus)
@@ -101,19 +97,19 @@ class OreSatNode:
         # all oresat node TPDO COB-ID follow values of 0x[1234]80 + $NODEID
         # this fixes the values for all 16 RPDOs/TPDOs
         for i in range(len(self.node.rpdo)):
-            cob_id = self.od[RPDO_COMM_INDEX + i][1].default & 0xFFF
+            cob_id = self.od[0x1400 + i][1].default & 0xFFF
             if cob_id in default_rpdos:
                 cob_id = 0x200 + 0x100 * (i % 4) + self.node_id + i // 4
             else:
-                cob_id = self.od[RPDO_COMM_INDEX + i][1].default
-            self.od[RPDO_COMM_INDEX + i][1].value = cob_id
+                cob_id = self.od[0x1400 + i][1].default
+            self.od[0x1400 + i][1].value = cob_id
         for i in range(len(self.node.tpdo)):
-            cob_id = self.od[TPDO_COMM_INDEX + i][1].default & 0xFFF
+            cob_id = self.od[0x1800 + i][1].default & 0xFFF
             if cob_id in default_tpdos:
                 cob_id = 0x180 + 0x100 * (i % 4) + self.node_id + i // 4
             else:
-                cob_id = self.od[TPDO_COMM_INDEX + i][1].default
-            self.od[TPDO_COMM_INDEX + i][1].value = cob_id
+                cob_id = self.od[0x1800 + i][1].default
+            self.od[0x1800 + i][1].value = cob_id
 
         # default apps
         self.add_app(OSCommandApp(self.node))
@@ -136,11 +132,12 @@ class OreSatNode:
         try:
             self.network.disconnect()
         except Exception as exc:
-            logging.error(exc)
+            logger.error(exc)
 
     def _quit(self, signo, _frame):
-
-        self.event.set()
+        '''called when signals are caught'''
+        logger.info(f'signal {signal.Signals(signo).name} was caught')
+        self.stop()
 
     def send_tpdo(self, tpdo: int):
         '''Send a TPDO. Will not be sent if not node is not in operational state.
@@ -154,12 +151,12 @@ class OreSatNode:
         if self.node.nmt.state != 'OPERATIONAL':
             return  # PDOs should not be sent if not in OPERATIONAL state
 
-        cob_id = self.od[TPDO_COMM_INDEX + tpdo][1].value
-        maps = self.od[TPDO_MAP_INDEX + tpdo][0].value
+        cob_id = self.od[0x1800 + tpdo][1].value
+        maps = self.od[0x1A00 + tpdo][0].value
 
         data = b''
         for i in range(maps):
-            pdo_map = self.od[TPDO_MAP_INDEX + tpdo][i + 1].value
+            pdo_map = self.od[0x1A00 + tpdo][i + 1].value
             if pdo_map == 0:
                 break  # nothing todo
             pdo_map_bytes = pdo_map.to_bytes(4, 'big')
@@ -179,7 +176,7 @@ class OreSatNode:
             self.send_tpdo(tpdo)
 
             # get event time
-            value = self.od[TPDO_COMM_INDEX + tpdo][5].value
+            value = self.od[0x1800 + tpdo][5].value
 
             # milliseconds as int to seconds as a float
             delay = float(value) / 1000
@@ -189,6 +186,7 @@ class OreSatNode:
     def add_app(self, app):
         '''Add a app to be manage by `OreSatNode`'''
 
+        logger.debug(f'adding {app.name} app')
         self.apps.append(app)
 
     def _run_app_loop(self, app: App):
@@ -199,7 +197,7 @@ class OreSatNode:
                 app.on_loop()
             except Exception as exc:  # keep the rest of program from crashing
                 # nothing fancy just end return if the app loop fails
-                logging.error(app.name + ' app raised an uncaught exception: ' + str(exc))
+                logger.critical(f'{app.name} app raised an uncaught exception: {exc}')
                 app.end()
                 return
 
@@ -209,56 +207,67 @@ class OreSatNode:
         '''Go into operational mode, start all the apps, start all the thread, and monitor
         everything in a loop.'''
 
+        logger.info('node is starting')
+
         self.node.nmt.start_heartbeat(self.od[0x1017].default)
         self.node.nmt.state = 'OPERATIONAL'
         tpdo_threads = []
         app_threads = []
 
-        # run setup and start thread
+        logger.info('starting app threads')
         for app in self.apps:
+            logger.info(f'starting {app.name} app')
             app.setup()
             if app.delay >= 0:
                 new_thread = Thread(target=self._run_app_loop, args=(app,))
                 app_threads.append(new_thread)
                 new_thread.start()
 
-        # setup periodic tpdo(s)
+        logger.info('starting TPDO threads')
         for i in range(len(self.node.tpdo)):
-            transmission_type = self.od[TPDO_COMM_INDEX + i][2].default
-            event_time = self.od[TPDO_COMM_INDEX + i][5].default
+            transmission_type = self.od[0x1800 + i][2].default
+            event_time = self.od[0x1800 + i][5].default
 
             if transmission_type in [0xFE, 0xFF] and event_time and event_time > 0:
                 t = Thread(target=self._send_tpdo_loop, args=(i,))
                 t.start()
                 tpdo_threads.append(t)
 
+        logger.info('node is running')
         while not self.event.is_set():
             if not psutil.net_if_stats().get(self.bus).isup:
-                logging.critical('CAN bus "' + self.bus + '" is down')
+                logger.critical(f'CAN bus {self.bus} is down')
                 if self.node.nmt.state != 'PRE-OPERATIONAL':
                     self.node.nmt.state == 'PRE-OPERATIONAL'
 
             # monitor threads
             for t in tpdo_threads:
                 if not t.is_alive:
-                    logging.info('tpdo thread has ended')
+                    logger.info('tpdo thread has ended')
             for t in app_threads:
                 if not t.is_alive:
-                    logging.info('app thread has ended')
+                    logger.info('app thread has ended')
+
             self.event.wait(1)
 
         for app in self.apps:
+            logger.info(f'ending app {app.name}')
             app.end()
 
+        logger.info('joining TPDO threads')
         for t in tpdo_threads:
             t.join()
 
+        logger.info('joining app threads')
         for t in app_threads:
             t.join()
+
+        logger.info('node has ended')
 
     def stop(self):
         '''End the run loop'''
 
+        logger.info('stopping node')
         self.event.set()
 
     @property

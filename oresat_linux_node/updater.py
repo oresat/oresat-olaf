@@ -1,7 +1,6 @@
 '''Linux updater daemon'''
 
 import json
-import logging
 import tarfile
 import subprocess
 from os import listdir, remove
@@ -9,6 +8,8 @@ from os.path import abspath, basename, isfile
 from shutil import rmtree
 from pathlib import Path
 from enum import IntEnum
+
+from loguru import logger
 
 from .common.oresat_file import OreSatFile, new_oresat_file
 from .common.oresat_file_cache import OreSatFileCache
@@ -75,12 +76,12 @@ class Updater:
         # make update_archives for cache dir
         Path(cache_dir).mkdir(parents=True, exist_ok=True)
         self._cache_dir = abspath(cache_dir)
-        logging.debug('updater cache dir ' + self._cache_dir)
+        logger.debug(f'updater cache dir {self._cache_dir}')
 
         # make update_archives for work dir
         Path(work_dir).mkdir(parents=True, exist_ok=True)
         self._work_dir = abspath(work_dir)
-        logging.debug('updater work dir ' + self._work_dir)
+        logger.debug(f'updater work dir {self._work_dir}')
 
         self._cache = OreSatFileCache(cache_dir)
 
@@ -94,7 +95,7 @@ class Updater:
     def _clear_work_dir(self):
         '''Clear the working directory.'''
 
-        logging.info('clearing working directory')
+        logger.info('clearing working directory')
         rmtree(self._work_dir, ignore_errors=True)
         Path(self._work_dir).mkdir(parents=True, exist_ok=True)
 
@@ -119,7 +120,7 @@ class Updater:
         try:
             self._cache.add(file_path)
         except FileNotFoundError:
-            logging.error(file_name + ' is a invalid file')
+            logger.error(f'{file_name} is a invalid file')
             ret = False
 
         return ret
@@ -154,63 +155,63 @@ class Updater:
         # something in working dir, see if it an update to resume
         file_list = listdir(self._work_dir)
         if len(file_list) != 0:
-            logging.info('files found in working dir')
+            logger.info('files found in working dir')
 
             # find update archive in work directory
             for file_name in file_list:
                 if is_update_archive(file_name):
                     self._update_archive = file_name
                     update_archive_file_path = self._work_dir + '/' + file_name
-                    logging.info('resuming update with ' + file_name)
+                    logger.info(f'resuming update with {file_name}')
                     break
 
             if update_archive_file_path == '':  # Nothing to resume
-                logging.info('nothing to resume')
+                logger.info('nothing to resume')
                 self._clear_work_dir()
 
         # if not resuming, get new update archive from cache
         if update_archive_file_path == '' and len(self._cache) != 0:
             update_archive_file_path = self._cache.get(self._work_dir)
             self._update_archive = basename(update_archive_file_path)
-            logging.info('got ' + self._update_archive + ' from cache')
+            logger.info(f'got {self._update_archive} from cache')
 
         if update_archive_file_path == '':  # nothing to do
-            logging.info('no update to resume or in cache')
+            logger.info('no update to resume or in cache')
             self._state = UpdaterState.UPDATE_SUCCESSFUL
             return
 
-        logging.info('extracting files from update')
+        logger.info('extracting files from update')
         try:
             self._extract_update_archive(update_archive_file_path)
         except UpdaterError as exc:
-            logging.error(exc)
+            logger.error(exc)
             self._clear_work_dir()
             self._state = UpdaterState.PRE_UPDATE_FAILED
             return
 
-        logging.info('reading instructions file')
+        logger.info('reading instructions file')
         try:
             commands = self._read_instructions()
         except UpdaterError as exc:
-            logging.error(exc)
+            logger.error(exc)
             self._clear_work_dir()
             self._state = UpdaterState.PRE_UPDATE_FAILED
             return
 
-        logging.info('running instructions')
+        logger.info('running instructions')
         try:
             # No turn back point, the update is starting!!!
             # If anything fails/errors the board's software could break.
             # All errors are log at critical level.
             self._run_instructions(commands)
         except UpdaterError as exc:
-            logging.critical(exc)
+            logger.critical(exc)
             self._clear_work_dir()
             self._cache.clear()
             self._state = UpdaterState.UPDATE_FAILED
             return
 
-        logging.info('update ' + self._update_archive + ' was successful')
+        logger.info(f'update {self._update_archive} was successful')
         self._clear_work_dir()
         self._update_archive = ''
 
@@ -319,7 +320,7 @@ class Updater:
         self._instruction_percent = 0
 
         for command in commands:
-            logging.info(command)
+            logger.info(command)
 
             self._command = command
             self._instruction_index = commands.index(command)
@@ -329,13 +330,13 @@ class Updater:
             if out.returncode != 0:
                 for line in out.stderr.decode('utf-8').split('\n'):
                     if len(line) != 0:
-                        logging.error(line)
+                        logger.error(line)
 
                 raise UpdaterError('update failed!')
 
             for line in out.stdout.decode('utf-8').split('\n'):
                 if len(line) != 0:
-                    logging.info(line)
+                    logger.info(line)
 
             self.instruction_percent = self.total_instructions // self._instruction_index
 

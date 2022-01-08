@@ -1,8 +1,8 @@
-import logging
 from os import geteuid
 from time import time, clock_settime, CLOCK_REALTIME
 
 import canopen
+from loguru import logger
 
 from ..common.app import App
 from ..common.ecss import scet_int_from_time, utc_int_from_time, scet_int_to_time, utc_int_to_time
@@ -45,6 +45,6 @@ class ECSSApp(App):
 
         if geteuid() == 0:
             clock_settime(CLOCK_REALTIME, ts)
-            logging.info(self.name, 'has set system time')
+            logger.info(f'{self.name} app has set system time')
         else:
-            logging.error(self.name, 'cannot set time, not running as root')
+            logger.error(f'{self.name} app cannot set time, not running as root')

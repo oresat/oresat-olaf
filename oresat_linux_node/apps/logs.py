@@ -1,9 +1,9 @@
-import logging
 import tarfile
 from os import geteuid, listdir
 from time import time, clock_settime, CLOCK_REALTIME
 
 import canopen
+from loguru import logger
 
 from ..common.app import App
 from ..common.oresat_file import new_oresat_file
@@ -25,7 +25,7 @@ class LogsApp(App):
 
         if self.obj.value:
             self.obj.value = False
-            logging.info('Making a copy of logs')
+            logger.info('Making a copy of logs')
 
             tar_file_path = '/tmp/' + new_oresat_file('logs', ext='.tar.xz')
 

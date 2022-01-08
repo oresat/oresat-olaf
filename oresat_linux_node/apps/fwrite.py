@@ -1,9 +1,9 @@
 
-import logging
 from os.path import basename
 from pathlib import Path
 
 import canopen
+from loguru import logger
 
 from ..common.app import App
 from ..common.oresat_file_cache import OreSatFileCache
@@ -51,15 +51,16 @@ class FwriteApp(App):
             self.file_path = self.tmp_dir + '/' + file_name
         elif subindex == self.subindex_file_data:
             if not self.file_path:
-                logging.error('fwrite file path was not set before file data was sent')
+                logger.error('fwrite file path was not set before file data was sent')
                 return
 
             try:
                 with open(self.file_path, 'wb') as f:
                     f.write(data)
+                logger.info(self.name + ' receive new file: ' + file_name)
                 self.fwrite_cache.add(self.file_path, consume=True)
             except FileNotFoundError as exc:
-                logging.error(exc)
+                logger.error(exc)
 
             self.file_path = ''
 
