@@ -17,23 +17,21 @@ class OreSatFileCache:
         Parameters
         ----------
         dir_path: str
-            Directory to use as a OreSat file cache
+            Directory to use as a OreSat file cache. Directory will be made if it does not exist.
         '''
 
-        self._dir = abspath(dir_path)
+        self._dir = abspath(dir_path) + '/'
         self._data = []
         self._lock = Lock()
 
         Path(self._dir).mkdir(parents=True, exist_ok=True)
 
         for f in listdir(self._dir):
-            oresat_file = OreSatFile(self._dir + '/' + f)
+            oresat_file = OreSatFile(self._dir + f)
             self._data.append(oresat_file)
         self._data = sorted(self._data, reverse=True)
 
     def __len__(self) -> int:
-
-        length = 0
 
         with self._lock:
             length = len(self._data)
@@ -49,9 +47,14 @@ class OreSatFileCache:
             Path to the file to add to the cache
         consume: bool
             Flag to consume the file when added to the cache
+
+        Raises
+        ------
+        FileNotFoundError
+            `file_path` was not a valid file path
         '''
 
-        new_file_path = self._dir + '/' + basename(file_path)
+        new_file_path = self._dir + basename(file_path)
 
         with self._lock:
             if consume:
@@ -64,7 +67,7 @@ class OreSatFileCache:
             self._data = sorted(self._data, reverse=True)
 
     def remove(self, file_name: str):
-        '''Remove file from cache
+        '''Remove a file from cache
 
         Parameters
         ----------
@@ -79,31 +82,57 @@ class OreSatFileCache:
                     self._data.remove(f)
 
     def peak(self) -> str:
-        '''Get the oldest file name'''
+        '''Get the oldest file name
+
+        Returns
+        -------
+        str
+            Name of the oldest file or an empty string if the cache is empty.
+        '''
 
         with self._lock:
             if len(self._data) > 0:
                 file_name = self._data[0].name
             else:
-                file_name = None
+                file_name = ''
 
         return file_name
 
-    def pop(self, dir_path) -> str:
-        '''Pop the oldest file from the cache'''
+    def pop(self, dir_path: str, copy: bool = False) -> str:
+        '''Pop the oldest file from the cache
+
+        Parameters
+        ----------
+        dir_path: str
+            Name of the directory to move the file to.
+        copy: bool
+            When True the file is copied from the cache, when False the file is moved out of the
+            cache.
+
+        Returns
+        -------
+        str
+            File path of the file now in `dir_path` or an empty string if the cache is empty.
+        '''
+
+        if dir_path[-1] != '/':
+            dir_path += '/'
 
         with self._lock:
             if len(self._data) > 0:
                 file = self._data[0]
-                dest = dir_path + '/' + file.name
-                shutil.move(file.path, dest)
-                self._data.remove(file)
+                dest = dir_path + file.name
+                if copy:
+                    shutil.copy(self._dir + file.name, dest)
+                else:
+                    shutil.move(self._dir + file.name, dest)
+                    self._data.remove(file)
             else:
-                dest = None
+                dest = ''
 
         return dest
 
-    def get(self, file_name: str, dir_path: str) -> str:
+    def get(self, file_name: str, dir_path: str, copy: bool = False) -> str:
         '''Get the file from the cache and move it a specific directory.
 
         Parameters
@@ -112,6 +141,19 @@ class OreSatFileCache:
             Name of the file to get from the cache
         dir_path: str
             Name of the directory to move the file to.
+        copy: bool
+            When True the file is copied from the cache, when False the file is moved out of the
+            cache.
+
+        Raises
+        ------
+        FileNotFoundError
+            `file_name` was not in cache
+
+        Returns
+        -------
+        str
+            File path of the file now in `dir_path` or an empty string if the cache is empty.
         '''
 
         if dir_path[-1] != '/':
@@ -121,23 +163,29 @@ class OreSatFileCache:
         with self._lock:
             for f in self._data:
                 if f.name == file_name:
-                    dest = dir_path + '/' + f.name
-                    shutil.move(f.path, dest)
-                    self._data.remove(f)
+                    dest = dir_path + f.name
+                    if copy:
+                        shutil.copy(self._dir + f.name, dest)
+                    else:
+                        shutil.move(self._dir + f.name, dest)
+                        self._data.remove(f)
         if not dest:
-            raise FileNotFoundError('file', file_name, 'not in cache')
+            raise FileNotFoundError(f'file {file_name} not in cache')
 
         return dest
 
-    def files(self, keyword='') -> list:
+    def files(self, keyword: str = '') -> list:
         '''Return a list of files in the cache.
 
         Parameters
         ----------
         keyword: str
             A keyword to filter by
-        path: bool
-            Add the absolute path to file list
+
+        Returns
+        -------
+        list
+            list of :py:class:`OreSatFile` that are in the cache.
         '''
 
         files = []
@@ -153,12 +201,13 @@ class OreSatFileCache:
     def clear(self):
         '''Clear all file in the cache'''
 
-        if len(listdir(self._work_dir)) != 0:
+        with self._lock:
             shutil.rmtree(self._dir, ignore_errors=True)
             Path(self._dir).mkdir(parents=True, exist_ok=True)
+            self._data = []
 
     @property
     def dir(self) -> str:
         '''str: Gets the directory path the cache using.'''
 
-        return self._dir
+        return self._dir[:-1]  # remove the trailing '/'

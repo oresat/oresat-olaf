@@ -1,4 +1,6 @@
+'''Fwrite app'''
 
+from os import remove, listdir
 from os.path import basename
 from pathlib import Path
 
@@ -14,14 +16,31 @@ class FwriteApp(App):
     def __init__(self,
                  node: canopen.LocalNode,
                  fwrite_cache: OreSatFileCache,
-                 tmp_dir: str = '/tmp/oresat-fwrite'):
+                 tmp_dir: str = '/tmp/oresat/fwrite'):
+        '''
+        node: canopen.LocalNode
+            The CANopen node, used to set on sdo read/write callbacks.
+        fwrite_cache: OreSatFileCache
+            The cache the master node can write file to.
+        tmp_dir: str
+            The tmp directory to use for writing file to.
+        '''
 
         super().__init__('Fwrite', -1.0)
+
+        if tmp_dir == '/':
+            raise ValueError('tmp_dir cannot be root dir')
+
+        if tmp_dir[-1] != '/':
+            tmp_dir += '/'
 
         self.node = node
         self.fwrite_cache = fwrite_cache
         self.tmp_dir = tmp_dir
         Path(self.tmp_dir).mkdir(parents=True, exist_ok=True)
+        logger.debug(f'fwrite tmp_dir is {self.tmp_dir}')
+        for i in listdir(self.tmp_dir):
+            remove(self.tmp_dir + i)
 
         self.index = 0x3004
         self.subindex_file_name = 0x1
@@ -32,7 +51,7 @@ class FwriteApp(App):
         self.node.add_read_callback(self.on_read)
         self.node.add_write_callback(self.on_write)
 
-    def on_read(self, index: int, subindex: int, od: canopen.ObjectDictionary) -> bytes:
+    def on_read(self, index: int, subindex: int, od: canopen.ObjectDictionary):
 
         ret = None
 
@@ -57,13 +76,13 @@ class FwriteApp(App):
             try:
                 with open(self.file_path, 'wb') as f:
                     f.write(data)
-                logger.info(self.name + ' receive new file: ' + file_name)
+                logger.info(self.name + ' receive new file: ' + basename(self.file_path))
                 self.fwrite_cache.add(self.file_path, consume=True)
             except FileNotFoundError as exc:
                 logger.error(exc)
 
             self.file_path = ''
 
-            # clear buffers to not was memory
+            # clear buffers to not waste memory
             self.node.object_dictionary[index][subindex].value = ''
             self.node.sdo[index][subindex].value = ''

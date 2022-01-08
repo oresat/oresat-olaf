@@ -1,5 +1,8 @@
+'''Fread app'''
 
+from os import remove, listdir
 from os.path import basename
+from pathlib import Path
 
 import canopen
 from loguru import logger
@@ -13,12 +16,31 @@ class FreadApp(App):
     def __init__(self,
                  node: canopen.LocalNode,
                  fread_cache: OreSatFileCache,
-                 tmp_dir: str = '/tmp/fread'):
+                 tmp_dir: str = '/tmp/oresat/fread'):
+        '''
+        node: canopen.LocalNode
+            The CANopen node, used to set on sdo read/write callbacks.
+        fread_cache: OreSatFileCache
+            The cache the master node can read file from.
+        tmp_dir: str
+            The tmp directory to use for reading file from.
+        '''
 
         super().__init__('Fread', -1.0)
 
+        if tmp_dir == '/':
+            raise ValueError('tmp_dir cannot be root dir')
+
+        if tmp_dir[-1] != '/':
+            tmp_dir += '/'
+
         self.fread_cache = fread_cache
+
         self.tmp_dir = tmp_dir
+        Path(self.tmp_dir).mkdir(parents=True, exist_ok=True)
+        logger.debug(f'fread tmp_dir is {self.tmp_dir}')
+        for i in listdir(self.tmp_dir):
+            remove(self.tmp_dir + i)
 
         self.index = 0x3003
         self.subindex_file_name = 0x1
@@ -30,16 +52,20 @@ class FreadApp(App):
         node.add_read_callback(self.on_read)
         node.add_write_callback(self.on_write)
 
-    def on_read(self, index: int, subindex: int, od: canopen.ObjectDictionary) -> bytes:
+    def on_read(self, index: int, subindex: int, od: canopen.ObjectDictionary):
 
         ret = None
 
-        if index != self.index or not self.fread_file:
-            return
+        if index != self.index:
+            return ret
 
-        if subindex == 0x1:  # file name
+        if not self.file_path:
+            logger.error('fread file path was not set before trying to read info')
+            return ret
+
+        if subindex == self.subindex_file_name:
             ret = basename(self.file_path)
-        elif subindex == 0x2:  # file data
+        elif subindex == self.subindex_file_data:
             try:
                 with open(self.file_path, 'rb') as f:
                     ret = f.read()
@@ -54,10 +80,21 @@ class FreadApp(App):
             return
 
         if subindex == self.subindex_file_name:
+            # delete old file if it exist
+            if self.file_path:
+                remove(self.file_path)
+                self.file_path = ''
+
             file_name = data.decode()
-            self.file_path = self.fread_cache.get(file_name, self.tmp_dir)
+            try:
+                self.file_path = self.fread_cache.get(file_name, self.tmp_dir, True)
+            except FileNotFoundError:
+                logger.error(f'file {file_name} not in fread cache')
         elif subindex == self.subindex_delete_file:
-            if not self.file_path:
-                logger.error('fread file path was not set before delete file was called')
-            else:
+            if self.file_path:
+                # delete file from cache and tmp dir
                 self.fread_cache.remove(basename(self.file_path))
+                remove(self.file_path)
+                self.file_path = ''
+            else:
+                logger.error('fread file path was not set before trying to delete file')
