@@ -203,7 +203,8 @@ class OreSatNode:
         for app in self.apps:
             app.start()
             if app.delay >= 0:
-                t = Thread(target=app.run, args=(self.event,))
+                t = Thread(name=app.name, target=app.run, args=(self.event,))
+                logger.debug(f'starting {t.name} app thread')
                 t.start()
                 app_threads.append(t)
 
@@ -212,7 +213,8 @@ class OreSatNode:
             event_time = self.od[0x1800 + i][5].default
 
             if transmission_type in [0xFE, 0xFF] and event_time and event_time > 0:
-                t = Thread(target=self._send_tpdo_loop, args=(i,))
+                t = Thread(name='TPDO' + str(i + 1), target=self._send_tpdo_loop, args=(i,))
+                logger.debug(f'starting {t.name} thread')
                 t.start()
                 tpdo_threads.append(t)
 
@@ -226,10 +228,14 @@ class OreSatNode:
             # monitor threads
             for t in tpdo_threads:
                 if not t.is_alive:
-                    logger.info('tpdo thread has ended')
+                    logger.error(f'tpdo thread {t.name} has ended')
+                    t.join()
+                    tpdo_threads.remove(t)
             for t in app_threads:
                 if not t.is_alive:
-                    logger.info('app thread has ended')
+                    logger.error(f'app thread {t.name} has ended')
+                    t.join()
+                    app_threads.remove(t)
 
             self.event.wait(1)
 
@@ -237,9 +243,11 @@ class OreSatNode:
             app.end()
 
         for t in tpdo_threads:
+            logger.debug(f'joining {t.name} thread')
             t.join()
 
         for t in app_threads:
+            logger.debug(f'joining {t.name} app thread')
             t.join()
 
         logger.info('node has ended')
