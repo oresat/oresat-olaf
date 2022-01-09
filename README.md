@@ -21,7 +21,17 @@ To run the `examples/example_node.py` example:
 - `$ cd examples`
 - Run example `$ python example_node.py`
 
+## Unit Tests
+
+OreSat Linux Node makes use of Python's [unittest] framework.
+
+To run unit tests:
+
+- Make a virtual CAN bus `$ sudo ./scripts/vcan.sh`
+- Run unit tests`$ python -m unittest`
+
 <!-- References -->
+[unittest]:https://docs.python.org/3/library/unittest.html#module-unittest
 [python-canopen]:https://github.com/christiansandberg/canopen
 [CANopen]:https://www.can-cia.org/canopen
 [ECSS CANBus Extended Protocal]:https://ecss.nl/standard/ecss-e-st-50-15c-space-engineering-canbus-extension-protocol-1-may-2015/

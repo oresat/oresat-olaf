@@ -88,7 +88,7 @@ def utc_int_from_time(unix_time: float) -> int:
     '''
 
     day = int(unix_time / 86400)
-    temp_us = unix_time % 1 * 1000000
+    temp_us = unix_time % 86400 * 1000000
     ms_of_day = int(temp_us / 1000)
     us_of_day = int(temp_us % 1000)
 
@@ -119,6 +119,6 @@ def utc_int_to_time(utc: int) -> float:
 
     day = int.from_bytes(raw[:2], 'little')
     ms_of_day = int.from_bytes(raw[2:-2], 'little')
-    us_of_day = int.from_bytes(raw[:-2], 'little')
+    us_of_day = int.from_bytes(raw[-2:], 'little')
 
     return day * 86400 + ms_of_day / 1000 + us_of_day / 1000000

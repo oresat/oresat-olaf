@@ -60,4 +60,4 @@ def parse_node_args(args):
     if args.log:
         logger.add(SysLogHandler(address='/dev/log'), format=LOG_FORMAT, level=level)
     else:
-        logger.add(sys.stderr, format=LOG_FORMAT, level=level)
+        logger.add(sys.stdout, format=LOG_FORMAT, level=level)

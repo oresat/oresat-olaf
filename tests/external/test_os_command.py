@@ -3,7 +3,7 @@ from time import sleep
 import canopen
 from oresat_linux_node.apps.os_command import OSCommandState
 
-from . import oresat_node
+from . import NodeTestCase
 
 
 def run_os_command(node: canopen.RemoteNode, command: str):
@@ -15,19 +15,16 @@ def run_os_command(node: canopen.RemoteNode, command: str):
             break
 
 
-def test_os_command_permissions():
-    node = oresat_node()
+class TestOSCommand(NodeTestCase):
+    def test_os_command(self):
+        self.assertIsNotNone(self.sdo[0x1023][0x1].raw)
+        self.assertIn(self.sdo[0x1023][0x2].phys, [e.value for e in OSCommandState])
+        self.assertIsNotNone(self.sdo[0x1023][0x3].raw)
 
-    assert node.sdo[0x1023][0x1].raw
-    assert node.sdo[0x1023][0x2].phys in [e.value for e in OSCommandState]
-    assert node.sdo[0x1023][0x3].raw
+        run_os_command(self.oresat_node.node, 'ls')
+        self.assertEqual(self.sdo[0x1023][0x2].phys, OSCommandState.NO_ERROR_REPLY)
+        self.assertIsNotNone(self.sdo[0x1023][0x3].raw)
 
-    run_os_command(node, 'ls')
-    assert node.sdo[0x1023][0x2].phys == OSCommandState.NO_ERROR_REPLY.value
-    assert node.sdo[0x1023][0x3].raw
-
-    run_os_command(node, 'invalid-bash-command')
-    assert node.sdo[0x1023][0x2].phys == OSCommandState.ERROR_REPLY.value
-    assert node.sdo[0x1023][0x3].raw
-
-    node.network.disconnect()
+        run_os_command(self.oresat_node.node, 'invalid-bash-command')
+        self.assertEqual(self.sdo[0x1023][0x2].phys, OSCommandState.ERROR_REPLY)
+        self.assertIsNotNone(self.sdo[0x1023][0x3].raw)
