@@ -24,7 +24,7 @@ from .apps.logs import LogsApp
 class OreSatNode:
     '''The main class that manages the CAN bus, apps, and threads.'''
 
-    def __init__(self, eds: str, bus: str, node_id: int = 0):
+    def __init__(self, eds: str, bus: str, node_id=0):
         '''
         Parameters
         ----------
@@ -32,14 +32,27 @@ class OreSatNode:
             File path to EDS or DCF file.
         bus: str
             Which CAN bus to use.
-        node_id: int
-            The node ID. If not set and a DCF was used for the eds arg, the value will be pulled
-            from the DCD, otherwise, it will be set to 0x7C.
+        node_id: int, str
+            The node ID. If set to 0 and DCF was used for the eds arg, the value will be pulled
+            from the DCF, otherwise, it will be set to 0x7C.
+
+        Raises
+        ------
+        ValueError
+            Invalid parameter(s)
         '''
 
         self.bus = bus
         self.event = Event()
         self.apps = []
+
+        if isinstance(node_id, str):
+            if node_id.startswith('0x'):
+                node_id = int(node_id, 16)
+            else:
+                node_id = int(node_id)
+        elif not isinstance(node_id, int):
+            raise ValueError('node_id is not a int/hex str or a int')
 
         if geteuid() == 0:  # running as root
             self.work_base_dir = '/var/lib/oresat'

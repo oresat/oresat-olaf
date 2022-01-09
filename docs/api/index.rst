@@ -10,3 +10,4 @@ API
    oresat_file
    oresat_file_cache
    pru
+   other
