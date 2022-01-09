@@ -52,7 +52,7 @@ def scet_int_from_time(unix_time: float) -> int:
 
 
 def scet_int_to_time(scet: int) -> float:
-    '''Convert a SCET int to time.time() format
+    '''Convert a SCET int to :py:func:`time.time()` format
 
     Parameters
     ----------
@@ -102,7 +102,7 @@ def utc_int_from_time(unix_time: float) -> int:
 
 
 def utc_int_to_time(utc: int) -> float:
-    '''Convert a ECSS UTC int to time.time() format
+    '''Convert a ECSS UTC int to :py:func:`time.time()` format
 
     Parameters
     ----------

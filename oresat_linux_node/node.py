@@ -189,22 +189,8 @@ class OreSatNode:
         logger.debug(f'adding {app.name} app')
         self.apps.append(app)
 
-    def _run_app_loop(self, app: App):
-        '''Run an app'''
-
-        while not self.event.is_set():
-            try:
-                app.on_loop()
-            except Exception as exc:  # keep the rest of program from crashing
-                # nothing fancy just end return if the app loop fails
-                logger.critical(f'{app.name} app raised an uncaught exception: {exc}')
-                app.end()
-                return
-
-            self.event.wait(app.delay)
-
     def run(self):
-        '''Go into operational mode, start all the apps, start all the thread, and monitor
+        '''Go into operational mode, start all the apps, start all the threads, and monitor
         everything in a loop.'''
 
         logger.info('node is starting')
@@ -214,16 +200,13 @@ class OreSatNode:
         tpdo_threads = []
         app_threads = []
 
-        logger.info('starting app threads')
         for app in self.apps:
-            logger.info(f'starting {app.name} app')
-            app.setup()
+            app.start()
             if app.delay >= 0:
-                new_thread = Thread(target=self._run_app_loop, args=(app,))
-                app_threads.append(new_thread)
-                new_thread.start()
+                t = Thread(target=app.run, args=(self.event,))
+                t.start()
+                app_threads.append(t)
 
-        logger.info('starting TPDO threads')
         for i in range(len(self.node.tpdo)):
             transmission_type = self.od[0x1800 + i][2].default
             event_time = self.od[0x1800 + i][5].default
@@ -251,14 +234,11 @@ class OreSatNode:
             self.event.wait(1)
 
         for app in self.apps:
-            logger.info(f'ending app {app.name}')
             app.end()
 
-        logger.info('joining TPDO threads')
         for t in tpdo_threads:
             t.join()
 
-        logger.info('joining app threads')
         for t in app_threads:
             t.join()
 

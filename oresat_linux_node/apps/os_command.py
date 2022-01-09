@@ -21,14 +21,14 @@ class OSCommandApp(App):
 
     def __init__(self, node: canopen.LocalNode):
 
-        super().__init__('OS Command', 0.5)
+        super().__init__(node, 'OS Command', 0.5)
 
         self.failed = False
 
         self.index = 0x1023
-        self.subindex_command = 0x01
-        self.subindex_state = 0x02
-        self.subindex_reply = 0x03
+        self.sub_command = 0x01
+        self.sub_state = 0x02
+        self.sub_reply = 0x03
 
         self.command = ''
         self.state = OSCommandState.NO_ERROR_NO_REPLY
@@ -38,41 +38,7 @@ class OSCommandApp(App):
         node.add_read_callback(self.on_read)
         node.add_write_callback(self.on_write)
 
-    def end(self):
-        self.failed = True
-        self.command = ''
-        self.state = OSCommandState.ERROR_NO_REPLY
-        self.reply = ''
-
-    def on_read(self, index, subindex, od):
-        '''Callback for a SDO read the command and/or reply domain values'''
-
-        ret = None
-
-        if index == self.index and not self.failed:
-            if subindex == self.subindex_command:
-                ret = self.command.encode()
-            elif subindex == self.subindex_state:
-                ret = self.state.value
-            elif subindex == self.subindex_reply:
-                ret = self.reply.encode()
-
-        return ret
-
-    def on_write(self, index: int, subindex: int, od: canopen.ObjectDictionary, data: bytes):
-        '''Callback for a SDO write for an OS command'''
-
-        if index == self.index and \
-                subindex == self.subindex_command and \
-                self.state != OSCommandState.EXECUTING and \
-                not self.failed:
-
-            self.reply = ''
-            self.command = data.decode()
-            self.state = OSCommandState.EXECUTING  # run os command
-
     def on_loop(self):
-        '''Run the command and get the reply'''
 
         if self.state == OSCommandState.EXECUTING:
             logger.info('Running OS command: ' + self.command)
@@ -90,3 +56,34 @@ class OSCommandApp(App):
                     self.state = OSCommandState.NO_ERROR_REPLY
                 else:
                     self.state = OSCommandState.NO_ERROR_NO_REPLY
+
+    def on_end(self):
+        self.failed = True
+        self.command = ''
+        self.state = OSCommandState.ERROR_NO_REPLY
+        self.reply = ''
+
+    def on_read(self, index, subindex, od):
+
+        ret = None
+
+        if index == self.index and not self.failed:
+            if subindex == self.sub_command:
+                ret = self.command.encode()
+            elif subindex == self.sub_state:
+                ret = self.state.value
+            elif subindex == self.sub_reply:
+                ret = self.reply.encode()
+
+        return ret
+
+    def on_write(self, index, subindex, od, data):
+
+        if index == self.index and \
+                subindex == self.sub_command and \
+                self.state != OSCommandState.EXECUTING and \
+                not self.failed:
+
+            self.reply = ''
+            self.command = data.decode()
+            self.state = OSCommandState.EXECUTING  # run os command

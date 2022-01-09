@@ -17,16 +17,8 @@ class FwriteApp(App):
                  node: canopen.LocalNode,
                  fwrite_cache: OreSatFileCache,
                  tmp_dir: str = '/tmp/oresat/fwrite'):
-        '''
-        node: canopen.LocalNode
-            The CANopen node, used to set on sdo read/write callbacks.
-        fwrite_cache: OreSatFileCache
-            The cache the master node can write file to.
-        tmp_dir: str
-            The tmp directory to use for writing file to.
-        '''
 
-        super().__init__('Fwrite', -1.0)
+        super().__init__(node, 'Fwrite', -1.0)
 
         if tmp_dir == '/':
             raise ValueError('tmp_dir cannot be root dir')
@@ -34,7 +26,6 @@ class FwriteApp(App):
         if tmp_dir[-1] != '/':
             tmp_dir += '/'
 
-        self.node = node
         self.fwrite_cache = fwrite_cache
         self.tmp_dir = tmp_dir
         Path(self.tmp_dir).mkdir(parents=True, exist_ok=True)
@@ -43,32 +34,29 @@ class FwriteApp(App):
             remove(self.tmp_dir + i)
 
         self.index = 0x3004
-        self.subindex_file_name = 0x1
-        self.subindex_file_data = 0x2
+        self.sub_file_name = 0x1
+        self.sub_file_data = 0x2
 
         self.file_path = ''
 
-        self.node.add_read_callback(self.on_read)
-        self.node.add_write_callback(self.on_write)
-
-    def on_read(self, index: int, subindex: int, od: canopen.ObjectDictionary):
+    def on_read(self, index, subindex, od):
 
         ret = None
 
-        if index == self.index and self.file_path and subindex == self.subindex_file_name:
+        if index == self.index and self.file_path and subindex == self.sub_file_name:
             ret = basename(self._file_path)
 
         return ret
 
-    def on_write(self, index: int, subindex: int, od: canopen.ObjectDictionary, data: bytes):
+    def on_write(self, index, subindex, od, data):
 
         if index != self.index:
             return
 
-        if subindex == self.subindex_file_name:
+        if subindex == self.sub_file_name:
             file_name = data.decode()
             self.file_path = self.tmp_dir + '/' + file_name
-        elif subindex == self.subindex_file_data:
+        elif subindex == self.sub_file_data:
             if not self.file_path:
                 logger.error('fwrite file path was not set before file data was sent')
                 return

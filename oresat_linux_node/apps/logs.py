@@ -14,7 +14,7 @@ class LogsApp(App):
 
     def __init__(self, node: canopen.LocalNode, fread_cache: OreSatFileCache):
 
-        super().__init__('Logs', 1.0)
+        super().__init__(node, 'Logs', 1.0)
 
         self.index = 0x3006
         self.logs_dir_path = '/var/log/journal/'

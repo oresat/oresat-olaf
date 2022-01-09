@@ -8,6 +8,12 @@ from ..common.oresat_file_cache import OreSatFileCache
 
 class UpdaterApp(App):
 
+    index = 0x3100
+    sub_status = 0x1
+    sub_updates_cached = 0x2
+    sub_list_available = 0x3
+    sub_update = 0x4
+
     def __init__(self,
                  node: canopen.LocalNode,
                  fread_cache: OreSatFileCache,
@@ -15,14 +21,9 @@ class UpdaterApp(App):
                  work_dir: str,
                  cache_dir: str):
 
-        super().__init__('Updater', 1.0)
+        super().__init__(node, 'Updater', 1.0)
 
-        self.index = 0x3100
-        self.subindex_status = 0x1
-        self.subindex_updates_cached = 0x2
-        self.subindex_list_available = 0x3
-        self.subindex_update = 0x4
-        self.subindex_make_statue_file = 0x5
+        self.sub_make_statue_file = 0x5
         self.obj = node.object_dictionary[self.index]
 
         self._updater = Updater(work_dir, cache_dir)
@@ -30,9 +31,8 @@ class UpdaterApp(App):
         self._fwrite_cache = fwrite_cache
 
         # make sure defaults are set
-        self.obj[self.subindex_update].value = False
-        self.obj[self.subindex_update].value = False
-        self.obj[self.subindex_status].value = self._updater.status.value
+        self.obj[self.sub_update].value = False
+        self.obj[self.sub_update].value = False
 
         node.add_read_callback(self.on_read)
 
@@ -41,25 +41,25 @@ class UpdaterApp(App):
         for i in self._fwrite_cache.files('update'):
             self._updater.add_update(self._fwrite_cache.dir + '/' + i)
 
-        if self.obj[self.subindex_update].value:
+        if self.obj[self.sub_update].value:
             self._updater.update()
-            self.obj[self.subindex_update].value = False
+            self.obj[self.sub_update].value = False
 
-        if self.obj[self.subindex_make_statue_file].value:
+        if self.obj[self.sub_make_statue_file].value:
             status_archive_file_path = self.updater.make_status_archive()
             self._fread_cache.add(status_archive_file_path, consume=True)
-            self.obj[self.subindex_make_statue_file].value = False
+            self.obj[self.sub_make_statue_file].value = False
 
-    def on_read(self, index: int, subindex: int, od: canopen.LocalNode):
+    def on_read(self, index, subindex, od):
 
         ret = None
 
         if index == self.index:
-            if subindex == self.subindex_status:
+            if subindex == self.sub_status:
                 ret = self._updater.status.value
-            elif subindex == self.subindex_updates_cached:
+            elif subindex == self.sub_updates_cached:
                 ret = self._updater.updates_cached
-            elif subindex == self.subindex_list_available:
+            elif subindex == self.sub_list_available:
                 ret = ' '.join(self._cache.files())
 
         return ret

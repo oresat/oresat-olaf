@@ -12,16 +12,12 @@ class ECSSApp(App):
 
     def __init__(self, node: canopen.LocalNode):
 
-        super().__init__('ESCC', -1.0)
+        super().__init__(node, 'ESCC', -1.0)
 
-        self.node = node
         self.index_scet = 0x2010
         self.index_utc = 0x2011
 
-        node.add_read_callback(self.on_read)
-        node.add_write_callback(self.on_write)
-
-    def on_read(self, index: int, subindex: int, od: canopen.ObjectDictionary) -> bytes:
+    def on_read(self, index, subindex, od):
 
         ret = None
 
@@ -32,7 +28,7 @@ class ECSSApp(App):
 
         return ret
 
-    def on_write(self, index: int, subindex: int, od: canopen.ObjectDictionary, data: bytes):
+    def on_write(self, index, subindex, od, data):
 
         if index == self.index_scet:
             raw = self.node.object_dictionary[self.index_scet].decode_raw(data)
