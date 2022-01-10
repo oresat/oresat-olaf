@@ -20,11 +20,6 @@ jobs:
       with:
         python-version: "3.9"
 
-    - name: Make vcan0 bus for unit tests
-      run: |
-        sudo ip link add dev vcan0 type vcan
-        sudo ip link set vcan0 up
-
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip

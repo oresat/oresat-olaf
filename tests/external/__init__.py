@@ -1,32 +1,27 @@
-import unittest
-from threading import Thread
+from threading import Thread, Event
 from loguru import logger
 
 import canopen
-from oresat_linux_node import OreSatNode
-
-BUS = 'vcan0'
-EDS_FILE = 'oresat_linux_node.eds'
-NODE_ID = 0x10
+from oresat_linux_node import OreSatNode, App
 
 
-def oresat_node():
-    network = canopen.Network()
-    network.connect(bustype='socketcan', channel=BUS)
-    node = canopen.RemoteNode(NODE_ID, EDS_FILE)
-    network.add_node(node)
-
-    return node
-
-
-class NodeTestCase(unittest.TestCase):
-    def setUp(self):
-        self.oresat_node = OreSatNode('oresat_linux_node.eds', 'vcan0', 0x10)
+class TestNode(Thread):
+    def __init__(self):
+        super().__init__()
         logger.disable('oresat_linux_node')
-        self.thread = Thread(target=self.oresat_node.run)
-        self.thread.start()
-        self.sdo = self.oresat_node.node.sdo
+        self.node = canopen.LocalNode(0x10, 'oresat_linux_node.eds')
 
-    def tearDown(self):
-        self.oresat_node.stop()
-        self.thread.join()
+    def add_app(self, app: App):
+        self.app = app
+        self.node.add_read_callback(self.app.on_read)
+        self.node.add_write_callback(self.app.on_write)
+
+    def run(self):
+        self.event = Event()
+        self.app.start()
+        self.app.run(self.event)
+        self.app.end()
+
+    def stop(self):
+        self.event.set()
+        self.join()
