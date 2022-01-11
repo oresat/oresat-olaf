@@ -18,9 +18,11 @@ class TestApp(Thread):
 
     def run(self):
         self.event = Event()
-        self.resource.start()
-        self.resource.run(self.event)
-        self.resource.end()
+        self.resource.on_start()
+        while not self.event.is_set():
+            self.resource.on_loop()
+            self.event.wait(self.resource.delay)
+        self.resource.on_end()
 
     def stop(self):
         self.event.set()

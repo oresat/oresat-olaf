@@ -202,6 +202,20 @@ class App:
         logger.debug(f'adding {resource.name} resource')
         self.resources.append(resource)
 
+    def _run_resource(self, resource):
+        '''Run the resource'''
+
+        while not self.event.is_set():
+            try:
+                resource.on_loop()
+            except Exception as exc:  # nothing fancy just end return if the resource loop fails
+                msg = f'{resource.name} resource\'s on_loop raised an uncaught exception: {exc}'
+                logger.critical(msg)
+                break
+
+            if resource.delay > 0:
+                self.event.wait(resource.delay)
+
     def run(self):
         '''Go into operational mode, start all the resources, start all the threads, and monitor
         everything in a loop.'''
@@ -211,15 +225,21 @@ class App:
         self.node.nmt.start_heartbeat(self.od[0x1017].default)
         self.node.nmt.state = 'OPERATIONAL'
         tpdo_threads = []
-        resource_threads = []
+        resource_threads = {}
 
         for resource in self.resources:
-            resource.start()
+            try:
+                resource.on_start()
+            except Exception as exc:
+                msg = f'{self.name} resource\'s on_start raised an uncaught exception: {exc}'
+                logger.critical(msg)
+                continue
+
             if resource.delay >= 0:
-                t = Thread(name=resource.name, target=resource.run, args=(self.event,))
+                t = Thread(name=resource.name, target=self._run_resource, args=(resource,))
                 logger.debug(f'starting {t.name} resource thread')
                 t.start()
-                resource_threads.append(t)
+                resource_threads[t] = resource
 
         for i in range(len(self.node.tpdo)):
             transmission_type = self.od[0x1800 + i][2].default
@@ -248,12 +268,17 @@ class App:
                 if not t.is_alive:
                     logger.error(f'resource thread {t.name} has ended')
                     t.join()
-                    resource_threads.remove(t)
+                    try:
+                        resource_threads[t].on_end()
+                    except Exception as exc:
+                        msg = f'{self.name} resource\'s on_end raised an uncaught exception: {exc}'
+                        logger.critical(msg)
+                    del resource_threads[t]
 
             self.event.wait(1)
 
         for resource in self.resources:
-            resource.end()
+            resource.on_end()
 
         for t in tpdo_threads:
             logger.debug(f'joining {t.name} thread')

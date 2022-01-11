@@ -1,7 +1,5 @@
 '''The OreSat Linux base app resource'''
 
-from threading import Event
-
 import canopen
 from loguru import logger
 
@@ -87,50 +85,6 @@ class Resource:
         '''
 
         pass
-
-    def start(self):
-        '''Starts the resource. Calls :py:func:`on_start` and handles any exceptions raised.'''
-
-        logger.info(f'starting {self._name} resource')
-        try:
-            self.on_start()
-        except Exception as exc:
-            msg = f'{self._name} resource\'s  on_start raised an uncaught exception: {exc}'
-            logger.critical(msg)
-
-    def run(self, event: Event):
-        '''Runs the resource. Will call :py:func:`on_loop` every :py:data:`delay` seconds. If the
-        resource fails :py:func:`end` will be called.
-
-        Parameters
-        ----------
-        event: threading.Event
-            The end event. Run loop will end when event is set.
-        '''
-
-        if self._delay < 0:
-            return
-
-        while not event.is_set():
-            try:
-                self.on_loop()
-            except Exception as exc:  # nothing fancy just end return if the resource loop fails
-                msg = f'{self._name} resource\'s on_loop raised an uncaught exception: {exc}'
-                logger.critical(msg)
-                self.end()
-                break
-
-            event.wait(self._delay)
-
-    def end(self):
-        '''Ends the resource. Calls :py:func:`on_end` and handles any exceptions raised.'''
-
-        logger.info(f'ending {self._name} resource')
-        try:
-            self.on_end()
-        except Exception as exc:
-            msg = f'{self._name} resource\'s on_end raised an uncaught exception: {exc}'
-            logger.critical(msg)
 
     @property
     def node(self) -> canopen.LocalNode:
