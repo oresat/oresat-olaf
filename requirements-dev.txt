@@ -1,6 +1,8 @@
-canopen
-psutil
-loguru
+setuptools
+wheel
 flake8
 sphinx
 sphinx-rtd-theme
+canopen
+psutil
+loguru
