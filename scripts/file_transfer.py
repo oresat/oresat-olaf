@@ -7,7 +7,7 @@ from os.path import basename, dirname, abspath
 
 import canopen
 
-EDS_FILE = dirname(abspath(__file__)) + '/../oresat_linux_node.eds'
+EDS_FILE = dirname(abspath(__file__)) + '/../oresat_app.eds'
 
 # valid cache selector inputs
 FREAD_CACHE = 0

@@ -1,20 +1,20 @@
 [FileInfo]
-FileName=oresat_linux_node.eds
+FileName=oresat_app.eds
 FileVersion=1
 FileRevision=1
 EDSVersion=4.0
-Description=OreSat Generic
+Description=OreSat Linux app template
 CreationTime=10:41PM
 CreationDate=03-09-2021
-CreatedBy=Ryan Medick
+CreatedBy=PSAS
 ModificationTime=12:49PM
 ModificationDate=11-26-2021
-ModifiedBy=Ryan Medick
+ModifiedBy=PSAS
 
 [DeviceInfo]
 VendorName=Portland State Aerospace Society
 VendorNumber=0
-ProductName=OreSat Generic
+ProductName=OreSat Linux app template
 ProductNumber=0
 RevisionNumber=0
 BaudRate_10=1

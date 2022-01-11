@@ -8,7 +8,7 @@ from os.path import dirname, abspath
 import canopen
 
 
-EDS_FILE = dirname(abspath(__file__)) + '/../oresat_linux_node.eds'
+EDS_FILE = dirname(abspath(__file__)) + '/../oresat_app.eds'
 OS_COMMAND_INDEX = 0x1023
 
 parser = ArgumentParser(description='Send bash command over CAN bus')

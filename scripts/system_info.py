@@ -6,7 +6,7 @@ from os.path import dirname, abspath
 
 import canopen
 
-EDS_FILE = dirname(abspath(__file__)) + '/../oresat_linux_node.eds'
+EDS_FILE = dirname(abspath(__file__)) + '/../oresat_app.eds'
 SYSTEM_INFO_INDEX = 0x3001
 
 parser = ArgumentParser(description='System info')
