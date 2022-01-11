@@ -16,7 +16,7 @@ See examples in `examples/`
 
 To run the `examples/example_node.py` example:
 
-- Install dependencies `$ pip install -r requirements.txt`
+- Install dependencies `$ pip install -r requirements-dev.txt`
 - Make a virtual CAN bus `$ sudo ./scripts/vcan.sh`
 - `$ cd examples`
 - Run example `$ python example_node.py`
@@ -33,7 +33,7 @@ OreSat Linux Node uses [sphinx] for documentation.
 
 To build docs:
 
-- Install dependencies `$ pip install sphinx sphinx-rtd-theme`
+- Install dependencies `$ pip install -r requirements-dev.txt`
 - Build docs `make -C docs html`
 - Open `docs/build/html/index.html` in a web browser
 

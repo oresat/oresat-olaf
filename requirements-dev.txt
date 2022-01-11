@@ -1,0 +1,6 @@
+canopen
+psutil
+loguru
+flake8
+sphinx
+sphinx-rtd-theme

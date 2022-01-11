@@ -12,17 +12,7 @@ from .common.oresat_file import OreSatFile, new_oresat_file
 from .common.oresat_file_cache import OreSatFileCache
 from .common.pru import PRU, PRUError, PRUState
 
-MAJOR = 0
-MINOR = 1
-PATCH = 0
-
-APP_NAME = 'oresat-linux-node'
-APP_DESCRIPTION = 'Framework for all OreSat Linux nodes'
-APP_VERSION = '{}.{}.{}'.format(MAJOR, MINOR, PATCH)
-APP_AUTHOR = 'PSAS'
-APP_EMAIL = 'oresat@pdx.edu'
-APP_URL = 'https://github.com/oresat/oresat-linux-node'
-APP_LICENSE = 'GPL-3.0'
+__version__ = '0.1.0'
 
 LOG_FORMAT = '<green>{time}</green> | {level} | <level>{message}</level>'
 '''Logger message format'''
