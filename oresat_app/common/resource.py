@@ -1,4 +1,4 @@
-'''OreSat Linux node app'''
+'''The OreSat Linux base app resource'''
 
 from threading import Event
 
@@ -6,8 +6,8 @@ import canopen
 from loguru import logger
 
 
-class App:
-    '''OreSat Linux node base app.
+class Resource:
+    '''OreSat Linux base app resource.
 
     All the `on_*` members can be overriden as needed.
     '''
@@ -19,7 +19,7 @@ class App:
         node: canopen.LocalNode
             The CANopen node. Gives acces object dictionary.
         name: str
-            Unique name for the app
+            Unique name for the resource
         delay: float
             Delay between loop calls in seconds. Set to a negative number if loop is not needed
         '''
@@ -32,7 +32,7 @@ class App:
         node.add_write_callback(self.on_write)
 
     def on_start(self):
-        '''Start the app. Should be used to setup hardware or anything that is slow.'''
+        '''Start the resource. Should be used to setup hardware or anything that is slow.'''
 
         pass
 
@@ -43,8 +43,8 @@ class App:
         pass
 
     def on_end(self):
-        '''Called when the program ends and if the apps fails. Should be used to stop hardware and
-        can be used to zero/clear app's data in object dictionary as needed.'''
+        '''Called when the program ends and if the resources fails. Should be used to stop hardware and
+        can be used to zero/clear resource's data in object dictionary as needed.'''
 
         pass
 
@@ -89,18 +89,18 @@ class App:
         pass
 
     def start(self):
-        '''Starts the app. Calls :py:func:`on_start` and handles any exceptions raised.'''
+        '''Starts the resource. Calls :py:func:`on_start` and handles any exceptions raised.'''
 
-        logger.info(f'starting {self._name} app')
+        logger.info(f'starting {self._name} resource')
         try:
             self.on_start()
         except Exception as exc:
-            logger.critical(f'{self._name} app\'s  on_start raised an uncaught exception: {exc}')
-            return  # don't continue
+            msg = f'{self._name} resource\'s  on_start raised an uncaught exception: {exc}'
+            logger.critical(msg)
 
     def run(self, event: Event):
-        '''Runs the app. Will call :py:func:`on_loop` every :py:data:`delay` seconds. If the app fails
-        :py:func:`end` will be called.
+        '''Runs the resource. Will call :py:func:`on_loop` every :py:data:`delay` seconds. If the
+        resource fails :py:func:`end` will be called.
 
         Parameters
         ----------
@@ -114,25 +114,27 @@ class App:
         while not event.is_set():
             try:
                 self.on_loop()
-            except Exception as exc:  # nothing fancy just end return if the app loop fails
-                logger.critical(f'{self._name} app\'s on_loop raised an uncaught exception: {exc}')
+            except Exception as exc:  # nothing fancy just end return if the resource loop fails
+                msg = f'{self._name} resource\'s on_loop raised an uncaught exception: {exc}'
+                logger.critical(msg)
                 self.end()
                 break
 
             event.wait(self._delay)
 
     def end(self):
-        '''Ends the app. Calls :py:func:`on_end` and handles any exceptions raised.'''
+        '''Ends the resource. Calls :py:func:`on_end` and handles any exceptions raised.'''
 
-        logger.info(f'ending {self._name} app')
+        logger.info(f'ending {self._name} resource')
         try:
             self.on_end()
         except Exception as exc:
-            logger.critical(f'{self._name} app\'s on_end raised an uncaught exception: {exc}')
+            msg = f'{self._name} resource\'s on_end raised an uncaught exception: {exc}'
+            logger.critical(msg)
 
     @property
     def node(self) -> canopen.LocalNode:
-        '''canopen.LocalNode: The local node to be used by the app. Gives acces to object
+        '''canopen.LocalNode: The local node to be used by the resource. Gives acces to object
         dictionary.'''
 
         return self._node

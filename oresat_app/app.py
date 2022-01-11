@@ -9,20 +9,20 @@ import canopen
 import psutil
 from loguru import logger
 
-from .common.app import App
+from .common.resource import Resource
 from .common.oresat_file_cache import OreSatFileCache
-from .apps.os_command import OSCommandApp
-from .apps.system_info import SystemInfoApp
-from .apps.file_caches import FileCachesApp
-from .apps.fread import FreadApp
-from .apps.fwrite import FwriteApp
-from .apps.ecss import ECSSApp
-from .apps.updater import UpdaterApp
-from .apps.logs import LogsApp
+from .resources.os_command import OSCommandResource
+from .resources.system_info import SystemInfoResource
+from .resources.file_caches import FileCachesResource
+from .resources.fread import FreadResource
+from .resources.fwrite import FwriteResource
+from .resources.ecss import ECSSResource
+from .resources.updater import UpdaterResource
+from .resources.logs import LogsResource
 
 
-class OreSatNode:
-    '''The main class that manages the CAN bus, apps, and threads.'''
+class App:
+    '''The application class that manages the CAN bus, resources, and threads.'''
 
     def __init__(self, eds: str, bus: str, node_id=0):
         '''
@@ -44,7 +44,7 @@ class OreSatNode:
 
         self.bus = bus
         self.event = Event()
-        self.apps = []
+        self.resources = []
 
         if isinstance(node_id, str):
             if node_id.startswith('0x'):
@@ -124,19 +124,19 @@ class OreSatNode:
                 cob_id = self.od[0x1800 + i][1].default
             self.od[0x1800 + i][1].value = cob_id
 
-        # default apps
-        self.add_app(OSCommandApp(self.node))
-        self.add_app(ECSSApp(self.node))
-        self.add_app(SystemInfoApp(self.node))
-        self.add_app(FileCachesApp(self.node, self.fread_cache, self.fwrite_cache))
-        self.add_app(FreadApp(self.node, self.fread_cache))
-        self.add_app(FwriteApp(self.node, self.fwrite_cache))
-        self.add_app(UpdaterApp(self.node,
-                                self.fread_cache,
-                                self.fwrite_cache,
-                                self.work_base_dir + '/updater',
-                                self.cache_base_dir + '/updater'))
-        self.add_app(LogsApp(self.node, self.fread_cache))
+        # default resources
+        self.add_resource(OSCommandResource(self.node))
+        self.add_resource(ECSSResource(self.node))
+        self.add_resource(SystemInfoResource(self.node))
+        self.add_resource(FileCachesResource(self.node, self.fread_cache, self.fwrite_cache))
+        self.add_resource(FreadResource(self.node, self.fread_cache))
+        self.add_resource(FwriteResource(self.node, self.fwrite_cache))
+        self.add_resource(UpdaterResource(self.node,
+                                          self.fread_cache,
+                                          self.fwrite_cache,
+                                          self.work_base_dir + '/updater',
+                                          self.cache_base_dir + '/updater'))
+        self.add_resource(LogsResource(self.node, self.fread_cache))
 
     def __del__(self):
 
@@ -196,30 +196,30 @@ class OreSatNode:
 
             self.event.wait(delay)
 
-    def add_app(self, app):
-        '''Add a app to be manage by `OreSatNode`'''
+    def add_resource(self, resource: Resource):
+        '''Add a resource for the app'''
 
-        logger.debug(f'adding {app.name} app')
-        self.apps.append(app)
+        logger.debug(f'adding {resource.name} resource')
+        self.resources.append(resource)
 
     def run(self):
-        '''Go into operational mode, start all the apps, start all the threads, and monitor
+        '''Go into operational mode, start all the resources, start all the threads, and monitor
         everything in a loop.'''
 
-        logger.info('node is starting')
+        logger.info('app is starting')
 
         self.node.nmt.start_heartbeat(self.od[0x1017].default)
         self.node.nmt.state = 'OPERATIONAL'
         tpdo_threads = []
-        app_threads = []
+        resource_threads = []
 
-        for app in self.apps:
-            app.start()
-            if app.delay >= 0:
-                t = Thread(name=app.name, target=app.run, args=(self.event,))
-                logger.debug(f'starting {t.name} app thread')
+        for resource in self.resources:
+            resource.start()
+            if resource.delay >= 0:
+                t = Thread(name=resource.name, target=resource.run, args=(self.event,))
+                logger.debug(f'starting {t.name} resource thread')
                 t.start()
-                app_threads.append(t)
+                resource_threads.append(t)
 
         for i in range(len(self.node.tpdo)):
             transmission_type = self.od[0x1800 + i][2].default
@@ -231,7 +231,7 @@ class OreSatNode:
                 t.start()
                 tpdo_threads.append(t)
 
-        logger.info('node is running')
+        logger.info('app is running')
         while not self.event.is_set():
             if not psutil.net_if_stats().get(self.bus).isup:
                 logger.critical(f'CAN bus {self.bus} is down')
@@ -244,31 +244,31 @@ class OreSatNode:
                     logger.error(f'tpdo thread {t.name} has ended')
                     t.join()
                     tpdo_threads.remove(t)
-            for t in app_threads:
+            for t in resource_threads:
                 if not t.is_alive:
-                    logger.error(f'app thread {t.name} has ended')
+                    logger.error(f'resource thread {t.name} has ended')
                     t.join()
-                    app_threads.remove(t)
+                    resource_threads.remove(t)
 
             self.event.wait(1)
 
-        for app in self.apps:
-            app.end()
+        for resource in self.resources:
+            resource.end()
 
         for t in tpdo_threads:
             logger.debug(f'joining {t.name} thread')
             t.join()
 
-        for t in app_threads:
-            logger.debug(f'joining {t.name} app thread')
+        for t in resource_threads:
+            logger.debug(f'joining {t.name} resource thread')
             t.join()
 
-        logger.info('node has ended')
+        logger.info('app has ended')
 
     def stop(self):
         '''End the run loop'''
 
-        logger.info('stopping node')
+        logger.info('stopping app')
         self.event.set()
 
     @property

@@ -1,12 +1,12 @@
-
 import canopen
 from loguru import logger
 
-from ..common.app import App
+from ..common.resource import Resource
 from ..common.oresat_file_cache import OreSatFileCache
 
 
-class FileCachesApp(App):
+class FileCachesResource(Resource):
+    '''Resource for interacting with the fread and fwrite caches'''
 
     def __init__(self,
                  node: canopen.LocalNode,

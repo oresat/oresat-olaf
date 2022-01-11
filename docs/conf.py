@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'OreSat Linux Node'
+project = 'OreSat Linux App'
 copyright = '2022, Portland State Aerospace Society'
 author = 'PSAS'
 

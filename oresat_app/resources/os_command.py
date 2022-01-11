@@ -1,12 +1,10 @@
-'''App for running OS (bash) commands over CAN bus'''
-
 import subprocess
 from enum import IntEnum
 
 import canopen
 from loguru import logger
 
-from ..common.app import App
+from ..common.resource import Resource
 
 
 class OSCommandState(IntEnum):
@@ -17,7 +15,8 @@ class OSCommandState(IntEnum):
     EXECUTING = 0xFF
 
 
-class OSCommandApp(App):
+class OSCommandResource(Resource):
+    '''Resource for running OS (bash) commands over CAN bus as defined by CiA 301 specs'''
 
     def __init__(self, node: canopen.LocalNode):
 

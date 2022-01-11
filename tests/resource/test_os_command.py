@@ -2,9 +2,9 @@ import unittest
 from time import sleep
 
 import canopen
-from oresat_linux_node.apps.os_command import OSCommandState, OSCommandApp
+from oresat_app.resources.os_command import OSCommandState, OSCommandResource
 
-from . import TestNode
+from . import TestApp
 
 
 def run_os_command(node: canopen.LocalNode, command: str):
@@ -18,13 +18,13 @@ def run_os_command(node: canopen.LocalNode, command: str):
 
 class TestOSCommand(unittest.TestCase):
     def setUp(self):
-        self.oresat = TestNode()
-        self.node = self.oresat.node
-        self.oresat.add_app(OSCommandApp(self.node))
-        self.oresat.start()
+        self.app = TestApp()
+        self.node = self.app.node
+        self.app.add_resource(OSCommandResource(self.node))
+        self.app.start()
 
     def tearDown(self):
-        self.oresat.stop()
+        self.app.stop()
 
     def test_os_command(self):
 

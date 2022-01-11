@@ -5,12 +5,13 @@ from time import time, clock_settime, CLOCK_REALTIME
 import canopen
 from loguru import logger
 
-from ..common.app import App
+from ..common.resource import Resource
 from ..common.oresat_file import new_oresat_file
 from ..common.oresat_file_cache import OreSatFileCache
 
 
-class LogsApp(App):
+class LogsResource(Resource):
+    '''Resource for getting logs'''
 
     def __init__(self, node: canopen.LocalNode, fread_cache: OreSatFileCache):
 

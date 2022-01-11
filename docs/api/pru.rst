@@ -1,13 +1,13 @@
 PRU
 ===
 
-.. autoclass:: oresat_linux_node.PRUState
+.. autoclass:: oresat_app.PRUState
    :show-inheritance:
    :members:
 
-.. autoexception:: oresat_linux_node.PRUError
+.. autoexception:: oresat_app.PRUError
 
-.. autoclass:: oresat_linux_node.PRU
+.. autoclass:: oresat_app.PRU
    :class-doc-from: both
    :members:
    :member-order: bysource

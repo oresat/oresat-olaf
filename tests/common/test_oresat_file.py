@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from oresat_linux_node.common.oresat_file import new_oresat_file, OreSatFile
+from oresat_app.common.oresat_file import new_oresat_file, OreSatFile
 
 
 class TestStringMethods(unittest.TestCase):

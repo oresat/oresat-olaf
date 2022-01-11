@@ -1,7 +1,7 @@
 Update Archive
 ==============
 
-An update archive is tar file that will be used by the OreSat Linux Node
+An update archive is tar file that will be used by an OreSat application
 to update the Linux board the daemon is running on. The update maker will 
 be used to generate these files.
 

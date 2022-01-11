@@ -1,9 +1,9 @@
 OreSat File
 ===========
 
-.. autofunction:: oresat_linux_node.new_oresat_file
+.. autofunction:: oresat_app.new_oresat_file
 
-.. autoclass:: oresat_linux_node.OreSatFile
+.. autoclass:: oresat_app.OreSatFile
    :class-doc-from: both
    :members:
    :member-order: bysource

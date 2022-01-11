@@ -1,7 +1,7 @@
 Updater
 =======
 
-OreSat Linux Node has the ability to update the board it is running on thru update archives.
+An OreSat application has the ability to update the board it is running on thru update archives.
 
 .. toctree::
    :maxdepth: 2
@@ -22,7 +22,7 @@ Basics
 States
 ------
 
-.. autoclass:: oresat_linux_node.updater.UpdaterState
+.. autoclass:: oresat_app.updater.UpdaterState
    :members:
    :member-order: bysource
    :noindex:

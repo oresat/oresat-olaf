@@ -1,5 +1,3 @@
-'''App for monitoring the local system'''
-
 import os
 import platform
 from time import time
@@ -7,12 +5,13 @@ from time import time
 import canopen
 import psutil
 
-from ..common.app import App
+from ..common.resource import Resource
 
 _B_TO_MB = 1024 * 1024
 
 
-class SystemInfoApp(App):
+class SystemInfoResource(Resource):
+    '''Resource for getting local system infomation'''
 
     def __init__(self, node: canopen.LocalNode):
 

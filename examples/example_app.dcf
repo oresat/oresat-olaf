@@ -1,20 +1,20 @@
 [FileInfo]
-FileName=example_node.dcf
+FileName=example_app.dcf
 FileVersion=1
 FileRevision=1
 EDSVersion=4.0
-Description=OreSat Generic
+Description=An example OreSat Linux app
 CreationTime=10:41PM
 CreationDate=03-09-2021
-CreatedBy=Ryan Medick
+CreatedBy=PSAS
 ModificationTime=12:49PM
 ModificationDate=11-26-2021
-ModifiedBy=Ryan Medick
+ModifiedBy=PSAS
 
 [DeviceInfo]
 VendorName=Portland State Aerospace Society
 VendorNumber=0
-ProductName=OreSat Generic
+ProductName=OreSat Example Board
 ProductNumber=0
 RevisionNumber=0
 BaudRate_10=1
@@ -49,7 +49,7 @@ Lines=0
 
 [DeviceComissioning]
 NodeID=0x10
-NodeName=Example OreSat Linux Node
+NodeName=Example App
 Baudrate=1000
 NetNumber=0
 NetworkName=

@@ -4,11 +4,12 @@ from time import time, clock_settime, CLOCK_REALTIME
 import canopen
 from loguru import logger
 
-from ..common.app import App
+from ..common.resource import Resource
 from ..common.ecss import scet_int_from_time, utc_int_from_time, scet_int_to_time, utc_int_to_time
 
 
-class ECSSApp(App):
+class ECSSResource(Resource):
+    '''Resource for ECSS CANBus Extended Protocal standards'''
 
     def __init__(self, node: canopen.LocalNode):
 
@@ -41,6 +42,6 @@ class ECSSApp(App):
 
         if geteuid() == 0:
             clock_settime(CLOCK_REALTIME, ts)
-            logger.info(f'{self.name} app has set system time')
+            logger.info(f'{self.name} resource has set system time')
         else:
-            logger.error(f'{self.name} app cannot set time, not running as root')
+            logger.error(f'{self.name} resource cannot set time, not running as root')

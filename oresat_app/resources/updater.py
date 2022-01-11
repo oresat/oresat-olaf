@@ -1,12 +1,12 @@
-
 import canopen
 
-from ..common.app import App
-from ..updater import Updater
+from ..common.resource import Resource
 from ..common.oresat_file_cache import OreSatFileCache
+from ..updater import Updater
 
 
-class UpdaterApp(App):
+class UpdaterResource(Resource):
+    '''Resource for interacting with the updater'''
 
     index = 0x3100
     sub_status = 0x1

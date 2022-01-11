@@ -1,5 +1,3 @@
-'''Fread app'''
-
 from os import remove, listdir
 from os.path import basename
 from pathlib import Path
@@ -7,11 +5,12 @@ from pathlib import Path
 import canopen
 from loguru import logger
 
-from ..common.app import App
+from ..common.resource import Resource
 from ..common.oresat_file_cache import OreSatFileCache
 
 
-class FreadApp(App):
+class FreadResource(Resource):
+    '''Resource for readings file over the CAN bus'''
 
     def __init__(self,
                  node: canopen.LocalNode,
