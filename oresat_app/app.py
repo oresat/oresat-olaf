@@ -231,7 +231,7 @@ class App:
             try:
                 resource.on_start()
             except Exception as exc:
-                msg = f'{self.name} resource\'s on_start raised an uncaught exception: {exc}'
+                msg = f'{resource.name} resource\'s on_start raised an uncaught exception: {exc}'
                 logger.critical(msg)
                 continue
 
@@ -271,8 +271,8 @@ class App:
                     try:
                         resource_threads[t].on_end()
                     except Exception as exc:
-                        msg = f'{self.name} resource\'s on_end raised an uncaught exception: {exc}'
-                        logger.critical(msg)
+                        logger.critical(f'{resource_threads[t].name} resource\'s on_end raised an '
+                                        f'uncaught exception: {exc}')
                     del resource_threads[t]
 
             self.event.wait(1)
