@@ -34,7 +34,6 @@ INSTRUCTIONS_WITH_FILES = [
 
 OLU_STATUS_KEYWORD = 'olu-status'
 DPKG_STATUS_KEYWORD = 'dpkg-status'
-DPKG_STATUS_FILE = '/var/lib/dpkg/status'
 
 
 class UpdaterError(Exception):
@@ -92,6 +91,10 @@ class Updater:
         self._instruction_percent = 0
         self._command = ''
 
+        self._has_dpkg = isfile('/bin/dpkg')
+        if not self._has_dpkg:
+            logger.error('dpkg is not installed, updates will not start')
+
     def _clear_work_dir(self):
         '''Clear the working directory.'''
 
@@ -143,6 +146,9 @@ class Updater:
 
         if self._state == UpdaterState.UPDATING:
             raise UpdaterError('can\'t start an new update while already updating')
+
+        if not self._has_dpkg:
+            raise UpdaterError('cannot run a update, missing dpkg')
 
         update_archive_file_path = ''
         self._state = UpdaterState.UPDATING
@@ -245,7 +251,7 @@ class Updater:
             with tarfile.open(file_path, 'r:xz') as t:
                 t.extractall(self._work_dir)
         except tarfile.TarError:
-            raise UpdaterError(file_name + ' is a invalid .xztar.xz')
+            raise UpdaterError(file_name + ' is a invalid .tar.xz')
 
         instructions_file_path = self._work_dir + INSTRUCTIONS_FILE
         if not isfile(instructions_file_path):
@@ -352,14 +358,10 @@ class Updater:
             Path to new status file or empty string on failure.
         '''
 
-        dpkg_status = False
-        if isfile(DPKG_STATUS_FILE):
-            dpkg_status = True
-
         # make the file names
         olu_file = '/tmp/' + new_oresat_file(keyword=OLU_STATUS_KEYWORD)
         olu_tar = '/tmp/' + new_oresat_file(keyword=OLU_STATUS_KEYWORD, ext='.tar.xz')
-        if dpkg_status:
+        if self._has_dpkg:
             dpkg_file = new_oresat_file(keyword=DPKG_STATUS_KEYWORD)
 
         with open(olu_file, 'w') as f:
@@ -367,12 +369,22 @@ class Updater:
 
         with tarfile.open(olu_tar, 'w:xz') as t:
             t.add(olu_file, arcname=basename(olu_file))
-            if dpkg_status:
-                t.add(DPKG_STATUS_FILE, arcname=basename(dpkg_file))
+
+            if self._has_dpkg:
+                dpkg_status_file = '/var/lib/dpkg/status'
+                if isfile(dpkg_status_file):
+                    t.add(dpkg_status_file, arcname=basename(dpkg_file))
+                else:
+                    logger.error(f'could not find {dpkg_status_file}')
 
         remove(olu_file)
 
         return olu_tar
+
+    @property
+    def has_dpkg(self) -> bool:
+        '''bool: system has dpkg or not'''
+        return self._has_dpkg
 
     @property
     def status(self) -> UpdaterState:
