@@ -1,8 +1,9 @@
 import canopen
+from loguru import logger
 
 from ..common.resource import Resource
 from ..common.oresat_file_cache import OreSatFileCache
-from ..updater import Updater
+from ..updater import Updater, UpdaterError
 
 
 class UpdaterResource(Resource):
@@ -42,7 +43,10 @@ class UpdaterResource(Resource):
             self._updater.add_update(self._fwrite_cache.dir + '/' + i)
 
         if self.obj[self.sub_update].value:
-            self._updater.update()
+            try:
+                self._updater.update()
+            except UpdaterError as exc:
+                logger.error(exc)
             self.obj[self.sub_update].value = False
 
         if self.obj[self.sub_make_statue_file].value:

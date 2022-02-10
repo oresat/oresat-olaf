@@ -287,10 +287,10 @@ class Updater:
 
         # valid instructions and make commands
         for i in instructions:
-            if i not in instructions:
-                raise UpdaterError(i + ' is not a valid instruction type')
+            if i not in INSTRUCTIONS:
+                raise UpdaterError(f'{i} is not a valid instruction type')
             if not isinstance(instructions[i], list):
-                raise UpdaterError(i + ' values is not a list')
+                raise UpdaterError(f'{i} values is not a list')
 
             work_dir_path = ' ' + self._work_dir + '/'
 
@@ -298,7 +298,7 @@ class Updater:
                 # make sure all file exist
                 for j in instructions[i]:
                     if isfile(self._work_dir + '/' + j):
-                        UpdaterError(i + ' is missing ' + j)
+                        UpdaterError(f'{i} is missing {j}')
 
                 command = INSTRUCTIONS[i] + ' ' + work_dir_path.join(instructions[i])
             else:
