@@ -7,8 +7,7 @@
 
 A pythonic CANopen application framework for all OreSat Linux boards. Built
 ontop on [python-canopen]. It is designed to handle all the common OreSat
-[CANopen] Node functionality including support for [ECSS CANBus Extended
-Protocal], file transfer over CAN, and updating the Linux board.
+[CANopen] Node functionality including support for [ECSS CANBus Extended Protocol], file transfer over CAN, and updating the Linux board.
 
 ## Examples
 
@@ -42,4 +41,4 @@ To build docs:
 [sphinx]:https://www.sphinx-doc.org/en/master/
 [python-canopen]:https://github.com/christiansandberg/canopen
 [CANopen]:https://www.can-cia.org/canopen
-[ECSS CANBus Extended Protocal]:https://ecss.nl/standard/ecss-e-st-50-15c-space-engineering-canbus-extension-protocol-1-may-2015/
+[ECSS CANBus Extended Protocol]:https://ecss.nl/standard/ecss-e-st-50-15c-space-engineering-canbus-extension-protocol-1-may-2015/
