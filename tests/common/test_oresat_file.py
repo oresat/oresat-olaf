@@ -4,7 +4,7 @@ import unittest
 from oresat_app.common.oresat_file import new_oresat_file, OreSatFile
 
 
-class TestStringMethods(unittest.TestCase):
+class TestOreSatFile(unittest.TestCase):
     def test_new_oresat_file(self):
 
         file = new_oresat_file('keyword', 'test', 100)

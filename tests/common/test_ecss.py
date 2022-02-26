@@ -5,7 +5,7 @@ from oresat_app.common.ecss import scet_int_from_time, scet_int_to_time, \
     utc_int_from_time, utc_int_to_time
 
 
-class TestStringMethods(unittest.TestCase):
+class TestECSS(unittest.TestCase):
     def test_scet_time(self):
         now = time()
         scet = scet_int_from_time(now)
