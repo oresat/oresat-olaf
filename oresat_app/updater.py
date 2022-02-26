@@ -1,4 +1,4 @@
-'''Linux updater daemon'''
+'''Linux updater updater'''
 
 import json
 import tarfile
@@ -48,7 +48,7 @@ class UpdaterState(IntEnum):
     PRE_UPDATE_FAILED = 0x1
     '''The last update failed during the inital non critical section. Either the was an error using the
     file cache, when opening tarfile, or reading the instructions file.'''
-    UPDATED_FAILED = 0x2
+    UPDATE_FAILED = 0x2
     '''The update failed during the critical section. The updater fail while following the
     instructions.'''
     UPDATING = 0xFF
@@ -91,7 +91,7 @@ class Updater:
         self._instruction_percent = 0
         self._command = ''
 
-        self._has_dpkg = isfile('/bin/dpkg')
+        self._has_dpkg = isfile('/usr/bin/dpkg')
         if not self._has_dpkg:
             logger.error('dpkg is not installed, updates will not start')
 
@@ -177,7 +177,7 @@ class Updater:
 
         # if not resuming, get new update archive from cache
         if update_archive_file_path == '' and len(self._cache) != 0:
-            update_archive_file_path = self._cache.get(self._work_dir)
+            update_archive_file_path = self._cache.pop(self._work_dir)
             self._update_archive = basename(update_archive_file_path)
             logger.info(f'got {self._update_archive} from cache')
 
@@ -189,7 +189,7 @@ class Updater:
         logger.info('extracting files from update')
         try:
             self._extract_update_archive(update_archive_file_path)
-        except UpdaterError as exc:
+        except Exception as exc:
             logger.error(exc)
             self._clear_work_dir()
             self._state = UpdaterState.PRE_UPDATE_FAILED
@@ -198,7 +198,7 @@ class Updater:
         logger.info('reading instructions file')
         try:
             commands = self._read_instructions()
-        except UpdaterError as exc:
+        except Exception as exc:
             logger.error(exc)
             self._clear_work_dir()
             self._state = UpdaterState.PRE_UPDATE_FAILED
@@ -210,7 +210,7 @@ class Updater:
             # If anything fails/errors the board's software could break.
             # All errors are log at critical level.
             self._run_instructions(commands)
-        except UpdaterError as exc:
+        except Exception as exc:
             logger.critical(exc)
             self._clear_work_dir()
             self._cache.clear()
@@ -253,7 +253,7 @@ class Updater:
         except tarfile.TarError:
             raise UpdaterError(file_name + ' is a invalid .tar.xz')
 
-        instructions_file_path = self._work_dir + INSTRUCTIONS_FILE
+        instructions_file_path = self._work_dir + '/' + INSTRUCTIONS_FILE
         if not isfile(instructions_file_path):
             raise UpdaterError(file_name + ' is missing an instructions file')
 
@@ -280,29 +280,37 @@ class Updater:
 
         commands = []
 
+        instructions_file_path = self._work_dir + '/' + INSTRUCTIONS_FILE
+        if not isfile(instructions_file_path):
+            raise UpdaterError(f'cannot find {INSTRUCTIONS_FILE}')
+
+        with open(instructions_file_path, 'r') as f:
+            instructions_str = f.read()
+
         try:
-            instructions = json.loads(self._work_dir + '/' + INSTRUCTIONS_FILE)
+            instructions = json.loads(instructions_str)
         except json.JSONDecodeError:
             raise UpdaterError('instructions file was mising or did not contain a valid json')
 
         # valid instructions and make commands
         for i in instructions:
-            if i not in INSTRUCTIONS:
-                raise UpdaterError(f'{i} is not a valid instruction type')
-            if not isinstance(instructions[i], list):
-                raise UpdaterError(f'{i} values is not a list')
+            i_type = i['type']
+            i_items = i['items']
+            if i_type not in INSTRUCTIONS:
+                raise UpdaterError(f'{i_type} is not a valid instruction type')
+            if not isinstance(i_items, list):
+                raise UpdaterError(f'{i_type} values is not a list')
 
-            work_dir_path = ' ' + self._work_dir + '/'
-
-            if i in INSTRUCTIONS_WITH_FILES:
+            if i_type in INSTRUCTIONS_WITH_FILES:
                 # make sure all file exist
-                for j in instructions[i]:
-                    if isfile(self._work_dir + '/' + j):
-                        UpdaterError(f'{i} is missing {j}')
+                for j in i_items:
+                    if not isfile(self._work_dir + '/' + j):
+                        UpdaterError(f'{i_type} is missing file {j}')
 
-                command = INSTRUCTIONS[i] + ' ' + work_dir_path.join(instructions[i])
+                i_items_with_paths = [self._work_dir + '/' + i for i in i_items]
+                command = INSTRUCTIONS[i_type] + ' ' + ' '.join(i_items_with_paths)
             else:
-                command = INSTRUCTIONS[i] + ' ' + ' '.join(instructions[i])
+                command = INSTRUCTIONS[i_type] + ' ' + ' '.join(i_items)
 
             commands.append(command)
 
@@ -338,13 +346,13 @@ class Updater:
                     if len(line) != 0:
                         logger.error(line)
 
-                raise UpdaterError('update failed!')
+                raise UpdaterError(f'update failed on {command} with {out.returncode}!')
 
             for line in out.stdout.decode('utf-8').split('\n'):
                 if len(line) != 0:
                     logger.info(line)
 
-            self.instruction_percent = self.total_instructions // self._instruction_index
+            self._instruction_percent = self._instruction_index // self._total_instructions
 
         self._instruction_percent = 100
 
@@ -396,13 +404,13 @@ class Updater:
     def updates_cached(self) -> int:
         '''int: The number of update archives in cache.'''
 
-        return len(self._cache)
+        return len(self._cache.files())
 
     @property
     def list_updates(self) -> str:
         '''str: Get a JSON list of file_name in cache.'''
 
-        return json.dumps(self._cache)
+        return json.dumps([i.name for i in self._cache.files()])
 
     @property
     def update_archive(self) -> str:
