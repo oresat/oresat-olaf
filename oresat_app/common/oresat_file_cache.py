@@ -63,8 +63,15 @@ class OreSatFileCache:
                 shutil.copy(file_path, new_file_path)
 
             oresat_file = OreSatFile(new_file_path)
-            self._data.append(oresat_file)
-            self._data = sorted(self._data, reverse=True)
+
+            overwrite = False
+            for i in self._data:
+                if i.name == oresat_file.name:
+                    overwrite = True
+
+            if not overwrite:
+                self._data.append(oresat_file)
+                self._data = sorted(self._data, reverse=True)
 
     def remove(self, file_name: str):
         '''Remove a file from cache
