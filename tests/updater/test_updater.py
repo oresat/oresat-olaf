@@ -2,7 +2,7 @@ import shutil
 import json
 import tempfile
 import unittest
-from os import remove
+from os import remove, geteuid
 from os.path import isfile, dirname, abspath
 
 from oresat_app.updater import Updater, UpdaterState, is_update_archive
@@ -87,14 +87,14 @@ class TestUpdater(unittest.TestCase):
         updater._extract_update_archive(PATH + '/test_update_1611940000.tar.xz')
         updater._read_instructions()
 
-    @unittest.skipUnless(isfile('/usr/bin/dpkg'), 'requires dpkg')
+    @unittest.skipUnless(isfile('/usr/bin/dpkg') and geteuid() == 0, 'requires dpkg and root')
     def test_run_instructions(self):
         updater = Updater(self._work_dir, self._cache_dir)
         updater._extract_update_archive(PATH + '/test_update_1611940000.tar.xz')
         commands = updater._read_instructions()
         updater._run_instructions(commands)
 
-    @unittest.skipUnless(isfile('/usr/bin/dpkg'), 'requires dpkg')
+    @unittest.skipUnless(isfile('/usr/bin/dpkg') and geteuid() == 0, 'requires dpkg and root')
     def test_update(self):
         updater = Updater(self._work_dir, self._cache_dir)
         updates_cached = updater.updates_cached
