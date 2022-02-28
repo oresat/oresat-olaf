@@ -29,7 +29,7 @@ class OreSatFileCache:
         for f in listdir(self._dir):
             oresat_file = OreSatFile(self._dir + f)
             self._data.append(oresat_file)
-        self._data = sorted(self._data, reverse=True)
+        self._data = sorted(self._data)
 
     def __len__(self) -> int:
 
@@ -71,7 +71,7 @@ class OreSatFileCache:
 
             if not overwrite:
                 self._data.append(oresat_file)
-                self._data = sorted(self._data, reverse=True)
+                self._data = sorted(self._data)
 
     def remove(self, file_name: str):
         '''Remove a file from cache
