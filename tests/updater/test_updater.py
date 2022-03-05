@@ -5,7 +5,7 @@ import unittest
 from os import remove, geteuid
 from os.path import isfile, dirname, abspath
 
-from oresat_app.updater import Updater, UpdaterState, is_update_archive
+from olaf.updater import Updater, UpdaterState, is_update_archive
 
 PATH = dirname(abspath(__file__)) + '/test_files'
 

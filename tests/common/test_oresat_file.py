@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from oresat_app.common.oresat_file import new_oresat_file, OreSatFile
+from olaf.common.oresat_file import new_oresat_file, OreSatFile
 
 
 class TestOreSatFile(unittest.TestCase):

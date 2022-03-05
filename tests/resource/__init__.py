@@ -2,7 +2,7 @@ from threading import Thread, Event
 from loguru import logger
 
 import canopen
-from oresat_app import Resource
+from olaf import Resource
 
 
 class TestApp(Thread):

@@ -1,7 +1,7 @@
 import unittest
 from time import time
 
-from oresat_app.common.ecss import scet_int_from_time, scet_int_to_time, \
+from olaf.common.ecss import scet_int_from_time, scet_int_to_time, \
     utc_int_from_time, utc_int_to_time
 
 

@@ -7,7 +7,7 @@ sys.path.append('..')
 
 from argparse import ArgumentParser
 
-from oresat_app import app_args_parser, parse_app_args, App
+from olaf import app_args_parser, parse_app_args, App
 
 # add the parent ArgumentParser for standard OreSat app args
 parser = ArgumentParser(parents=[app_args_parser])

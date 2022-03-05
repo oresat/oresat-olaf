@@ -1,7 +1,7 @@
 import unittest
 from time import sleep
 
-from oresat_app.resources.ecss import ECSSResource
+from olaf.resources.ecss import ECSSResource
 
 from . import TestApp
 

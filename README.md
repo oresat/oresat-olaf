@@ -1,13 +1,14 @@
-# OreSat Linux App
+# OreSat Linux App Framework (OLAF)
 
-[![License](https://img.shields.io/github/license/oresat/oresat-linux-app)](./LICENSE)
-[![Issues](https://img.shields.io/github/issues/oresat/oresat-linux-app)](https://github.com/oresat/oresat-linux-app/issues)
-[![Docs](https://readthedocs.org/projects/oresat-linux-app/badge/?version=latest)](https://oresat-linux-app.readthedocs.io/en/latest/?badge=latest)
-[![Tests](https://github.com/oresat/oresat-linux-app/actions/workflows/tests.yaml/badge.svg)](https://github.com/oresat/oresat-linux-app/actions/workflows/tests.yaml)
+[![License](https://img.shields.io/github/license/oresat/oresat-linux-app-framework)](./LICENSE)
+[![Issues](https://img.shields.io/github/issues/oresat/oresat-linux-app-framework)](https://github.com/oresat/oresat-linux-app-framework/issues)
+[![Docs](https://readthedocs.org/projects/oresat-linux-app-framework/badge/?version=latest)](https://oresat-linux-app-framework.readthedocs.io/en/latest/?badge=latest)
+[![Tests](https://github.com/oresat/oresat-linux-app-framework/actions/workflows/tests.yaml/badge.svg)](https://github.com/oresat/oresat-linux-app-framework/actions/workflows/tests.yaml)
 
 A pythonic CANopen application framework for all OreSat Linux boards. Built
 ontop on [python-canopen]. It is designed to handle all the common OreSat
-[CANopen] Node functionality including support for [ECSS CANBus Extended Protocol], file transfer over CAN, and updating the Linux board.
+[CANopen] Node functionality including support for [ECSS CANBus Extended
+Protocol], file transfer over CAN, and updating the Linux board.
 
 ## Examples
 

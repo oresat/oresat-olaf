@@ -2,7 +2,7 @@ import unittest
 from time import sleep
 
 import canopen
-from oresat_app.resources.os_command import OSCommandState, OSCommandResource
+from olaf.resources.os_command import OSCommandState, OSCommandResource
 
 from . import TestApp
 
