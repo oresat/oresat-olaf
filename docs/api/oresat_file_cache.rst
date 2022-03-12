@@ -1,7 +1,7 @@
 OreSat File Cache
 =================
 
-.. autoclass:: oresat_app.OreSatFileCache
+.. autoclass:: olaf.OreSatFileCache
    :class-doc-from: both
    :members:
    :member-order: bysource

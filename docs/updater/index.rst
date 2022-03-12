@@ -22,7 +22,7 @@ Basics
 States
 ------
 
-.. autoclass:: oresat_app.updater.UpdaterState
+.. autoclass:: olaf.updater.UpdaterState
    :members:
    :member-order: bysource
    :noindex:

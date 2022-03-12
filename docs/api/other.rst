@@ -4,7 +4,7 @@ Other
 Logger
 ------
 
-OreSat Linux App make use of the `loguru`_ library internally, so an app should make use its logger
+OLAF makes use of the `loguru`_ library internally, so an app should make use its logger
 as needed.
 
 **How to:**
@@ -20,10 +20,10 @@ as needed.
 Argument Parser
 ---------------
 
-.. autodata:: oresat_app.app_args_parser
+.. autodata:: olaf.app_args_parser
    :annotation:
 
-.. autofunction:: oresat_app.parse_app_args
+.. autofunction:: olaf.parse_app_args
 
 **How to:**
 
@@ -31,7 +31,7 @@ Argument Parser
 
     from argparse import ArgumentParser
 
-    from oresat_app import app_args_parser, parse_app_args
+    from olaf import app_args_parser, parse_app_args
 
     parser = ArgumentParser(parents=[app_args_parser])
     parser.add_argument('-m', help='message')

@@ -1,7 +1,7 @@
-Welcome to OreSat Linux App's documentation!
-=============================================
+Welcome to OreSat Linux App Framework's documentation!
+======================================================
 
-A pythonic application framework for all OreSat Linux boards.
+OreSat Linux App Framework (aka OLAF) is a pythonic application framework for all OreSat Linux boards.
 
 .. warning::
     This is still a work in progress.

@@ -1,13 +1,13 @@
 PRU
 ===
 
-.. autoclass:: oresat_app.PRUState
+.. autoclass:: olaf.PRUState
    :show-inheritance:
    :members:
 
-.. autoexception:: oresat_app.PRUError
+.. autoexception:: olaf.PRUError
 
-.. autoclass:: oresat_app.PRU
+.. autoclass:: olaf.PRU
    :class-doc-from: both
    :members:
    :member-order: bysource
