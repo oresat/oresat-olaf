@@ -87,7 +87,7 @@ class OreSatFileCache:
         with self._lock:
             for f in self._data:
                 if f.name == file_name:
-                    remove(self._dir + f.name)  #remove file inside cache directory
+                    remove(self._dir + f.name)
 
     def peek(self) -> str:
         '''Get the oldest file name
