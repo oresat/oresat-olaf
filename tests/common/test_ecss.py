@@ -1,8 +1,8 @@
 import unittest
+
 from time import time
 
-from olaf.common.ecss import scet_int_from_time, scet_int_to_time, \
-    utc_int_from_time, utc_int_to_time
+from olaf.common.ecss import scet_int_from_time, scet_int_to_time, utc_int_from_time, utc_int_to_time
 
 
 class TestECSS(unittest.TestCase):

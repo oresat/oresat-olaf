@@ -1,7 +1,7 @@
 
 import shutil
 from os import listdir, remove
-from os.path import basename, abspath
+from os.path import basename, abspath, getctime, isfile
 from pathlib import Path
 from threading import Lock
 from copy import deepcopy
@@ -24,12 +24,15 @@ class OreSatFileCache:
         self._data = []
         self._lock = Lock()
 
-        Path(self._dir).mkdir(parents=True, exist_ok=True)
+        if(isfile(abspath(self._dir))):
+            print("Cannot create new directory with an existing file name.")
+        else:
+            Path(self._dir).mkdir(parents=True, exist_ok=True)
 
-        for f in listdir(self._dir):
-            oresat_file = OreSatFile(self._dir + f)
-            self._data.append(oresat_file)
-        self._data = sorted(self._data)
+            for f in listdir(self._dir):
+                oresat_file = OreSatFile(self._dir + f)
+                self._data.append(oresat_file)
+            self._data = sorted(self._data)
 
     def __len__(self) -> int:
 
@@ -85,10 +88,9 @@ class OreSatFileCache:
         with self._lock:
             for f in self._data:
                 if f.name == file_name:
-                    remove(f.path)
-                    self._data.remove(f)
+                    remove(self._dir + f.name)  #remove file inside cache directory
 
-    def peak(self) -> str:
+    def peek(self) -> str:
         '''Get the oldest file name
 
         Returns
@@ -99,11 +101,11 @@ class OreSatFileCache:
 
         with self._lock:
             if len(self._data) > 0:
-                file_name = self._data[0].name
+                oldest_file = self._data[0].name
             else:
-                file_name = ''
+                oldest_file = ''
 
-        return file_name
+        return basename(oldest_file)
 
     def pop(self, dir_path: str, copy: bool = False) -> str:
         '''Pop the oldest file from the cache
@@ -127,13 +129,14 @@ class OreSatFileCache:
 
         with self._lock:
             if len(self._data) > 0:
-                file = self._data[0]
-                dest = dir_path + file.name
+                #oldest_file = min(full_path, key=getctime)
+                oldest_file = self._data[0]
+                dest = dir_path + oldest_file.name
                 if copy:
-                    shutil.copy(self._dir + file.name, dest)
+                    shutil.copy(self._dir + oldest_file.name, dest)
                 else:
-                    shutil.move(self._dir + file.name, dest)
-                    self._data.remove(file)
+                    shutil.move(self._dir + oldest_file.name, dest)
+                    self._data.remove(oldest_file)
             else:
                 dest = ''
 
