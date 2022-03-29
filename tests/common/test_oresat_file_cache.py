@@ -19,8 +19,6 @@ from olaf.common.oresat_file import new_oresat_file
 
 
 class TestOreSatFileCache(unittest.TestCase):
-
-
     def test_oresat_file_cache__init__(self):
 
         # TEST:non-existing directory name
@@ -61,7 +59,6 @@ class TestOreSatFileCache(unittest.TestCase):
         OreSatFileCache(dir_name)
         remove(abspath(dir_name))
 
-
     def test_oresat_file_cache_add(self):
 
         # TEST: populated directory with good file name conventions
@@ -94,8 +91,7 @@ class TestOreSatFileCache(unittest.TestCase):
             OreSatFileCache.add(result, file_path, True)
 
         # cleanup good_cache
-        rmtree(abspath(dir_name), ignore_errors = True)
-
+        rmtree(abspath(dir_name), ignore_errors=True)
 
         # TEST: populate directory with BAD file name conventions
         dir_name = 'bad_cache'
@@ -113,7 +109,6 @@ class TestOreSatFileCache(unittest.TestCase):
 
         # cleanup bad_cache directory
         rmtree(abspath(dir_name), ignore_errors=True)
-
 
     def test_oresat_file_cache_remove(self):
 
@@ -135,7 +130,6 @@ class TestOreSatFileCache(unittest.TestCase):
         # cleanup remove_cache
         rmtree(abspath(dir_name), ignore_errors=True)
 
-
     def test_oresat_file_cache_peek(self):
 
         # TEST: Get the oldest file name or returns empty string if none
@@ -147,12 +141,11 @@ class TestOreSatFileCache(unittest.TestCase):
             with open(name, 'w'):
                 pass
             OreSatFileCache.add(result, name, True)
- 
+
         self.assertEqual(OreSatFileCache.peek(result), file_names[0])
 
         # cleanup peek_cache
         rmtree(abspath(dir_name), ignore_errors=True)
-
 
     def test_oresat_file_cache_pop(self):
 
@@ -167,7 +160,7 @@ class TestOreSatFileCache(unittest.TestCase):
         except FileNotFoundError:
             print('Remove files from pop_cache or delete the directory first.')
 
-        #TEST: Pop oldest file in cache via Move
+        # TEST: Pop oldest file in cache via Move
         dir_name = 'pop_cache'
         result = OreSatFileCache(dir_name)
 
@@ -189,11 +182,10 @@ class TestOreSatFileCache(unittest.TestCase):
         self.assertEqual(dest_path, result2._dir + file_names[1])
         self.assertTrue(exists(result._dir + file_names[1]))
         self.assertTrue(exists(result2._dir + file_names[1]))
-        
+
         # cleanup
         rmtree(abspath(dir_name), ignore_errors=True)
         rmtree(abspath(dir_name2), ignore_errors=True)
-
 
     def test_oresat_file_cache_get(self):
 
@@ -204,23 +196,23 @@ class TestOreSatFileCache(unittest.TestCase):
         dir_name2 = 'get_copy'
         result2 = OreSatFileCache(dir_name2)
 
-        file_names = ['get_file_999.txt','get_file_111.txt']
+        file_names = ['get_file_999.txt', 'get_file_111.txt']
         for name in file_names:
             with open(name, 'w'):
                 pass
             OreSatFileCache.add(result, name, True)
-            
-        dest_path = OreSatFileCache.get(result, 'get_file_111.txt', abspath(dir_name2), True)    # copy is made
+
+        dest_path = OreSatFileCache.get(result, 'get_file_111.txt', abspath(dir_name2), True)
         self.assertEqual(dest_path, result2._dir + 'get_file_111.txt')
 
-        dest_path = OreSatFileCache.get(result, 'get_file_999.txt', abspath(dir_name2), False)   # file is moved
+        dest_path = OreSatFileCache.get(result, 'get_file_999.txt', abspath(dir_name2), False)
         self.assertEqual(dest_path, result2._dir + 'get_file_999.txt')
 
-        self.assertTrue(exists(result._dir + 'get_file_111.txt'))   # File original still exist in main dir (result)
-        self.assertTrue(exists(result2._dir + 'get_file_111.txt'))  # File copy is made in destination dir (result2)
+        self.assertTrue(exists(result._dir + 'get_file_111.txt'))
+        self.assertTrue(exists(result2._dir + 'get_file_111.txt'))
 
-        self.assertFalse(exists(result._dir + 'get_file_999.txt'))  # File original is moved from main dir (result)
-        self.assertTrue(exists(result2._dir + 'get_file_999.txt'))  # File original is moved to dest dir (result2)
+        self.assertFalse(exists(result._dir + 'get_file_999.txt'))
+        self.assertTrue(exists(result2._dir + 'get_file_999.txt'))
 
         # Raises: FileNotFoundError when filename is not in cache
         with self.assertRaises(FileNotFoundError):
@@ -235,7 +227,6 @@ class TestOreSatFileCache(unittest.TestCase):
         # cleanup get_cache, get_copy
         rmtree(abspath(dir_name), ignore_errors=True)
         rmtree(abspath(dir_name2), ignore_errors=True)
-
 
     def test_oresat_file_cache_files(self):
 
@@ -286,12 +277,11 @@ class TestOreSatFileCache(unittest.TestCase):
         # cleanup file_cache
         rmtree(abspath(dir_name), ignore_errors=True)
 
-
     def test_oresat_file_cache_clear(self):
 
         dir_name = 'clear_cache'
         result = OreSatFileCache(dir_name)
-        
+
         file_name = 'clear_file_123.txt'
         with open(file_name, 'w'):
             pass
