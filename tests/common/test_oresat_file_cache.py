@@ -1,6 +1,6 @@
-#uncomment next two lines to run 'python3 -m unittest' within the same directory
-import sys
-sys.path.append('../../')
+#uncomment next two lines to run test within the same directory
+#import sys
+#sys.path.append('../../')
 
 import unittest
 
