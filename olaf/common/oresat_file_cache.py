@@ -1,7 +1,6 @@
-
 import shutil
 from os import listdir, remove
-from os.path import basename, abspath, getctime, isfile
+from os.path import basename, abspath, isfile
 from pathlib import Path
 from threading import Lock
 from copy import deepcopy
@@ -105,7 +104,7 @@ class OreSatFileCache:
             else:
                 oldest_file = ''
 
-        return basename(oldest_file)
+        return oldest_file
 
     def pop(self, dir_path: str, copy: bool = False) -> str:
         '''Pop the oldest file from the cache
@@ -129,7 +128,6 @@ class OreSatFileCache:
 
         with self._lock:
             if len(self._data) > 0:
-                #oldest_file = min(full_path, key=getctime)
                 oldest_file = self._data[0]
                 dest = dir_path + oldest_file.name
                 if copy:
