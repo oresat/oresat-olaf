@@ -1,5 +1,4 @@
 import unittest
-
 from time import time
 
 from olaf.common.ecss import scet_int_from_time, scet_int_to_time, \

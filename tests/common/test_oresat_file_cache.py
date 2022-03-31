@@ -1,20 +1,9 @@
-import sys
-sys.path.append('../../')
-
 import unittest
-
-import threading
-
-from time import sleep
-
 from shutil import rmtree
-
 from os import rmdir, remove, listdir
-
 from os.path import basename, abspath, exists
 
 from olaf.common.oresat_file_cache import OreSatFileCache
-
 from olaf.common.oresat_file import new_oresat_file
 
 
@@ -56,7 +45,8 @@ class TestOreSatFileCache(unittest.TestCase):
         dir_name = 'existing_file.xyz'
         with open(dir_name, 'w'):
             pass
-        OreSatFileCache(dir_name)
+        with self.assertRaises(Exception):
+            OreSatFileCache(dir_name)
         remove(abspath(dir_name))
 
     def test_oresat_file_cache_add(self):
@@ -293,7 +283,3 @@ class TestOreSatFileCache(unittest.TestCase):
         # cleanup
         rmdir(dir_name)
         remove(abspath(file_name))
-
-
-if __name__ == '__main__':
-    unittest.main()

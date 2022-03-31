@@ -24,14 +24,14 @@ class OreSatFileCache:
         self._lock = Lock()
 
         if(isfile(abspath(self._dir))):
-            print("Cannot create new directory with an existing file name.")
-        else:
-            Path(self._dir).mkdir(parents=True, exist_ok=True)
+            raise Exception("Cannot create new directory with an existing file name.")
 
-            for f in listdir(self._dir):
-                oresat_file = OreSatFile(self._dir + f)
-                self._data.append(oresat_file)
-            self._data = sorted(self._data)
+        Path(self._dir).mkdir(parents=True, exist_ok=True)
+
+        for f in listdir(self._dir):
+            oresat_file = OreSatFile(self._dir + f)
+            self._data.append(oresat_file)
+        self._data = sorted(self._data)
 
     def __len__(self) -> int:
 
@@ -88,6 +88,7 @@ class OreSatFileCache:
             for f in self._data:
                 if f.name == file_name:
                     remove(self._dir + f.name)
+                    self._data.remove(f)
 
     def peek(self) -> str:
         '''Get the oldest file name
