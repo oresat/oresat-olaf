@@ -1,4 +1,4 @@
-# OreSat Linux App Framework (OLAF)
+# OLAF (OreSat Linux App Framework)
 
 [![License](https://img.shields.io/github/license/oresat/oresat-olaf)](./LICENSE)
 [![Issues](https://img.shields.io/github/issues/oresat/oresat-olaf)](https://github.com/oresat/oresat-olaf/issues)
@@ -10,16 +10,15 @@ ontop on [python-canopen]. It is designed to handle all the common OreSat
 [CANopen] Node functionality including support for [ECSS CANBus Extended
 Protocol], file transfer over CAN, and updating the Linux board.
 
-## Examples
+## Installing
 
-See examples in `examples/`
+Install using pip:
 
-To run the `examples/example_app.py` example:
+`$ pip install oresat-olaf`
 
-- Install dependencies `$ pip install -r requirements-dev.txt`
-- Make a virtual CAN bus `$ sudo ./scripts/vcan.sh`
-- `$ cd examples`
-- Run example `$ python example_app.py`
+## Example App
+
+See [example/README.md](example/README.md)
 
 ## Unit Tests
 
