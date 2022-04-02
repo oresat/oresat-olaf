@@ -2,9 +2,19 @@ name: tests
 
 on:
   push:
-    branches: [ master ]
+    paths-ignore:
+      - 'README.md'
+      - 'examples/**'
+      - 'scripts/**'
+    branches:
+      - master
   pull_request:
-    branches: [ master ]
+    paths-ignore:
+      - 'README.md'
+      - 'examples/**'
+      - 'scripts/**'
+    branches:
+      - master
 
 jobs:
   tests:
