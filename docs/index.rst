@@ -20,6 +20,7 @@ Society).
    :maxdepth: 2
 
    glossary
+   contributing_link
    api/index
    updater/index
 
