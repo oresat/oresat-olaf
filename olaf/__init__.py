@@ -12,7 +12,7 @@ from .common.oresat_file import OreSatFile, new_oresat_file
 from .common.oresat_file_cache import OreSatFileCache
 from .common.pru import PRU, PRUError, PRUState
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 LOG_FORMAT = '<green>{time}</green> | {level} | <level>{message}</level>'
 '''Logger message format'''
