@@ -1,9 +1,9 @@
 # OreSat Linux App Framework (OLAF)
 
-[![License](https://img.shields.io/github/license/oresat/oresat-linux-app-framework)](./LICENSE)
-[![Issues](https://img.shields.io/github/issues/oresat/oresat-linux-app-framework)](https://github.com/oresat/oresat-linux-app-framework/issues)
-[![Docs](https://readthedocs.org/projects/oresat-linux-app-framework/badge/?version=latest)](https://oresat-linux-app-framework.readthedocs.io/en/latest/?badge=latest)
-[![Tests](https://github.com/oresat/oresat-linux-app-framework/actions/workflows/tests.yaml/badge.svg)](https://github.com/oresat/oresat-linux-app-framework/actions/workflows/tests.yaml)
+[![License](https://img.shields.io/github/license/oresat/oresat-olaf)](./LICENSE)
+[![Issues](https://img.shields.io/github/issues/oresat/oresat-olaf)](https://github.com/oresat/oresat-olaf/issues)
+[![Docs](https://readthedocs.org/projects/oresat-olaf/badge/?version=latest)](https://oresat-olaf.readthedocs.io/en/latest/?badge=latest)
+[![Tests](https://github.com/oresat/oresat-olaf/actions/workflows/tests.yaml/badge.svg)](https://github.com/oresat/oresat-olaf/actions/workflows/tests.yaml)
 
 A pythonic CANopen application framework for all OreSat Linux boards. Built
 ontop on [python-canopen]. It is designed to handle all the common OreSat
