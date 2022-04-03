@@ -2,17 +2,21 @@ name: tests
 
 on:
   push:
-    paths-ignore:
-      - 'README.md'
-      - 'example/**'
-      - 'scripts/**'
+    paths:
+      - 'requirements-dev.txt'
+      - 'setup.*'
+      - 'docs/**'
+      - 'olaf/**'
+      - 'tests/**'
     branches:
       - master
   pull_request:
-    paths-ignore:
-      - 'README.md'
-      - 'example/**'
-      - 'scripts/**'
+    paths:
+      - 'requirements-dev.txt'
+      - 'setup.*'
+      - 'docs/**'
+      - 'olaf/**'
+      - 'tests/**'
     branches:
       - master
 
