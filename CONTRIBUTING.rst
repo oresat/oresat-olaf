@@ -45,6 +45,13 @@ First time setup
 
         $ pip install -r requirements-dev.txt
 
+-   Make a virtual CAN bus. **Note** this will have to remade if the system is
+    restarted.
+
+    .. code-block:: text
+
+        $ sudo ip link add dev vcan0 type vcan
+        $ sudo ip link set vcan0 up
 
 Start coding
 ------------
@@ -60,15 +67,17 @@ Start coding
         $ git pull
         $ git checkout -b your-branch-name
 
--   Make a virtual CAN bus.
+
+-   Using your favorite IDE or text editor, make your changes, commit your work
+    as you go.
+
+-   Use `run.py` for quick testing
 
     .. code-block:: text
 
-        $ sudo ip link add dev vcan0 type vcan
-        $ sudo ip link set vcan0 up
+        $ ./run.py
 
--   Using your favorite editor, make your changes, commit your work as you go.
--   Push your commits to your fork on GitHub.
+-   Push your commits to your branch on GitHub.
 
     .. code-block:: text
 
