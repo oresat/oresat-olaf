@@ -1,0 +1,8 @@
+services:
+  oresat-example-app:
+    build: .
+    container_name: oresat-examplea-pp
+    network_mode: 'host'
+    volumes:
+      - ./example_app:/example_app
+    command: "python3 -m example_app"

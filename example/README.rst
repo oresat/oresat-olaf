@@ -3,37 +3,43 @@ Example App
 
 An example OLAF app that uses a virtual CAN bus.
 
-Run the example app
--------------------
+Setup 
+-----
 
--   Clone the git repo 
+-   Clone the git repo::
 
-    .. code-block:: text
+    $ git clone https://github.com/oresat/oresat-olaf
+    $ cd oresat-olaf
 
-        $ git clone https://github.com/oresat/oresat-olaf
-        $ cd oresat-olaf
-
--   Make a virtual CAN bus
+-   Make a virtual CAN bus::
         
-    .. code-block:: text
+    $ sudo ip link add dev vcan0 type vcan
+    $ sudo ip link set vcan0 up
 
-        $ sudo ip link add dev vcan0 type vcan
-        $ sudo ip link set vcan0 up
+-   Swap to the ``example`` directory::
 
--   Swap to the ``example_app`` directory
+    $ cd example
 
-    .. code-block:: text
 
-        $ cd example_app
+Run without docker compose
+--------------------------
 
--   Install dependencies 
+-   Install dependencies::
 
-    .. code-block:: text
+    $ pip install -r requirements.txt
 
-      $ pip install -r requirements.txt
+-   Run example::
 
--   Run example
+    $ python -m example_app
 
-    .. code-block:: text
 
-      $ python -m example_app
+Run with docker compose
+-----------------------
+
+-   Build docker image::
+
+    $ docker-compose build
+
+-   Run with docker::
+
+    $ docker-compose run oresat-example-app
