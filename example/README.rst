@@ -1,5 +1,5 @@
-Example App
-===========
+OLAF Example App
+================
 
 An example OLAF app that uses a virtual CAN bus.
 
@@ -42,4 +42,4 @@ Run with docker compose
 
 -   Run with docker::
 
-    $ docker-compose run oresat-example-app
+    $ docker-compose run example-app

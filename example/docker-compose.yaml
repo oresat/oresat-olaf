@@ -1,7 +1,7 @@
 services:
-  oresat-example-app:
+  example-app:
     build: .
-    container_name: oresat-examplea-pp
+    container_name: example-app
     network_mode: 'host'
     volumes:
       - ./example_app:/example_app

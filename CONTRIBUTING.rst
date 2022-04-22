@@ -1,13 +1,8 @@
 Contributing to OLAF
 ====================
 
-When you have a question
-------------------------
-
-Post your question to `GitHub issues`_ with the ``question`` tag.
-
-Reporting issues
-----------------
+Reporting bugs
+--------------
 
 Post your issue to `GitHub issues`_ with the ``bug`` tag.
 
@@ -17,7 +12,6 @@ Include the following information in your post:
 -   If possible, include a reproducible example to help identify the issue. 
 -   Describe what actually happened. Include the full traceback if there
     was an exception.
-
 
 Working on issues
 -----------------
@@ -45,6 +39,9 @@ First time setup
 
         $ pip install -r requirements-dev.txt
 
+-   Install `can-utils` for your system. This will give access to the `candump`
+    command which will display all message on the CAN bus.
+
 -   Make a virtual CAN bus. **Note** this will have to remade if the system is
     restarted.
 
@@ -52,6 +49,49 @@ First time setup
 
         $ sudo ip link add dev vcan0 type vcan
         $ sudo ip link set vcan0 up
+
+-   Building local Docker image (optional)
+
+    .. code-block:: text
+
+        $ docker build -t oresat-olaf .
+
+
+How to run OLAF
+---------------
+
+Use `run.py` for quick testing. Use `^C` (hit Control and C keys) to stop OLAF. 
+Change the args after `run.py` as needed (`-h` flag will print help menu).
+
+To run wthout docker::
+
+    $ ./run.py -v
+
+Or to run with docker (if the docker image was built)::
+
+    $ docker run --rm -it -w /olaf -v `pwd`/:/olaf --network host oresat-olaf ./run.py -v
+
+To see traffic on CAN bus, in another terminal use `candump`::
+
+    $ canump vcan0       
+    vcan0  77C   [1]  7F
+    vcan0  77C   [1]  7F
+    vcan0  2FC   [2]  00 00
+    vcan0  1FC   [6]  25 12 00 00 00 00
+    vcan0  77C   [1]  05
+    vcan0  77C   [1]  05
+    vcan0  77C   [1]  05
+    vcan0  77C   [1]  05
+    vcan0  77C   [1]  05
+    vcan0  2FC   [2]  00 00
+    vcan0  77C   [1]  05
+    ...
+
+
+The scripts in `/scripts` can be used to interact with OLAF, e.g. read/write
+values to/from Object Dictionary, file transfer, bash commands over CAN bus, 
+etc.
+
 
 Start coding
 ------------
@@ -67,15 +107,8 @@ Start coding
         $ git pull
         $ git checkout -b your-branch-name
 
-
 -   Using your favorite IDE or text editor, make your changes, commit your work
     as you go.
-
--   Use `run.py` for quick testing
-
-    .. code-block:: text
-
-        $ ./run.py
 
 -   Push your commits to your branch on GitHub.
 
