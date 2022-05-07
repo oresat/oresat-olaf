@@ -7,6 +7,7 @@ from olaf import app_args_parser, parse_app_args, App
 
 
 def main():
+    # where can we find a list of these args?
     # add the parent ArgumentParser for standard OreSat app args
     parser = ArgumentParser(parents=[app_args_parser])
     # add any other args here
@@ -27,6 +28,8 @@ def main():
     #App.run() - does this need to be called?  looks like it broadcasts out from the OD
 
     #App.send_tpdo(tpdo: int) - this is a standard one-off message
+
+    #are there other functions that we need to look for?
 
 
 if __name__ == '__main__':
