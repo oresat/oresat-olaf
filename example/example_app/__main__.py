@@ -19,6 +19,15 @@ def main():
 
     app.run()
 
+    #functions that need examples (from olaf App class)
+
+    #App.add_resource(resource: Resource)
+    #Check with Ryan what this is expecting...
+
+    #App.run() - does this need to be called?  looks like it broadcasts out from the OD
+
+    #App.send_tpdo(tpdo: int) - this is a standard one-off message
+
 
 if __name__ == '__main__':
     main()
