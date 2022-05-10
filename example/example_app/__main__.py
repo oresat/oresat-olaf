@@ -5,6 +5,7 @@ from argparse import ArgumentParser
 
 from olaf import app_args_parser, parse_app_args, App
 
+from .example_resource import ExampleResource
 
 def main():
     # where can we find a list of these args?
@@ -18,7 +19,11 @@ def main():
 
     # add resources as needed
 
+    app.add_resource(ExampleResource)
+
     app.run()
+
+
 
     #functions that need examples (from olaf App class)
 
