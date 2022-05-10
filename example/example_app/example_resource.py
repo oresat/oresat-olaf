@@ -25,19 +25,21 @@ class ExampleResource(Resource):
         self.sub_test_write = 0x1
         self.sub_test_read = 0x2
 
+        node.add_read_callback(self.on_read)
+        node.add_write_callback(self.on_write)
 
     def on_loop(self):
         #take a picture every N
         
         pass
 
-    def on_start(self):
-        #turn on the camera
-        pass
+#    def on_start(self):
+ #       #turn on the camera
+  #      pass
 
-    def on_end(self):
-        #turn off the camera
-        pass
+#    def on_end(self):
+ #       #turn off the camera
+  #      pass
 
 
     # on_read / on_write get triggered any time the OD is accessed... first check that

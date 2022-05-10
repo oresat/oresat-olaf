@@ -19,7 +19,7 @@ def main():
 
     # add resources as needed
 
-    app.add_resource(ExampleResource)
+    app.add_resource(ExampleResource(app.node, app.fread_cache, app.work_base_dir + "/updater"))
 
     app.run()
 
