@@ -6,7 +6,7 @@ import canopen
 from loguru import logger
 
 from olaf import Resource
-from ..common.oresat_file_cache import OreSatFileCache
+from olaf import OreSatFileCache
 
 
 class ExampleResource(Resource):
@@ -18,11 +18,12 @@ class ExampleResource(Resource):
 
         # the -1.0 is the on_loop rate; it's something like self.delay
         # -1.0 = never looped; 0 means "no delay", constantly called; any positive value = seconds
-        super().__init__(node, 'Fwrite', -1.0)
+        super().__init__(node, 'Fwrite', 10.0)
 
 
     def on_loop(self):
         #take a picture every N
+        
         pass
 
     def on_start(self):
@@ -40,7 +41,15 @@ class ExampleResource(Resource):
         # this can be a callback function to replace the value
         # i.e. if index = n && sub_index = m, return k
         # if another thread is trying to read the value at the specified location, this function is called
-        pass
+        ret = None 
+        
+        if index != self.index: 
+            return ret
+            
+        if subindex == self.sub_test_read:
+            logger.info('Test read resource succesful')
+            return 0x22
+     
 
     def on_write(self, index, subindex, od, data):
         # i.e. if we write a 1 to an index + subindex, callback function takes a photo
