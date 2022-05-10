@@ -20,6 +20,11 @@ class ExampleResource(Resource):
         # -1.0 = never looped; 0 means "no delay", constantly called; any positive value = seconds
         super().__init__(node, 'Fwrite', 10.0)
 
+        # Define the index we're expecting for this resourece
+        self.index = 0x1A0F #This looks like an unused mapping parameter?
+        self.sub_test_write = 0x1
+        self.sub_test_read = 0x2
+
 
     def on_loop(self):
         #take a picture every N
@@ -53,4 +58,11 @@ class ExampleResource(Resource):
 
     def on_write(self, index, subindex, od, data):
         # i.e. if we write a 1 to an index + subindex, callback function takes a photo
-        pass
+        if index != self.index:
+            return
+
+        if subindex == self.sub_test_write:
+            logger.info('Test write successful!')
+            ret = 0xABCD
+
+        #Add functionality for take a camera picture!
