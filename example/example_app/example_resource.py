@@ -49,3 +49,11 @@ class ExampleResource(Resource):
 
     def on_write(self, index, subindex, od, data):
         # i.e. if we write a 1 to an index + subindex, callback function takes a photo
+        if index != self.index:
+            return
+
+        if subindex == self.sub_test_write:
+            logger.info('Test write successful!')
+            ret = 0xABCD
+
+        #Add functionality for take a camera picture!
