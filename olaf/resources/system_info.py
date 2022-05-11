@@ -1,6 +1,7 @@
 import os
 import platform
 from time import time
+from enum import IntEnum, auto
 
 import canopen
 import psutil
@@ -8,6 +9,37 @@ import psutil
 from ..common.resource import Resource
 
 _B_TO_MB = 1024 * 1024
+
+
+class Subindex(IntEnum):
+    OS_DISTRO = auto()
+    OS_NAME = auto()
+    OS_KERNEL_VER = auto()
+    HOSTNAME = auto()
+    UPTIME = auto()
+    NUM_OF_CPUS = auto()
+    CPU_ARCH = auto()
+    CPU_GOV = auto()
+    CPU_FREQ = auto()
+    NUM_OF_RPROCS = auto()
+    RPROC_ITER = auto()
+    RPROC_NAME = auto()
+    RPROC_STATE = auto()
+    LOAD_AVG_1MIN = auto()
+    LOAD_AVG_5MIN = auto()
+    LOAD_AVG_15MIN = auto()
+    RAM_TOTAL = auto()
+    RAM_FREE = auto()
+    RAM_SHARED = auto()
+    RAM_BUFFERED = auto()
+    RAM_PERCENT = auto()
+    SWAP_TOTAL = auto()
+    SWAP_FREE = auto()
+    SWAP_PERCENT = auto()
+    PROCS = auto()
+    ROOT_PART_TOTAL = auto()
+    ROOT_PART_FREE = auto()
+    ROOT_PART_PERCENT = auto()
 
 
 class SystemInfoResource(Resource):
@@ -18,56 +50,24 @@ class SystemInfoResource(Resource):
         super().__init__(node, 'System Info', -1.0)
 
         self.index = 0x3001
-        self.sub_os_distro = 0x1
-        self.sub_os_name = 0x2
-        self.sub_os_kernel_ver = 0x3
-        self.sub_hostname = 0x4
-        self.sub_uptime = 0x5
-        self.sub_num_of_cpus = 0x6
-        self.sub_cpu_arch = 0x7
-        self.sub_cpu_gov = 0x8
-        self.sub_cpu_freq = 0x9
-        self.sub_num_of_rprocs = 0xA
-        self.subrproc_iter = 0xB
-        self.subrproc_name = 0xC
-        self.subrproc_state = 0xD
-        self.sub_load_avg_1min = 0xE
-        self.sub_load_avg_5min = 0xF
-        self.sub_load_avg_15min = 0x10
-        self.sub_ram_total = 0x11
-        self.sub_ram_free = 0x12
-        self.sub_ram_shared = 0x13
-        self.sub_ram_buffered = 0x14
-        self.sub_ram_percent = 0x15
-        self.sub_swap_total = 0x16
-        self.sub_swap_free = 0x17
-        self.sub_swap_percent = 0x18
-        self.sub_procs = 0x19
-        self.sub_root_part_total = 0x1A
-        self.sub_root_part_free = 0x1B
-        self.sub_root_part_percent = 0x1C
-
         self.rprocs = 0
         self.rproc_iter = 0
 
         with open('/etc/os-release', 'r') as f:
             os_release = f.readlines()
 
-        obj = node.object_dictionary[self.index]
-        obj[self.sub_os_distro].value = os_release[1].split('"')[1]
-        obj[self.sub_os_name].value = platform.system()
-        obj[self.sub_os_kernel_ver].value = platform.release()
-        obj[self.sub_hostname].value = platform.node()
-        obj[self.sub_num_of_cpus].value = psutil.cpu_count()
-        obj[self.sub_cpu_arch].value = platform.machine()
-        obj[self.sub_ram_total].value = psutil.virtual_memory().total // _B_TO_MB
-        obj[self.sub_swap_total].value = psutil.swap_memory().total // _B_TO_MB
-        obj[self.sub_root_part_total].value = psutil.disk_usage('/').total // _B_TO_MB
+        si_record = node.object_dictionary[self.index]
+        si_record[Subindex.OS_DISTRO.value].value = os_release[1].split('"')[1]
+        si_record[Subindex.OS_NAME.value].value = platform.system()
+        si_record[Subindex.OS_KERNEL_VER.value].value = platform.release()
+        si_record[Subindex.HOSTNAME.value].value = platform.node()
+        si_record[Subindex.NUM_OF_CPUS.value].value = psutil.cpu_count()
+        si_record[Subindex.CPU_ARCH.value].value = platform.machine()
+        si_record[Subindex.RAM_TOTAL.value].value = psutil.virtual_memory().total // _B_TO_MB
+        si_record[Subindex.SWAP_TOTAL.value].value = psutil.swap_memory().total // _B_TO_MB
+        si_record[Subindex.ROOT_PART_TOTAL.value].value = psutil.disk_usage('/').total // _B_TO_MB
         self.rprocs = len(os.listdir('/sys/class/remoteproc'))  # save for `on_read`
-        obj[self.sub_num_of_rprocs].value = self.rprocs
-
-        node.add_read_callback(self.on_read)
-        node.add_write_callback(self.on_write)
+        si_record[Subindex.NUM_OF_RPROCS.value].value = self.rprocs
 
     def on_read(self, index, subindex, od):
 
@@ -76,52 +76,57 @@ class SystemInfoResource(Resource):
 
         ret = None
 
-        if subindex == self.sub_uptime:
+        if subindex == Subindex.UPTIME.value:
             ret = int(time() - psutil.boot_time())
-        elif subindex == self.sub_cpu_freq:
+        elif subindex == Subindex.CPU_GOV.value:
+            file_path = '/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor'
+            if os.path.exists(file_path):
+                with open(file_path, 'r') as f:
+                    ret = f.read().strip()
+        elif subindex == Subindex.CPU_FREQ.value:
             ret = int(psutil.cpu_freq().current * 1000)
-        elif subindex == self.subrproc_iter:
+        elif subindex == Subindex.RPROC_ITER.value:
             ret = self.rproc_iter
-        elif subindex == self.subrproc_name:
-            file_path = '/sys/class/remoteproc/remoteproc' + str(self.rprocs) + '/state'
+        elif subindex == Subindex.RPROC_NAME.value:
+            file_path = f'/sys/class/remoteproc/remoteproc{self.rprocs}/state'
             if os.path.exists(file_path):
                 with open(file_path, 'r') as f:
                     ret = f.read()
-        elif subindex == self.subrproc_state:
-            file_path = '/sys/class/remoteproc/remoteproc' + str(self.rprocs) + '/state'
+        elif subindex == Subindex.RPROC_STATE.value:
+            file_path = f'/sys/class/remoteproc/remoteproc{self.rprocs}/state'
             if os.path.exists(file_path):
                 with open(file_path, 'r') as f:
                     ret = f.read()
-        elif subindex == self.sub_load_avg_1min:
+        elif subindex == Subindex.LOAD_AVG_1MIN.value:
             ret = int(psutil.getloadavg()[0])
-        elif subindex == self.sub_load_avg_5min:
+        elif subindex == Subindex.LOAD_AVG_5MIN.value:
             ret = int(psutil.getloadavg()[1])
-        elif subindex == self.sub_load_avg_15min:
+        elif subindex == Subindex.LOAD_AVG_15MIN.value:
             ret = int(psutil.getloadavg()[2])
-        elif subindex == self.sub_ram_free:
+        elif subindex == Subindex.RAM_FREE.value:
             ret = psutil.virtual_memory().free // _B_TO_MB
-        elif subindex == self.sub_ram_shared:
+        elif subindex == Subindex.RAM_SHARED.value:
             ret = psutil.virtual_memory().shared // _B_TO_MB
-        elif subindex == self.sub_ram_buffered:
+        elif subindex == Subindex.RAM_BUFFERED.value:
             ret = psutil.virtual_memory().buffers // _B_TO_MB
-        elif subindex == self.sub_ram_percent:
+        elif subindex == Subindex.RAM_PERCENT.value:
             ret = psutil.virtual_memory().percent
-        elif subindex == self.sub_swap_free:
+        elif subindex == Subindex.SWAP_FREE.value:
             ret = psutil.swap_memory().free // _B_TO_MB
-        elif subindex == self.sub_swap_percent:
+        elif subindex == Subindex.SWAP_PERCENT.value:
             ret = psutil.swap_memory().percent
-        elif subindex == self.sub_procs:
+        elif subindex == Subindex.PROCS.value:
             ret = len(psutil.pids())
-        elif subindex == self.sub_root_part_free:
+        elif subindex == Subindex.ROOT_PART_FREE.value:
             ret = psutil.disk_usage('/').free // _B_TO_MB
-        elif subindex == self.sub_root_part_percent:
+        elif subindex == Subindex.ROOT_PART_PERCENT.value:
             ret = psutil.disk_usage('/').percent
 
         return ret
 
     def on_write(self, index, subindex, od, data):
 
-        if index != self.index or subindex != self.subrproc_name:
+        if index != self.index or subindex != Subindex.RPROC_ITER.value:
             return
 
         temp = od.raw_decode(data)

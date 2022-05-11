@@ -1,12 +1,19 @@
 from os import remove, listdir
 from os.path import basename
 from pathlib import Path
+from enum import IntEnum, auto
 
 import canopen
 from loguru import logger
 
 from ..common.resource import Resource
 from ..common.oresat_file_cache import OreSatFileCache
+
+
+class Subindex(IntEnum):
+    FILE_NAME = auto()
+    FILE_DATA = auto()
+    DELETE_FILE = auto()
 
 
 class FreadResource(Resource):
@@ -34,9 +41,6 @@ class FreadResource(Resource):
             remove(self.tmp_dir + i)
 
         self.index = 0x3003
-        self.sub_file_name = 0x1
-        self.sub_file_data = 0x2
-        self.sub_delete_file = 0x3
 
         self.file_path = ''
 
@@ -67,7 +71,7 @@ class FreadResource(Resource):
         if index != self.index:
             return
 
-        if subindex == self.sub_file_name:
+        if subindex == Subindex.FILE_NAME:
             # delete old file if it exist
             if self.file_path:
                 remove(self.file_path)
@@ -78,7 +82,7 @@ class FreadResource(Resource):
                 self.file_path = self.fread_cache.get(file_name, self.tmp_dir, True)
             except FileNotFoundError:
                 logger.error(f'file {file_name} not in fread cache')
-        elif subindex == self.sub_delete_file:
+        elif subindex == Subindex.DELETE_FILE:
             if self.file_path:
                 # delete file from cache and tmp dir
                 self.fread_cache.remove(basename(self.file_path))

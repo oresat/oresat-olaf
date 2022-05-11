@@ -1,12 +1,18 @@
 from os import remove, listdir
 from os.path import basename
 from pathlib import Path
+from enum import IntEnum, auto
 
 import canopen
 from loguru import logger
 
 from ..common.resource import Resource
 from ..common.oresat_file_cache import OreSatFileCache
+
+
+class Subindex(IntEnum):
+    FILE_NAME = auto()
+    FILE_DATA = auto()
 
 
 class FwriteResource(Resource):
@@ -33,8 +39,6 @@ class FwriteResource(Resource):
             remove(self.tmp_dir + i)
 
         self.index = 0x3004
-        self.sub_file_name = 0x1
-        self.sub_file_data = 0x2
 
         self.file_path = ''
 
@@ -42,7 +46,7 @@ class FwriteResource(Resource):
 
         ret = None
 
-        if index == self.index and self.file_path and subindex == self.sub_file_name:
+        if index == self.index and self.file_path and subindex == Subindex.FILE_NAME:
             ret = basename(self._file_path)
 
         return ret
@@ -52,10 +56,10 @@ class FwriteResource(Resource):
         if index != self.index:
             return
 
-        if subindex == self.sub_file_name:
+        if subindex == Subindex.FILE_NAME:
             file_name = data.decode()
             self.file_path = self.tmp_dir + '/' + file_name
-        elif subindex == self.sub_file_data:
+        elif subindex == Subindex.FILE_DATA:
             if not self.file_path:
                 logger.error('fwrite file path was not set before file data was sent')
                 return
