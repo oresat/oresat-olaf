@@ -19,91 +19,93 @@ node = canopen.RemoteNode(int(args.node, 16), EDS_FILE)
 network.add_node(node)
 network.connect(bustype='socketcan', channel=args.bus)
 
-print('')
-
-os_name = node.sdo[SYSTEM_INFO_INDEX][1].phys
-os_distro = node.sdo[SYSTEM_INFO_INDEX][2].phys
-kernel_ver = node.sdo[SYSTEM_INFO_INDEX][3].phys
-print('OS Name: ' + os_name)
-print('OS Distro: ' + os_distro)
-print('Kernel Version: ' + kernel_ver)
+system_info_record = node.sdo[SYSTEM_INFO_INDEX]
 
 print('')
 
-hostname = node.sdo[SYSTEM_INFO_INDEX][4].phys
-uptime = node.sdo[SYSTEM_INFO_INDEX][5].phys
-print('Hostname: ' + hostname)
-print('Uptime: {} seconds'.format(uptime))
+os_name = system_info_record[1].phys
+os_distro = system_info_record[2].phys
+kernel_ver = system_info_record[3].phys
+print(f'OS Name: {os_name}')
+print(f'OS Distro: {os_distro}')
+print(f'Kernel Version: {kernel_ver}')
 
 print('')
 
-cpus = node.sdo[SYSTEM_INFO_INDEX][6].phys
-cpu_arch = node.sdo[SYSTEM_INFO_INDEX][7].phys
-cpu_gov = node.sdo[SYSTEM_INFO_INDEX][8].phys
-cpu_freq = node.sdo[SYSTEM_INFO_INDEX][9].phys
+hostname = system_info_record[4].phys
+uptime = system_info_record[5].phys
+print(f'Hostname: {hostname}')
+print(f'Uptime: {uptime} seconds')
+
+print('')
+
+cpus = system_info_record[6].phys
+cpu_arch = system_info_record[7].phys
+cpu_gov = system_info_record[8].phys
+cpu_freq = system_info_record[9].phys
 print('CPU info')
-print('  Total CPUs: {}'.format(cpus))
-print('  Architecture ' + cpu_arch)
-print('  CPU Frequency Governor {}'.format(cpu_gov))
-print('  CPU Frequency {} MHz'.format(cpu_freq))
+print(f'  Total CPUs: {cpus}')
+print(f'  Architecture: {cpu_arch}')
+print(f'  CPU Frequency Governor: {cpu_gov}')
+print(f'  CPU Frequency: {cpu_freq} MHz')
 
 print('')
 
-remote_procs = node.sdo[SYSTEM_INFO_INDEX][10].phys
+remote_procs = system_info_record[10].phys
 if remote_procs == 0:
     print('No remote processors')
 else:
     print('Remote processors')
     for i in range(remote_procs):
-        node.sdo[SYSTEM_INFO_INDEX][11].phys = i
-        rproc_name = node.sdo[SYSTEM_INFO_INDEX][12].phys
-        rproc_state = node.sdo[SYSTEM_INFO_INDEX][13].phys
-        print('  ' + rproc_name + ' is ' + rproc_state)
+        system_info_record[11].phys = i
+        rproc_name = system_info_record[12].phys
+        rproc_state = system_info_record[13].phys
+        print(f'  {rproc_name} is {rproc_state}')
 
 print('')
 
-load_avg_1min = node.sdo[SYSTEM_INFO_INDEX][14].phys
-load_avg_5min = node.sdo[SYSTEM_INFO_INDEX][15].phys
-load_avg_15min = node.sdo[SYSTEM_INFO_INDEX][16].phys
+load_avg_1min = system_info_record[14].phys
+load_avg_5min = system_info_record[15].phys
+load_avg_15min = system_info_record[16].phys
 print('Load averages')
-print('  1min: {}'.format(load_avg_1min))
-print('  5min: {}'.format(load_avg_5min))
-print('  15min: {}'.format(load_avg_15min))
+print(f'  1min: {load_avg_1min}')
+print(f'  5min: {load_avg_5min}')
+print(f'  15min: {load_avg_15min}')
 
 print('')
 
-ram_total = node.sdo[SYSTEM_INFO_INDEX][17].phys
-ram_free = node.sdo[SYSTEM_INFO_INDEX][18].phys
-ram_shared = node.sdo[SYSTEM_INFO_INDEX][19].phys
-ram_buffered = node.sdo[SYSTEM_INFO_INDEX][20].phys
-ram_percent = node.sdo[SYSTEM_INFO_INDEX][21].phys
+ram_total = system_info_record[17].phys
+ram_free = system_info_record[18].phys
+ram_shared = system_info_record[19].phys
+ram_buffered = system_info_record[20].phys
+ram_percent = system_info_record[21].phys
 print('RAM')
-print('  Total: {} MB'.format(ram_total))
-print('  Free: {} MB'.format(ram_free))
-print('  Shared: {} MB'.format(ram_shared))
-print('  Buffered: {} MB'.format(ram_buffered))
-print('  Usage: {} %'.format(ram_percent))
+print(f'  Total: {ram_total} MB')
+print(f'  Free: {ram_free} MB')
+print(f'  Shared: {ram_shared} MB')
+print(f'  Buffered: {ram_buffered} MB')
+print(f'  Usage: {ram_percent} %')
 
 print('')
 
-swap_total = node.sdo[SYSTEM_INFO_INDEX][22].phys
-swap_free = node.sdo[SYSTEM_INFO_INDEX][23].phys
-swap_percent = node.sdo[SYSTEM_INFO_INDEX][24].phys
+swap_total = system_info_record[22].phys
+swap_free = system_info_record[23].phys
+swap_percent = system_info_record[24].phys
 print('Swap')
-print('  Total: {}'.format(swap_total))
-print('  Free: {}'.format(swap_free))
-print('  Usage: {} %'.format(swap_percent))
+print(f'  Total: {swap_total}')
+print(f'  Free: {swap_free}')
+print(f'  Usage: {swap_percent} %')
 
 print('')
 
-procs = node.sdo[SYSTEM_INFO_INDEX][25].phys
-print('Procs: {}'.format(procs))
+procs = system_info_record[25].phys
+print(f'Procs: {procs}')
 
 print('')
 
-root_part_total = node.sdo[SYSTEM_INFO_INDEX][26].phys
-root_part_free = node.sdo[SYSTEM_INFO_INDEX][27].phys
-root_part_percent = node.sdo[SYSTEM_INFO_INDEX][28].phys
+root_part_total = system_info_record[26].phys
+root_part_free = system_info_record[27].phys
+root_part_percent = system_info_record[28].phys
 print('Root Parition')
 print('  Total: {} MB'.format(root_part_total))
 print('  Free: {} MB'.format(root_part_free))
