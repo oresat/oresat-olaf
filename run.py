@@ -11,6 +11,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     parse_app_args(args)  # parse the standard app args
 
-    app = App('oresat_app.eds', args.bus, args.node_id)
+    app = App('olaf/data/oresat_app.eds', args.bus, args.node_id)
 
     app.run()

@@ -9,7 +9,7 @@ class TestApp(Thread):
     def __init__(self):
         super().__init__()
         logger.disable('oresat_app')
-        self.node = canopen.LocalNode(0x10, 'oresat_app.eds')
+        self.node = canopen.LocalNode(0x10, 'olaf/data/oresat_app.eds')
 
     def add_resource(self, resource: Resource):
         self.resource = resource
