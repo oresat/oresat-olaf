@@ -1,6 +1,7 @@
 from os import remove, listdir
-from os.path import basename
+from os.path import basename, dirname, join
 from pathlib import Path
+import cv2
 
 import canopen
 from loguru import logger
@@ -24,22 +25,28 @@ class ExampleResource(Resource):
         self.index = 0x1A0F #This looks like an unused mapping parameter?
         self.sub_test_write = 0x1
         self.sub_test_read = 0x2
+        
+        #set dir to current directory
+        self.dir = dirname(__file__)
+        self.imageFile = join(self.dir, 'image1.jpeg')
+        
+        #camera object
+        self.cam = cv2.VideoCapture(0)
 
 
     def on_loop(self):
-        #take a picture every N
-        
-        pass
+        result, image = self.cam.read()
+        ret = cv2.imwrite(self.imageFile, image)
+   
 
-    def on_start(self):
+   # def on_start(self):
         #turn on the camera
-        pass
+   #     pass
 
     def on_end(self):
         #turn off the camera
-        pass
-
-
+        self.cam.release()
+      
     # on_read / on_write get triggered any time the OD is accessed... first check that
     # index + subindex match the desired value; if not, return immediately to lower overhead
     def on_read(self, index: int, subindex: int, od: canopen.objectdictionary.Variable):
@@ -52,7 +59,9 @@ class ExampleResource(Resource):
             return ret
             
         if subindex == self.sub_test_read:
-            logger.info('Test read resource succesful')
+            logger.info('Image File Path = ' + self.imageFile)
+            
+            #TO DO: filepath strig to hex function goes here
             return 0x22
      
 
@@ -62,7 +71,9 @@ class ExampleResource(Resource):
             return
 
         if subindex == self.sub_test_write:
-            logger.info('Test write successful!')
-            ret = 0xABCD
+            self.imageFile = join(self.dir, str(data))
+            logger.info('Taking a picture, filename = ' + self.imageFile)
+            result, image = self.cam.read()
+            ret = cv2.imwrite(self.imageFile, image)
+            return ret
 
-        #Add functionality for take a camera picture!
