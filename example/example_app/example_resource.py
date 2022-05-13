@@ -51,6 +51,7 @@ class ExampleResource(Resource):
       
 
 
+
     # on_read / on_write get triggered any time the OD is accessed... first check that
     # index + subindex match the desired value; if not, return immediately to lower overhead
     def on_read(self, index: int, subindex: int, od: canopen.objectdictionary.Variable):
