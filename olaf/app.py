@@ -170,12 +170,22 @@ class App:
         data = b''
         for i in range(maps):
             pdo_map = self.od[0x1A00 + tpdo][i + 1].value
+
             if pdo_map == 0:
                 break  # nothing todo
+
             pdo_map_bytes = pdo_map.to_bytes(4, 'big')
             index, subindex, length = struct.unpack('>HBB', pdo_map_bytes)
-            value = self.node.sdo[index][subindex].phys  # to call sdo callback(s)
-            value_bytes = self.od[index][subindex].encode_raw(value)
+
+            # call sdo callback(s) and convert data to bytes
+            if isinstance(self.od[index], canopen.objectdictionary.Variable):
+                value = self.node.sdo[index].phys
+                value_bytes = self.od[index].encode_raw(value)
+            else:  # record or array
+                value = self.node.sdo[index][subindex].phys
+                value_bytes = self.od[index][subindex].encode_raw(value)
+
+            # pack pdo with bytes
             data += value_bytes
 
         try:
