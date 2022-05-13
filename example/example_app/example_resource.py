@@ -41,7 +41,6 @@ class ExampleResource(Resource):
         ret = cv2.imwrite(self.imageFile, image)
    
 
-<<<<<<< HEAD
    # def on_start(self):
         #turn on the camera
    #     pass
@@ -52,8 +51,6 @@ class ExampleResource(Resource):
       
 
 
-
->>>>>>> 4851234b872dad75f1d15fd93c6b61695d8070eb
     # on_read / on_write get triggered any time the OD is accessed... first check that
     # index + subindex match the desired value; if not, return immediately to lower overhead
     def on_read(self, index: int, subindex: int, od: canopen.objectdictionary.Variable):
