@@ -33,12 +33,15 @@ class ExampleResource(Resource):
         #camera object
         self.cam = cv2.VideoCapture(0)
 
+        node.add_read_callback(self.on_read)
+        node.add_write_callback(self.on_write)
 
     def on_loop(self):
         result, image = self.cam.read()
         ret = cv2.imwrite(self.imageFile, image)
    
 
+<<<<<<< HEAD
    # def on_start(self):
         #turn on the camera
    #     pass
@@ -47,6 +50,10 @@ class ExampleResource(Resource):
         #turn off the camera
         self.cam.release()
       
+
+
+
+>>>>>>> 4851234b872dad75f1d15fd93c6b61695d8070eb
     # on_read / on_write get triggered any time the OD is accessed... first check that
     # index + subindex match the desired value; if not, return immediately to lower overhead
     def on_read(self, index: int, subindex: int, od: canopen.objectdictionary.Variable):
