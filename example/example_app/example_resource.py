@@ -25,11 +25,11 @@ class ExampleResource(Resource):
         self.index = 0x1A0F #This looks like an unused mapping parameter?
         self.sub_test_write = 0x1
         self.sub_test_read = 0x2
-        
+
         #set dir to current directory
         self.dir = dirname(__file__)
         self.imageFile = join(self.dir, 'image1.jpeg')
-        
+
         #camera object
         self.cam = cv2.VideoCapture(0)
 
@@ -39,16 +39,17 @@ class ExampleResource(Resource):
     def on_loop(self):
         result, image = self.cam.read()
         ret = cv2.imwrite(self.imageFile, image)
-   
+
 
    # def on_start(self):
         #turn on the camera
+        #turn on stuff being done in init because it's fast
    #     pass
 
     def on_end(self):
         #turn off the camera
         self.cam.release()
-      
+
 
 
 
@@ -58,17 +59,16 @@ class ExampleResource(Resource):
         # this can be a callback function to replace the value
         # i.e. if index = n && sub_index = m, return k
         # if another thread is trying to read the value at the specified location, this function is called
-        ret = None 
-        
-        if index != self.index: 
+        ret = None
+
+        if index != self.index:
             return ret
-            
+
         if subindex == self.sub_test_read:
             logger.info('Image File Path = ' + self.imageFile)
-            
-            #TO DO: filepath strig to hex function goes here
-            return 0x22
-     
+
+            return __strToHex(self.imageFile)
+
 
     def on_write(self, index, subindex, od, data):
         # i.e. if we write a 1 to an index + subindex, callback function takes a photo
@@ -82,3 +82,12 @@ class ExampleResource(Resource):
             ret = cv2.imwrite(self.imageFile, image)
             return ret
 
+    #Private helper function to convert the file name to hex for the CAN bus
+    def __strToHex(in_text):
+        hex_val = 0x0
+        for chrs in in_text:
+            print("adding " + str(ord(chrs)) + "to " + str(hex_val))
+            hex_val = (hex_val << (8))
+            hex_val = hex_val + ord(chrs)
+
+        return hex_val
