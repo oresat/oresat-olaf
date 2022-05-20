@@ -8,7 +8,7 @@ from olaf import app_args_parser, parse_app_args, App
 
 def main():
     # add the parent ArgumentParser for standard OreSat app args
-    parser = ArgumentParser(parents=[app_args_parser])
+    parser = ArgumentParser(prog='example-app', parents=[app_args_parser])
     # add any other args here
     args = parser.parse_args()
     parse_app_args(args)  # parse the standard app args

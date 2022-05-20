@@ -30,6 +30,7 @@ app_args_parser.add_argument('-n', '--node-id', type=str, default='0', metavar='
 app_args_parser.add_argument('-v', '--verbose', action='store_true', help='verbose logging')
 app_args_parser.add_argument('-l', '--log', action='store_true', help='log to only journald')
 app_args_parser.add_argument('-e', '--eds', metavar='FILE', help='EDS/DCF file to use')
+app_args_parser.add_argument('-m', '--mock-hw', action='store_true', help='mock the hardware')
 
 
 def parse_app_args(args):

@@ -14,7 +14,7 @@ class TestApp(Thread):
         self.fwrite_cache = OreSatFileCache('/tmp/fwrite')
 
     def add_resource(self, resource: Resource):
-        self.resource = resource(self.node, self.fread_cache, self.fwrite_cache)
+        self.resource = resource(self.node, self.fread_cache, self.fwrite_cache, True)
         self.node.add_read_callback(self.resource.on_read)
         self.node.add_write_callback(self.resource.on_write)
 

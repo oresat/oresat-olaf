@@ -26,7 +26,7 @@ from .resources.logs import LogsResource
 class App:
     '''The application class that manages the CAN bus, resources, and threads.'''
 
-    def __init__(self, eds: str, bus: str, node_id=0):
+    def __init__(self, eds: str, bus: str, node_id=0, mock_hw=False):
         '''
         Parameters
         ----------
@@ -37,6 +37,8 @@ class App:
         node_id: int, str
             The node ID. If set to 0 and DCF was used for the eds arg, the value will be pulled
             from the DCF, otherwise, it will be set to 0x7C.
+        mock_hw: bool
+            Flag to mock hardware. This will be pass to any resources added.
 
         Raises
         ------
@@ -48,6 +50,7 @@ class App:
         self.event = Event()
         self.resources = []
         self.network = None
+        self.mock_hw = mock_hw
 
         if isinstance(node_id, str):
             if node_id.startswith('0x'):
@@ -212,7 +215,7 @@ class App:
     def add_resource(self, resource: Resource):
         '''Add a resource for the app'''
 
-        res = resource(self.node, self.fread_cache, self.fwrite_cache)
+        res = resource(self.node, self.fread_cache, self.fwrite_cache, self.mock_hw)
         logger.debug(f'adding {res.__class__.__name__} resources')
         self.resources.append(res)
 

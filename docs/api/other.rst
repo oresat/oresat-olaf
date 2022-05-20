@@ -33,7 +33,7 @@ Argument Parser
 
     from olaf import app_args_parser, parse_app_args
 
-    parser = ArgumentParser(parents=[app_args_parser])
+    parser = ArgumentParser(prog='program-name', parents=[app_args_parser])
     parser.add_argument('-m', help='message')
     ...
     # add arg
