@@ -83,7 +83,7 @@ class ExampleResource(Resource):
             return ret
 
     #Private helper function to convert the file name to hex for the CAN bus
-    def __strToHex(in_text):
+    def __strToHex(self, in_text):
         hex_val = 0x0
         for chrs in in_text:
             print("adding " + str(ord(chrs)) + "to " + str(hex_val))
