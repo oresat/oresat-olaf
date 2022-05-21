@@ -67,7 +67,7 @@ class ExampleResource(Resource):
         if subindex == self.sub_test_read:
             logger.info('Image File Path = ' + self.imageFile)
 
-            return self.__strToHex(self.imageFile)
+            return self.__strToHex(self.imageFile[-15:-5])
 
 
     def on_write(self, index, subindex, od, data):
@@ -86,7 +86,6 @@ class ExampleResource(Resource):
     def __strToHex(self, in_text):
         hex_val = 0x0
         for chrs in in_text:
-            print("adding " + str(ord(chrs)) + "to " + str(hex_val))
             hex_val = (hex_val << (8))
             hex_val = hex_val + ord(chrs)
 
