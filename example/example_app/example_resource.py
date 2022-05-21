@@ -67,7 +67,7 @@ class ExampleResource(Resource):
         if subindex == self.sub_test_read:
             logger.info('Image File Path = ' + self.imageFile)
 
-            return __strToHex(self.imageFile)
+            return self.__strToHex(self.imageFile)
 
 
     def on_write(self, index, subindex, od, data):
