@@ -31,14 +31,15 @@ class ExampleResource(Resource):
         self.imageFile = join(self.dir, 'image1.jpeg')
 
         #camera object
-        self.cam = cv2.VideoCapture(0)
+        #self.cam = cv2.VideoCapture(0)
 
         node.add_read_callback(self.on_read)
         node.add_write_callback(self.on_write)
 
     def on_loop(self):
-        result, image = self.cam.read()
-        ret = cv2.imwrite(self.imageFile, image)
+        #result, image = self.cam.read()
+        #ret = cv2.imwrite(self.imageFile, image)
+        logger.info("Taking a picture!")
 
 
    # def on_start(self):
@@ -48,7 +49,7 @@ class ExampleResource(Resource):
 
     def on_end(self):
         #turn off the camera
-        self.cam.release()
+        #self.cam.release()
 
 
 
@@ -67,7 +68,7 @@ class ExampleResource(Resource):
         if subindex == self.sub_test_read:
             logger.info('Image File Path = ' + self.imageFile)
 
-            return self.__strToHex(self.imageFile[-15:-5])
+            return self.__strToHex(self.imageFile[-9:-5])
 
 
     def on_write(self, index, subindex, od, data):
@@ -78,8 +79,8 @@ class ExampleResource(Resource):
         if subindex == self.sub_test_write:
             self.imageFile = join(self.dir, str(data))
             logger.info('Taking a picture, filename = ' + self.imageFile)
-            result, image = self.cam.read()
-            ret = cv2.imwrite(self.imageFile, image)
+            #result, image = self.cam.read()
+            #ret = cv2.imwrite(self.imageFile, image)
             return ret
 
     #Private helper function to convert the file name to hex for the CAN bus
