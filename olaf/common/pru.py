@@ -1,5 +1,5 @@
 
-from os.path import exists, isdir
+from os.path import exists, isdir, isfile, basename
 from enum import Enum, auto
 
 
@@ -31,25 +31,31 @@ class PRU:
         pru: int
             PRU number. Must be a 0 or 1.
         fw_path: str
-            Absolute file path to firmware. Firmware file must be in `/lib/firmware/`.
+            Absolute file path to firmware binary or just the file name in `/lib/firmware/`.
+            Firmware binary file must be in `/lib/firmware/`.
 
         Raises
         ------
         PRUError
-            `pru` was not set to 0 or 1.
+            `pru` was not set to 0 or 1 or if the firmware file does not exist.
         '''
 
         if pru not in [0, 1]:
-            PRUError('pru must be set 0 or 1')
+            raise PRUError('pru must be set 0 or 1')
+        if not (isfile(fw_path) or isfile('/lib/firmware/' + fw_path)):
+            raise PRUError(f'firmware image {fw_path} not found')
 
         self._pru = pru
+
+        # path must not include "/lib/firmware/"
         self._fw_path = fw_path
-        if not self._fw_path.startswith('/lib/firmware/'):
-            self._fw_path = '/lib/firmware/' + self._fw
+        if self._fw_path.startswith('/lib/firmware/'):
+            self._fw_path = basename(self._fw_path)
 
         # remoteproc0 is the power manager M3
-        self._rproc_dir_path = '/sys/class/remoteproc/remoteproc' + str(pru + 1)
-        self._rproc_state_path = self._rproc_dir_path + '/state'
+        self._pru_dir_path = f'/dev/remoteproc/pruss-core{pru}'
+        self._pru_state_path = self._pru_dir_path + '/state'
+        self._pru_fw_path = self._pru_dir_path + '/firmware'
 
     def start(self):
         '''Starts the PRU.
@@ -60,17 +66,19 @@ class PRU:
             The PRU or PRU firmware was not found.
         '''
 
+        if self.state == PRUState.RUNNING:
+            return  # already running
+
         self.exists(raise_exception=True)
 
-        if not exists(self._fw_path):
-            raise PRUError(f'firmware file {self.fw_path} does not exist')
+        if not exists(f'/lib/firmware/{self._fw_path}'):
+            raise PRUError(f'firmware file /lib/firmware/{self._fw_path} does not exist')
 
-        with open(self._pru_fw_path, 'w') as fptr:
-            fptr.write(self._fw_path)
+        with open(self._pru_fw_path, 'w') as f:
+            f.write(self._fw_path)
 
-        if self.state() == PRUState.OFFLINE:
-            with open(self._pru_state_path, 'w') as fptr:
-                fptr.write('start')
+        with open(self._pru_state_path, 'w') as f:
+            f.write('start')
 
     def stop(self):
         '''Stops the PRU.
@@ -85,9 +93,9 @@ class PRU:
 
         # The state file will throw an errno 22 if a 'stop' command is writen to it while the
         # state is 'offline'
-        if self.state() == PRUState.RUNNING:
-            with open(self._pru_state_path, 'w') as fptr:
-                fptr.write('stop')
+        if self.state == PRUState.RUNNING:
+            with open(self._pru_state_path, 'w') as f:
+                f.write('stop')
 
     def restart(self):
         '''Restarts the PRU.'''
@@ -95,6 +103,7 @@ class PRU:
         self.stop()
         self.start()
 
+    @property
     def state(self) -> PRUState:
         '''Get the state of the PRU.
 
@@ -135,7 +144,7 @@ class PRU:
             True if the PRU exists or False if not found.
         '''
 
-        ret = isdir(self._rproc_dir_path)
+        ret = isdir(self._pru_dir_path)
 
         if raise_exception and not ret:
             raise PRUError(f'pru{self._pru} was not found. is the PRU device tree loaded?')
