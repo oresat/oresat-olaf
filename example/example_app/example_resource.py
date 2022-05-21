@@ -47,7 +47,7 @@ class ExampleResource(Resource):
         #turn on stuff being done in init because it's fast
    #     pass
 
-    def on_end(self):
+    #def on_end(self):
         #turn off the camera
         #self.cam.release()
 
