@@ -288,7 +288,11 @@ class App:
             self.event.wait(1)
 
         for resource in self.resources:
-            resource.on_end()
+            try:
+                resource.on_end()
+            except Exception as exc:
+                msg = f'{resource.name} resource\'s on_end raised an uncaught exception: {exc}'
+                logger.critical(msg)
 
         for t in tpdo_threads:
             logger.debug(f'joining {t.name} thread')

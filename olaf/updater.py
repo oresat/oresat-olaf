@@ -93,7 +93,7 @@ class Updater:
 
         self._has_dpkg = isfile('/usr/bin/dpkg')
         if not self._has_dpkg:
-            logger.error('dpkg is not installed, updates will not start')
+            logger.warning('dpkg is not installed, updates will not start')
 
     def _clear_work_dir(self):
         '''Clear the working directory.'''
