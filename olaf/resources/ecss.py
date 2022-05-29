@@ -11,14 +11,13 @@ from ..common.ecss import scet_int_from_time, utc_int_from_time, scet_int_to_tim
 class ECSSResource(Resource):
     '''Resource for ECSS CANBus Extended Protocal standards'''
 
-    def __init__(self, node: canopen.LocalNode):
-
-        super().__init__(node, 'ESCC', -1.0)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.scet_index = 0x2010
-        self.scet_obj = self.node.object_dictionary[self.scet_index]
+        self.scet_obj = self.od[self.scet_index]
         self.utc_index = 0x2011
-        self.utc_obj = self.node.object_dictionary[self.utc_index]
+        self.utc_obj = self.od[self.utc_index]
 
     def on_read(self, index, subindex, od):
 

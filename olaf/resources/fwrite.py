@@ -18,25 +18,14 @@ class Subindex(IntEnum):
 class FwriteResource(Resource):
     '''Resource for writing files over the CAN bus'''
 
-    def __init__(self,
-                 node: canopen.LocalNode,
-                 fwrite_cache: OreSatFileCache,
-                 tmp_dir: str = '/tmp/oresat/fwrite'):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        super().__init__(node, 'Fwrite', -1.0)
-
-        if tmp_dir == '/':
-            raise ValueError('tmp_dir cannot be root dir')
-
-        if tmp_dir[-1] != '/':
-            tmp_dir += '/'
-
-        self.fwrite_cache = fwrite_cache
-        self.tmp_dir = tmp_dir
+        self.tmp_dir = '/tmp/oresat/fwrite'
         Path(self.tmp_dir).mkdir(parents=True, exist_ok=True)
-        logger.debug(f'fwrite tmp_dir is {self.tmp_dir}')
+        logger.debug(f'fread tmp dir is {self.tmp_dir}')
         for i in listdir(self.tmp_dir):
-            remove(self.tmp_dir + i)
+            remove(f'{self.tmp_dir}/{i}')
 
         self.index = 0x3004
 
@@ -75,5 +64,4 @@ class FwriteResource(Resource):
             self.file_path = ''
 
             # clear buffers to not waste memory
-            self.node.object_dictionary[index][subindex].value = ''
-            self.node.sdo[index][subindex].value = ''
+            self.od[index][subindex].value = ''

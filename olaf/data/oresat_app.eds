@@ -14,7 +14,7 @@ ModifiedBy=PSAS
 [DeviceInfo]
 VendorName=Portland State Aerospace Society
 VendorNumber=0
-ProductName=OreSat Linux app template
+ProductName=OLAF
 ProductNumber=0
 RevisionNumber=0
 BaudRate_10=1

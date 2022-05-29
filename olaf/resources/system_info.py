@@ -45,9 +45,8 @@ class Subindex(IntEnum):
 class SystemInfoResource(Resource):
     '''Resource for getting local system infomation'''
 
-    def __init__(self, node: canopen.LocalNode):
-
-        super().__init__(node, 'System Info', -1.0)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.index = 0x3001
         self.rprocs = 0
@@ -56,7 +55,7 @@ class SystemInfoResource(Resource):
         with open('/etc/os-release', 'r') as f:
             os_release = f.readlines()
 
-        si_record = node.object_dictionary[self.index]
+        si_record = self.od[self.index]
         si_record[Subindex.OS_DISTRO.value].value = os_release[1].split('"')[1]
         si_record[Subindex.OS_NAME.value].value = platform.system()
         si_record[Subindex.OS_KERNEL_VER.value].value = platform.release()

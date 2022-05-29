@@ -20,7 +20,7 @@ class TestOSCommand(unittest.TestCase):
     def setUp(self):
         self.app = TestApp()
         self.node = self.app.node
-        self.app.add_resource(OSCommandResource(self.node))
+        self.app.add_resource(OSCommandResource)
         self.app.start()
 
     def tearDown(self):

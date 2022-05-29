@@ -13,14 +13,14 @@ from ..common.oresat_file_cache import OreSatFileCache
 class LogsResource(Resource):
     '''Resource for getting logs'''
 
-    def __init__(self, node: canopen.LocalNode, fread_cache: OreSatFileCache):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        super().__init__(node, 'Logs', 1.0)
+        self.delay = 1.0
 
         self.index = 0x3006
         self.logs_dir_path = '/var/log/journal/'
-        self.obj = node.object_dictionary[self.index]
-        self.fread_cache = fread_cache
+        self.obj = self.od[self.index]
 
     def on_loop(self):
 

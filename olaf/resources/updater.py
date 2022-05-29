@@ -1,3 +1,4 @@
+from pathlib import Path
 from enum import IntEnum, auto
 
 import canopen
@@ -19,22 +20,15 @@ class Subindex(IntEnum):
 class UpdaterResource(Resource):
     '''Resource for interacting with the updater'''
 
-    index = 0x3100
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-    def __init__(self,
-                 node: canopen.LocalNode,
-                 fread_cache: OreSatFileCache,
-                 fwrite_cache: OreSatFileCache,
-                 work_dir: str,
-                 cache_dir: str):
+        self.delay = 1.0
 
-        super().__init__(node, 'Updater', 1.0)
+        self._updater = Updater('/tmp/updater', f'{Path.home()}/.cache/oresat/updates')
 
-        self._updater = Updater(work_dir, cache_dir)
-        self._fread_cache = fread_cache
-        self._fwrite_cache = fwrite_cache
-
-        record = node.object_dictionary[self.index]
+        self.index = 0x3100
+        record = self.od[self.index]
         self.update_obj = record[Subindex.UPDATE.value]
         self.make_status_obj = record[Subindex.MAKE_STATUS_FILE.value]
 
@@ -44,8 +38,8 @@ class UpdaterResource(Resource):
 
     def on_loop(self):
 
-        for i in self._fwrite_cache.files('update'):
-            self._updater.add_update(self._fwrite_cache.dir + '/' + i)
+        for i in self.fwrite_cache.files('update'):
+            self._updater.add_update(self.fwrite_cache.dir + '/' + i)
 
         if self.update_obj.value:
             try:
@@ -56,7 +50,7 @@ class UpdaterResource(Resource):
 
         if self.make_status_obj.value:
             status_archive_file_path = self._updater.make_status_archive()
-            self._fread_cache.add(status_archive_file_path, consume=True)
+            self.fread_cache.add(status_archive_file_path, consume=True)
             self.make_status_obj.value = False
 
     def on_read(self, index, subindex, od):

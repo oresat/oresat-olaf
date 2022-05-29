@@ -18,10 +18,10 @@ class OSCommandState(IntEnum):
 class OSCommandResource(Resource):
     '''Resource for running OS (bash) commands over CAN bus as defined by CiA 301 specs'''
 
-    def __init__(self, node: canopen.LocalNode):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        super().__init__(node, 'OS Command', 0.5)
-
+        self.delay = 0.5
         self.failed = False
 
         self.index = 0x1023
@@ -33,9 +33,6 @@ class OSCommandResource(Resource):
         self.state = OSCommandState.NO_ERROR_NO_REPLY
         self.reply = ''
         self.reply_max_len = 10000
-
-        node.add_read_callback(self.on_read)
-        node.add_write_callback(self.on_write)
 
     def on_loop(self):
 

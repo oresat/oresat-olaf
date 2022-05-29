@@ -22,17 +22,10 @@ class Subindex(IntEnum):
 class FileCachesResource(Resource):
     '''Resource for interacting with the fread and fwrite caches'''
 
-    def __init__(self,
-                 node: canopen.LocalNode,
-                 fread_cache: OreSatFileCache,
-                 fwrite_cache: OreSatFileCache,
-                 name: str = 'File Caches'):
-
-        super().__init__(node, name, -1.0)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.index = 0x3002
-        self.fread_cache = fread_cache
-        self.fwrite_cache = fwrite_cache
         self.file_caches = [self.fread_cache, self.fwrite_cache]
 
         # defaults
@@ -73,14 +66,14 @@ class FileCachesResource(Resource):
             return
 
         if subindex == Subindex.CACHE_SELECTOR:
-            self.selector = self.node.object_dictionary[index][subindex].decode_raw(data)
+            self.selector = self.od[index][subindex].decode_raw(data)
         elif subindex == Subindex.FILTER:
             if not data or not data.decode():  # empty or NULL terminator
                 self.filter = ''
             else:
                 data.decode()
         elif subindex == Subindex.ITER:
-            self.iter = self.node.object_dictionary[index][subindex].decode_raw(data)
+            self.iter = self.od[index][subindex].decode_raw(data)
         elif subindex == Subindex.DELETE_FILE:
             file_name = self.file_caches[self.selector].files(self.filter)[self.iter].name
             self.file_cache.remove(file_name)

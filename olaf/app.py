@@ -64,8 +64,13 @@ class App:
             self.work_base_dir = str(Path.home()) + '/.oresat'
             self.cache_base_dir = str(Path.home()) + '/.cache/oresat'
 
-        self.fread_cache = OreSatFileCache(self.cache_base_dir + '/fread')
-        self.fwrite_cache = OreSatFileCache(self.cache_base_dir + '/fwrite')
+        fread_path = self.cache_base_dir + '/fread'
+        fwrite_path = self.cache_base_dir + '/fwrite'
+        logger.debug(f'fread cache path {fread_path}')
+        logger.debug(f'fwrite cache path {fwrite_path}')
+
+        self.fread_cache = OreSatFileCache(fread_path)
+        self.fwrite_cache = OreSatFileCache(fwrite_path)
 
         # setup event
         for sig in ['SIGTERM', 'SIGHUP', 'SIGINT']:
@@ -80,6 +85,8 @@ class App:
             self.node_id = 0x7C
         self.node = canopen.LocalNode(self.node_id, eds)
         self.node.object_dictionary.node_id = self.node_id
+
+        self.name = self.node.object_dictionary.device_information.product_name
 
         # python canopen does not set the value to default for some reason
         for i in self.od:
@@ -121,18 +128,14 @@ class App:
             self.od[0x1800 + i][1].value = cob_id
 
         # default resources
-        self.add_resource(OSCommandResource(self.node))
-        self.add_resource(ECSSResource(self.node))
-        self.add_resource(SystemInfoResource(self.node))
-        self.add_resource(FileCachesResource(self.node, self.fread_cache, self.fwrite_cache))
-        self.add_resource(FreadResource(self.node, self.fread_cache))
-        self.add_resource(FwriteResource(self.node, self.fwrite_cache))
-        self.add_resource(UpdaterResource(self.node,
-                                          self.fread_cache,
-                                          self.fwrite_cache,
-                                          self.work_base_dir + '/updater',
-                                          self.cache_base_dir + '/updater'))
-        self.add_resource(LogsResource(self.node, self.fread_cache))
+        self.add_resource(OSCommandResource)
+        self.add_resource(ECSSResource)
+        self.add_resource(SystemInfoResource)
+        self.add_resource(FileCachesResource)
+        self.add_resource(FreadResource)
+        self.add_resource(FwriteResource)
+        self.add_resource(UpdaterResource)
+        self.add_resource(LogsResource)
 
     def __del__(self):
 
@@ -144,8 +147,9 @@ class App:
             logger.error(exc)
 
     def _quit(self, signo, _frame):
-        '''called when signals are caught'''
-        logger.info(f'signal {signal.Signals(signo).name} was caught')
+        '''Called when signals are caught'''
+
+        logger.debug(f'signal {signal.Signals(signo).name} was caught')
         self.stop()
 
     def send_tpdo(self, tpdo: int):
@@ -208,8 +212,9 @@ class App:
     def add_resource(self, resource: Resource):
         '''Add a resource for the app'''
 
-        logger.debug(f'adding {resource.name} resource')
-        self.resources.append(resource)
+        res = resource(self.node, self.fread_cache, self.fwrite_cache)
+        logger.debug(f'adding {res.__class__.__name__} resources')
+        self.resources.append(res)
 
     def _run_resource(self, resource):
         '''Run the resource'''
@@ -218,7 +223,8 @@ class App:
             try:
                 resource.on_loop()
             except Exception as exc:  # nothing fancy just end return if the resource loop fails
-                msg = f'{resource.name} resource\'s on_loop raised an uncaught exception: {exc}'
+                name = resource.__class__.__name__
+                msg = f'{name} resource\'s on_loop raised an uncaught exception: {exc}'
                 logger.critical(msg)
                 break
 
@@ -234,11 +240,10 @@ class App:
         int
             Errno value or 0 for on no error.
         '''
-
         tpdo_threads = []
         resource_threads = {}
 
-        logger.info('app is starting')
+        logger.info(f'{self.name} app is starting')
         if geteuid() != 0:  # running as root
             logger.warning('not running as root, cannot restart CAN bus if it goes down')
 
@@ -250,12 +255,14 @@ class App:
             try:
                 resource.on_start()
             except Exception as exc:
-                msg = f'{resource.name} resource\'s on_start raised an uncaught exception: {exc}'
+                name = resource.__class__.__name__
+                msg = f'{resource} resource\'s on_start raised an uncaught exception: {exc}'
                 logger.critical(msg)
                 continue
 
             if resource.delay >= 0:
-                t = Thread(name=resource.name, target=self._run_resource, args=(resource,))
+                name = resource.__class__.__name__
+                t = Thread(name=name, target=self._run_resource, args=(resource,))
                 logger.debug(f'starting {t.name} resource thread')
                 t.start()
                 resource_threads[t] = resource
@@ -270,7 +277,7 @@ class App:
                 t.start()
                 tpdo_threads.append(t)
 
-        logger.info('app is running')
+        logger.info(f'{self.name} app is running')
         while not self.event.is_set():
             if not psutil.net_if_stats().get(self.bus):
                 logger.critical(f'{self.bus} no longer exists, nothing OLAF can do, exiting')
@@ -332,13 +339,13 @@ class App:
             logger.debug(f'joining {t.name} resource thread')
             t.join()
 
-        logger.info('app has ended')
+        logger.info(f'{self.name} app has ended')
         return 0
 
     def stop(self):
         '''End the run loop'''
 
-        logger.info('stopping app')
+        logger.info(f'{self.name} app is stopping')
         self.event.set()
 
     @property

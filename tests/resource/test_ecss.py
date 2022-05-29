@@ -10,7 +10,7 @@ class TestECSSResource(unittest.TestCase):
     def setUp(self):
         self.app = TestApp()
         self.node = self.app.node
-        self.app.add_resource(ECSSResource(self.node))
+        self.app.add_resource(ECSSResource)
         self.app.start()
 
     def tearDown(self):

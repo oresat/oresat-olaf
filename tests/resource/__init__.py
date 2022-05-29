@@ -2,7 +2,7 @@ from threading import Thread, Event
 from loguru import logger
 
 import canopen
-from olaf import Resource
+from olaf import Resource, OreSatFileCache
 
 
 class TestApp(Thread):
@@ -10,9 +10,11 @@ class TestApp(Thread):
         super().__init__()
         logger.disable('oresat_app')
         self.node = canopen.LocalNode(0x10, 'olaf/data/oresat_app.eds')
+        self.fread_cache = OreSatFileCache('/tmp/fread')
+        self.fwrite_cache = OreSatFileCache('/tmp/fwrite')
 
     def add_resource(self, resource: Resource):
-        self.resource = resource
+        self.resource = resource(self.node, self.fread_cache, self.fwrite_cache)
         self.node.add_read_callback(self.resource.on_read)
         self.node.add_write_callback(self.resource.on_write)
 

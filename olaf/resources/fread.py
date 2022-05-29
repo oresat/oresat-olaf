@@ -19,26 +19,14 @@ class Subindex(IntEnum):
 class FreadResource(Resource):
     '''Resource for readings file over the CAN bus'''
 
-    def __init__(self,
-                 node: canopen.LocalNode,
-                 fread_cache: OreSatFileCache,
-                 tmp_dir: str = '/tmp/oresat/fread'):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        super().__init__(node, 'Fread', -1.0)
-
-        if tmp_dir == '/':
-            raise ValueError('tmp_dir cannot be root dir')
-
-        if tmp_dir[-1] != '/':
-            tmp_dir += '/'
-
-        self.fread_cache = fread_cache
-
-        self.tmp_dir = tmp_dir
+        self.tmp_dir = '/tmp/oresat/fread'
         Path(self.tmp_dir).mkdir(parents=True, exist_ok=True)
-        logger.debug(f'fread tmp_dir is {self.tmp_dir}')
+        logger.debug(f'fread tmp dir is {self.tmp_dir}')
         for i in listdir(self.tmp_dir):
-            remove(self.tmp_dir + i)
+            remove(f'{self.tmp_dir}/{i}')
 
         self.index = 0x3003
 
