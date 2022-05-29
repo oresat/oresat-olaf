@@ -1,6 +1,8 @@
 import sys
+import errno
 import struct
 import signal
+import subprocess
 from os import geteuid
 from pathlib import Path
 from threading import Thread, Event
@@ -45,6 +47,7 @@ class App:
         self.bus = bus
         self.event = Event()
         self.resources = []
+        self.network = None
 
         if isinstance(node_id, str):
             if node_id.startswith('0x'):
@@ -68,8 +71,6 @@ class App:
         for sig in ['SIGTERM', 'SIGHUP', 'SIGINT']:
             signal.signal(getattr(signal, sig), self._quit)
 
-        self.network = canopen.Network()
-        self.network.connect(bustype='socketcan', channel=self.bus)
         dcf_node_id = canopen.import_od(eds).node_id
         if node_id != 0:
             self.node_id = node_id
@@ -79,11 +80,6 @@ class App:
             self.node_id = 0x7C
         self.node = canopen.LocalNode(self.node_id, eds)
         self.node.object_dictionary.node_id = self.node_id
-        self.network.add_node(self.node)
-        self.node.nmt.state = 'PRE-OPERATIONAL'
-
-        self.node.tpdo.read()
-        self.node.rpdo.read()
 
         # python canopen does not set the value to default for some reason
         for i in self.od:
@@ -161,8 +157,11 @@ class App:
             TPDO number to send
         '''
 
-        if self.node.nmt.state != 'OPERATIONAL':
-            return  # PDOs should not be sent if not in OPERATIONAL state
+        # PDOs can't be sent if CAN bus is down and PDOs should not be sent if CAN bus not in
+        # 'OPERATIONAL' state
+        can_bus = psutil.net_if_stats().get(self.bus)
+        if not can_bus or (can_bus.isup and self.node.nmt.state != 'OPERATIONAL'):
+            return
 
         cob_id = self.od[0x1800 + tpdo][1].value
         maps = self.od[0x1A00 + tpdo][0].value
@@ -226,16 +225,26 @@ class App:
             if resource.delay > 0:
                 self.event.wait(resource.delay)
 
-    def run(self):
+    def run(self) -> int:
         '''Go into operational mode, start all the resources, start all the threads, and monitor
-        everything in a loop.'''
+        everything in a loop.
 
-        logger.info('app is starting')
+        Returns
+        -------
+        int
+            Errno value or 0 for on no error.
+        '''
 
-        self.node.nmt.start_heartbeat(self.od[0x1017].default)
-        self.node.nmt.state = 'OPERATIONAL'
         tpdo_threads = []
         resource_threads = {}
+
+        logger.info('app is starting')
+        if geteuid() != 0:  # running as root
+            logger.warning('not running as root, cannot restart CAN bus if it goes down')
+
+        if not psutil.net_if_stats().get(self.bus):
+            logger.critical(f'{self.bus} does not exist, nothing OLAF can do, exiting')
+            return errno.ENETUNREACH
 
         for resource in self.resources:
             try:
@@ -263,27 +272,48 @@ class App:
 
         logger.info('app is running')
         while not self.event.is_set():
-            if not psutil.net_if_stats().get(self.bus).isup:
-                logger.critical(f'CAN bus {self.bus} is down')
-                if self.node.nmt.state != 'PRE-OPERATIONAL':
-                    self.node.nmt.state == 'PRE-OPERATIONAL'
-
-            # monitor threads
-            for t in tpdo_threads:
-                if not t.is_alive:
-                    logger.error(f'tpdo thread {t.name} has ended')
-                    t.join()
-                    tpdo_threads.remove(t)
-            for t in resource_threads:
-                if not t.is_alive:
-                    logger.error(f'resource thread {t.name} has ended')
-                    t.join()
+            if not psutil.net_if_stats().get(self.bus):
+                logger.critical(f'{self.bus} no longer exists, nothing OLAF can do, exiting')
+                self.event.set()
+                break
+            elif not psutil.net_if_stats().get(self.bus).isup:
+                logger.error(f'{self.bus} is down')
+                if self.network:
+                    self.network = None
+                if geteuid() == 0:  # running as root
+                    logger.info(f'trying to restart CAN bus {self.bus}')
+                    out = subprocess.run(f'ip link set {self.bus} up', shell=True)
+                    if out.returncode != 0:
+                        logger.error(out)
+            else:
+                if not self.network:
+                    logger.debug('(re)starting can network')
+                    self.network = canopen.Network()
+                    self.network.connect(bustype='socketcan', channel=self.bus)
+                    self.network.add_node(self.node)
                     try:
-                        resource_threads[t].on_end()
+                        self.node.nmt.state = 'PRE-OPERATIONAL'
+                        self.node.nmt.start_heartbeat(self.od[0x1017].default)
+                        self.node.nmt.state = 'OPERATIONAL'
                     except Exception as exc:
-                        logger.critical(f'{resource_threads[t].name} resource\'s on_end raised an '
-                                        f'uncaught exception: {exc}')
-                    del resource_threads[t]
+                        logger.error(exc)
+
+                # monitor threads
+                for t in tpdo_threads:
+                    if not t.is_alive:
+                        logger.error(f'tpdo thread {t.name} has ended')
+                        t.join()
+                        tpdo_threads.remove(t)
+                for t in resource_threads:
+                    if not t.is_alive:
+                        logger.error(f'resource thread {t.name} has ended')
+                        t.join()
+                        try:
+                            resource_threads[t].on_end()
+                        except Exception as exc:
+                            logger.critical(f'{resource_threads[t].name} resource\'s on_end raised'
+                                            f' an uncaught exception: {exc}')
+                        del resource_threads[t]
 
             self.event.wait(1)
 
@@ -303,6 +333,7 @@ class App:
             t.join()
 
         logger.info('app has ended')
+        return 0
 
     def stop(self):
         '''End the run loop'''
