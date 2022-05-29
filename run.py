@@ -3,7 +3,7 @@
 from os.path import dirname, abspath
 from argparse import ArgumentParser
 
-from olaf import app_args_parser, parse_app_args, App
+from olaf import app_args_parser, parse_app_args, App, logger
 
 if __name__ == '__main__':
 
@@ -13,4 +13,4 @@ if __name__ == '__main__':
 
     app = App('olaf/data/oresat_app.eds', args.bus, args.node_id)
 
-    app.run()
+    exit(app.run())
