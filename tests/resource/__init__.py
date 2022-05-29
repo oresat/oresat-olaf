@@ -13,8 +13,17 @@ class TestApp(Thread):
         self.fread_cache = OreSatFileCache('/tmp/fread')
         self.fwrite_cache = OreSatFileCache('/tmp/fwrite')
 
+    def send_tpdo(self, tpdo: int):
+        return  # don't do anything
+
     def add_resource(self, resource: Resource):
-        self.resource = resource(self.node, self.fread_cache, self.fwrite_cache, True)
+        self.resource = resource(
+            self.node,
+            self.fread_cache,
+            self.fwrite_cache,
+            True,
+            self.send_tpdo
+        )
         self.node.add_read_callback(self.resource.on_read)
         self.node.add_write_callback(self.resource.on_write)
 

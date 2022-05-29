@@ -215,7 +215,13 @@ class App:
     def add_resource(self, resource: Resource):
         '''Add a resource for the app'''
 
-        res = resource(self.node, self.fread_cache, self.fwrite_cache, self.mock_hw)
+        res = resource(
+            self.node,
+            self.fread_cache,
+            self.fwrite_cache,
+            self.mock_hw,
+            self.send_tpdo
+        )
         logger.debug(f'adding {res.__class__.__name__} resources')
         self.resources.append(res)
 

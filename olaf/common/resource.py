@@ -21,6 +21,7 @@ class Resource:
         fread_cache: OreSatFileCache,
         fwrite_cache: OreSatFileCache,
         mock_hw: bool,
+        send_tpdo
     ):
         '''
         Parameters
@@ -33,6 +34,8 @@ class Resource:
             The file write over CAN cache (the file cache a master node can write to).
         mock_hw: bool
             Resource should mock any hardware when set to ``True``.
+        send_tpdo
+            function callback for :py:func:`App.send_tpdo`.
         '''
 
         self._delay = -1
@@ -40,6 +43,7 @@ class Resource:
         self._fread_cache = fread_cache
         self._fwrite_cache = fwrite_cache
         self._mock_hw = mock_hw
+        self._send_tpdo_cb = send_tpdo
 
         node.add_read_callback(self.on_read)
         node.add_write_callback(self.on_write)
@@ -108,6 +112,17 @@ class Resource:
         '''
 
         pass
+
+    def send_tpdo(self, tpdo: int):
+        '''Send a TPDO. Will not be sent if not node is not in operational state.
+
+        Parameters
+        ----------
+        tpdo: int
+            TPDO number to send.
+        '''
+
+        self._send_tpdo_cb(tpdo)
 
     @property
     def mock_hw(self):
