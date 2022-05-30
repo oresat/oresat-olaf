@@ -41,7 +41,7 @@ class FreadResource(Resource):
 
         if not self.file_path:
             logger.error('fread file path was not set before trying to read info')
-            return ret
+            return b''
 
         if subindex == Subindex.FILE_NAME:
             ret = basename(self.file_path)
@@ -70,6 +70,7 @@ class FreadResource(Resource):
                 self.file_path = self.fread_cache.get(file_name, self.tmp_dir, True)
             except FileNotFoundError:
                 logger.error(f'file {file_name} not in fread cache')
+                self.file_path = ''
         elif subindex == Subindex.DELETE_FILE:
             if self.file_path:
                 # delete file from cache and tmp dir

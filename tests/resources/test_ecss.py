@@ -19,4 +19,4 @@ class TestECSSResource(unittest.TestCase):
     def test_ecss(self):
 
         self.assertIsNot(self.node.sdo[0x2010].raw, 0)
-        self.assertIsNot(self.node.sdo[0x2010].raw, 0)
+        self.assertIsNot(self.node.sdo[0x2011].raw, 0)

@@ -36,7 +36,7 @@ class FwriteResource(Resource):
         ret = None
 
         if index == self.index and self.file_path and subindex == Subindex.FILE_NAME:
-            ret = basename(self._file_path)
+            ret = basename(self.file_path)
 
         return ret
 
