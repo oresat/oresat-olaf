@@ -1,11 +1,10 @@
 from threading import Thread, Event
-from loguru import logger
 
 import canopen
-from olaf import Resource, OreSatFileCache
+from olaf import Resource, OreSatFileCache, logger
 
 
-class TestApp(Thread):
+class MockApp(Thread):
     def __init__(self):
         super().__init__()
         logger.disable('oresat_app')

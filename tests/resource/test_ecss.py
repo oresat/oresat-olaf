@@ -3,12 +3,12 @@ from time import sleep
 
 from olaf.resources.ecss import ECSSResource
 
-from . import TestApp
+from . import MockApp
 
 
 class TestECSSResource(unittest.TestCase):
     def setUp(self):
-        self.app = TestApp()
+        self.app = MockApp()
         self.node = self.app.node
         self.app.add_resource(ECSSResource)
         self.app.start()

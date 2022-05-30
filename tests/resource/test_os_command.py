@@ -4,7 +4,7 @@ from time import sleep
 import canopen
 from olaf.resources.os_command import OSCommandState, OSCommandResource
 
-from . import TestApp
+from . import MockApp
 
 
 def run_os_command(node: canopen.LocalNode, command: str):
@@ -18,7 +18,7 @@ def run_os_command(node: canopen.LocalNode, command: str):
 
 class TestOSCommand(unittest.TestCase):
     def setUp(self):
-        self.app = TestApp()
+        self.app = MockApp()
         self.node = self.app.node
         self.app.add_resource(OSCommandResource)
         self.app.start()
