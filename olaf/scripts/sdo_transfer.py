@@ -70,7 +70,12 @@ def main():
     network.connect(bustype='socketcan', channel=args.bus)
 
     if args.mode == 'r' or args.mode == 'read':
-        raw_data = node.sdo.upload(index, subindex)
+        try:
+            raw_data = node.sdo.upload(index, subindex)
+        except Exception as exc:
+            print(exc)
+            network.disconnect()
+            return
         network.disconnect()
 
         if co_type == CANopenTypes.b:
@@ -137,7 +142,10 @@ def main():
         else:
             print('invalid data type')
 
-        node.sdo.download(index, subindex, raw_data)
+        try:
+            node.sdo.download(index, subindex, raw_data)
+        except Exception as exc:
+            print(exc)
         network.disconnect()
     else:
         print('Invalid mode')

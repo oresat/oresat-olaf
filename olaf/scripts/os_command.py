@@ -25,7 +25,11 @@ def main():
     network.add_node(node)
     network.connect(bustype='socketcan', channel=args.bus)
 
-    node.sdo[OS_COMMAND_INDEX][1].raw = args.command.encode('utf-8')
+    try:
+        node.sdo[OS_COMMAND_INDEX][1].raw = args.command.encode('utf-8')
+    except Exception as exc:
+        print(exc)
+        return
 
     while node.sdo[OS_COMMAND_INDEX][2].phys == 0xFF:
         sleep(0.1)

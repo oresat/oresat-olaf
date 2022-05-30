@@ -15,6 +15,38 @@ FWRITE_CACHE = 1
 FCACHE_INDEX = 0x3002
 
 
+def list_files(node, cache: str):
+    if cache == 'fread':
+        node.sdo[FCACHE_INDEX][3].phys = FREAD_CACHE
+    elif cache == 'fwrite':
+        node.sdo[FCACHE_INDEX][3].phys = FWRITE_CACHE
+    else:
+        print('invalid cache')
+        sys.exit(1)
+
+    node.sdo[FCACHE_INDEX][4].raw = b'\00'  # clear filter
+
+    for i in range(node.sdo[FCACHE_INDEX][5].phys):
+        node.sdo[FCACHE_INDEX][6].phys = i
+        print(node.sdo[FCACHE_INDEX][7].phys)
+
+
+def read_file(node, file: str):
+    node.sdo[0x3003][1].raw = file.encode('utf-8')
+    infile = node.sdo[0x3003][2].open('rb', encoding='ascii')
+    outfile = open(file, 'wb')
+    outfile.writelines(infile)
+    infile.close()
+    outfile.close()
+
+
+def write_file(node, file: str):
+    node.sdo[0x3004][1].raw = basename(file).encode('utf-8')
+    with open(file, 'rb') as fptr:
+        file_data = fptr.read()
+    node.sdo[0x3004][2].raw = file_data
+
+
 def main():
     parser = ArgumentParser(description='OLM file transfer')
     parser.add_argument('bus', help='CAN bus to use')
@@ -32,36 +64,18 @@ def main():
     network.add_node(node)
     network.connect(bustype='socketcan', channel=args.bus)
 
-    if args.cache is not None:
-        if args.cache == 'fread':
-            node.sdo[FCACHE_INDEX][3].phys = FREAD_CACHE
-        elif args.cache == 'fwrite':
-            node.sdo[FCACHE_INDEX][3].phys = FWRITE_CACHE
+    try:
+        if args.cache is not None:
+            list_files(node, args.cache)
+        elif args.read_file is not None:
+            read_file(node, args.read_file)
+        elif args.write_file is not None:
+            write_file(node, args.write_file)
         else:
-            print('invalid cache')
+            print('invalid mode')
             sys.exit(1)
-
-        node.sdo[FCACHE_INDEX][4].raw = b'\00'  # clear filter
-
-        for i in range(node.sdo[FCACHE_INDEX][5].phys):
-            node.sdo[FCACHE_INDEX][6].phys = i
-            print(node.sdo[FCACHE_INDEX][7].phys)
-    elif args.read_file is not None:
-        node.sdo[0x3003][1].raw = args.read_file.encode('utf-8')
-        infile = node.sdo[0x3003][2].open('rb', encoding='ascii')
-        outfile = open(args.read_file, 'wb')
-        outfile.writelines(infile)
-
-        infile.close()
-        outfile.close()
-    elif args.write_file is not None:
-        node.sdo[0x3004][1].raw = basename(args.write_file).encode('utf-8')
-        with open(args.write_file, 'rb') as fptr:
-            file_data = fptr.read()
-        node.sdo[0x3004][2].raw = file_data
-    else:
-        print('invalid mode')
-        sys.exit(1)
+    except Exception as exc:
+        print(exc)
 
     network.disconnect()
 

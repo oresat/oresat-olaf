@@ -21,7 +21,11 @@ def main():
     network.add_node(node)
     network.connect(bustype='socketcan', channel=args.bus)
 
-    system_info_record = node.sdo[SYSTEM_INFO_INDEX]
+    try:
+        system_info_record = node.sdo[SYSTEM_INFO_INDEX]
+    except Exception as exc:
+        print(exc)
+        return
 
     print('')
 
