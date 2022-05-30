@@ -43,9 +43,9 @@ class FreadResource(Resource):
             logger.error('fread file path was not set before trying to read info')
             return ret
 
-        if subindex == self.sub_file_name:
+        if subindex == Subindex.FILE_NAME:
             ret = basename(self.file_path)
-        elif subindex == self.sub_file_data:
+        elif subindex == Subindex.FILE_DATA:
             try:
                 with open(self.file_path, 'rb') as f:
                     ret = f.read()
