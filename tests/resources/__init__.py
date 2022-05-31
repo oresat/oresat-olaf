@@ -32,8 +32,6 @@ class MockApp(Thread):
             True,
             self.send_tpdo
         )
-        self.node.add_read_callback(self.resource.on_read)
-        self.node.add_write_callback(self.resource.on_write)
 
     def run(self):
         self.event = Event()

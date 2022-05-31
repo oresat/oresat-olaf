@@ -1,10 +1,9 @@
 import random
 import string
 import unittest
-from time import sleep
 from os.path import basename
 
-from olaf import logger, new_oresat_file
+from olaf import new_oresat_file
 from olaf.resources.fread import FreadResource, Subindex
 
 from . import MockApp

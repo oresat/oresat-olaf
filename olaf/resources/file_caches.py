@@ -1,3 +1,4 @@
+from os.path import getsize
 from enum import IntEnum, auto
 
 import canopen
@@ -45,6 +46,8 @@ class FileCachesResource(Resource):
                 ret = len(self.fread_cache)
             elif subindex == Subindex.FWRITE_LEN:
                 ret = len(self.fwrite_cache)
+            elif subindex == Subindex.CACHE_SELECTOR:
+                ret = self.selector
             elif subindex == Subindex.FILTER:
                 ret = self.filter
             elif subindex == Subindex.CACHE_LENGTH:
@@ -54,7 +57,10 @@ class FileCachesResource(Resource):
             elif subindex == Subindex.FILE_NAME:
                 ret = self.file_caches[self.selector].files(self.filter)[self.iter].name
             elif subindex == Subindex.FILE_SIZE:
-                ret = self.file_caches[self.selector].files(self.filter)[self.iter].size
+                dir_name = self.file_caches[self.selector].dir
+                file_name = self.file_caches[self.selector].files(self.filter)[self.iter].name
+                file_path = f'{dir_name}/{file_name}'
+                ret = getsize(file_path)
         except Exception as exc:
             logger.error(exc)
 
@@ -65,15 +71,20 @@ class FileCachesResource(Resource):
         if index != self.index:
             return
 
-        if subindex == Subindex.CACHE_SELECTOR:
-            self.selector = self.od[index][subindex].decode_raw(data)
-        elif subindex == Subindex.FILTER:
-            if not data or not data.decode():  # empty or NULL terminator
-                self.filter = ''
-            else:
-                data.decode()
-        elif subindex == Subindex.ITER:
-            self.iter = self.od[index][subindex].decode_raw(data)
-        elif subindex == Subindex.DELETE_FILE:
-            file_name = self.file_caches[self.selector].files(self.filter)[self.iter].name
-            self.file_cache.remove(file_name)
+        try:
+            if subindex == Subindex.CACHE_SELECTOR:
+                if self.od[index][subindex].decode_raw(data) in [0, 1]:  # check for invalid input
+                    self.selector = self.od[index][subindex].decode_raw(data)
+            elif subindex == Subindex.FILTER:
+                if not data or not data.decode():  # empty or NULL terminator
+                    self.filter = ''
+                else:
+                    self.filter = data.decode()
+            elif subindex == Subindex.ITER:
+                self.iter = self.od[index][subindex].decode_raw(data)
+            elif subindex == Subindex.DELETE_FILE:
+                file_name = self.file_caches[self.selector].files(self.filter)[self.iter].name
+                self.file_caches[self.selector].remove(file_name)
+                logger.info(f'deleted {file_name}')
+        except Exception as exc:
+            logger.error(exc)
