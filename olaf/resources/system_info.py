@@ -87,7 +87,10 @@ class SystemInfoResource(Resource):
                 with open(file_path, 'r') as f:
                     ret = f.read().strip()
         elif subindex == Subindex.CPU_FREQ.value:
-            ret = int(psutil.cpu_freq().current * 1000)
+            # there was MHz vs GHz bug with psutil v5.9.0
+            ret = int(psutil.cpu_freq().current)
+            if ret < 10:  # value was in GHz, not MHz
+                ret = int(psutil.cpu_freq().current * 1000)
         elif subindex == Subindex.RPROC_ITER.value:
             ret = self.rproc_iter
         elif subindex == Subindex.RPROC_NAME.value:
