@@ -65,7 +65,11 @@ class SystemInfoResource(Resource):
         si_record[Subindex.RAM_TOTAL.value].value = psutil.virtual_memory().total // _B_TO_MB
         si_record[Subindex.SWAP_TOTAL.value].value = psutil.swap_memory().total // _B_TO_MB
         si_record[Subindex.ROOT_PART_TOTAL.value].value = psutil.disk_usage('/').total // _B_TO_MB
-        self.rprocs = len(os.listdir('/sys/class/remoteproc'))  # save for `on_read`
+        if os.path.isdir('/sys/class/remoteproc'):
+            self.rprocs = len(os.listdir('/sys/class/remoteproc'))
+            # save for `on_read`
+        else:
+            self.rprocs = 0
         si_record[Subindex.NUM_OF_RPROCS.value].value = self.rprocs
 
     def on_read(self, index, subindex, od):
