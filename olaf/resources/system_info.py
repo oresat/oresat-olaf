@@ -128,6 +128,6 @@ class SystemInfoResource(Resource):
         if index != self.index or subindex != Subindex.RPROC_ITER.value:
             return
 
-        temp = od.raw_decode(data)
+        temp = od.decode_raw(data)
         if temp < self.rprocs:
             self.rproc_iter = temp
