@@ -23,7 +23,7 @@ class OreSatFileCache:
         self._data = []
         self._lock = Lock()
 
-        if(isfile(abspath(self._dir))):
+        if isfile(abspath(self._dir)):
             raise Exception("Cannot create new directory with an existing file name.")
 
         Path(self._dir).mkdir(parents=True, exist_ok=True)
