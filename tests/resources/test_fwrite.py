@@ -1,11 +1,10 @@
 import random
 import string
 import unittest
-from time import sleep
 from os import remove
 from os.path import basename
 
-from olaf import logger, new_oresat_file
+from olaf import new_oresat_file
 from olaf.resources.fwrite import FwriteResource, Subindex
 
 from . import MockApp

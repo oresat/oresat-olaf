@@ -1,5 +1,4 @@
 import unittest
-from time import sleep
 
 from olaf.resources.ecss import ECSSResource
 

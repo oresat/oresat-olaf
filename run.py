@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-from os.path import dirname, abspath
 from argparse import ArgumentParser
 
-from olaf import app_args_parser, parse_app_args, App, logger
+from olaf import app_args_parser, parse_app_args, App
 
 if __name__ == '__main__':
 

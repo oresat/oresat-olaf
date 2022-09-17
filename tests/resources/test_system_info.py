@@ -1,5 +1,4 @@
 import unittest
-from time import sleep
 
 from olaf.resources.system_info import SystemInfoResource, Subindex
 

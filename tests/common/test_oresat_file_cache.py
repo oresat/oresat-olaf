@@ -1,10 +1,9 @@
 import unittest
 from shutil import rmtree
 from os import rmdir, remove, listdir
-from os.path import basename, abspath, exists
+from os.path import abspath, exists
 
 from olaf.common.oresat_file_cache import OreSatFileCache
-from olaf.common.oresat_file import new_oresat_file
 
 
 class TestOreSatFileCache(unittest.TestCase):

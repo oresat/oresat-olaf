@@ -1,5 +1,4 @@
 import shutil
-import json
 import tempfile
 import unittest
 from os import remove, geteuid
