@@ -1,11 +1,9 @@
 from pathlib import Path
 from enum import IntEnum, auto
 
-import canopen
 from loguru import logger
 
 from ..common.resource import Resource
-from ..common.oresat_file_cache import OreSatFileCache
 from ..updater import Updater, UpdaterError
 
 

@@ -2,7 +2,6 @@
 from typing import Any
 
 import canopen
-from loguru import logger
 
 from .oresat_file_cache import OreSatFileCache
 

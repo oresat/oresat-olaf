@@ -3,7 +3,6 @@ import platform
 from time import time
 from enum import IntEnum, auto
 
-import canopen
 import psutil
 
 from ..common.resource import Resource

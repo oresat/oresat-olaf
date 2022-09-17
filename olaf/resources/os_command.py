@@ -1,7 +1,6 @@
 import subprocess
 from enum import IntEnum
 
-import canopen
 from loguru import logger
 
 from ..common.resource import Resource

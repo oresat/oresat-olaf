@@ -1,4 +1,3 @@
-import sys
 import errno
 import struct
 import signal

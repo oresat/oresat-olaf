@@ -1,7 +1,6 @@
 from os import geteuid
 from time import time, clock_settime, CLOCK_REALTIME
 
-import canopen
 from loguru import logger
 
 from ..common.resource import Resource

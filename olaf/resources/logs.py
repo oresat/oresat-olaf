@@ -1,13 +1,10 @@
 import tarfile
-from os import geteuid, listdir
-from time import time, clock_settime, CLOCK_REALTIME
+from os import listdir
 
-import canopen
 from loguru import logger
 
 from ..common.resource import Resource
 from ..common.oresat_file import new_oresat_file
-from ..common.oresat_file_cache import OreSatFileCache
 
 
 class LogsResource(Resource):
