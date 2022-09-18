@@ -74,10 +74,12 @@ class FileCachesResource(Resource):
                 if self.od[index][subindex].decode_raw(data) in [0, 1]:  # check for invalid input
                     self.selector = self.od[index][subindex].decode_raw(data)
             elif subindex == Subindex.FILTER:
-                if not data or not data.decode():  # empty or NULL terminator
+                if data == b'\x00':  # just NULL terminator mean no filter
                     self.filter = ''
+                    logger.debug('file cache filter clear')
                 else:
                     self.filter = data.decode()
+                    logger.debug(f'file cache filter now "{self.filter}"')
             elif subindex == Subindex.ITER:
                 self.iter = self.od[index][subindex].decode_raw(data)
             elif subindex == Subindex.DELETE_FILE:
