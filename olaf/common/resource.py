@@ -59,8 +59,8 @@ class Resource:
         pass
 
     def on_end(self) -> None:
-        '''Called when the program ends and if the resources fails. Should be used to stop hardware and
-        can be used to zero/clear resource's data in object dictionary as needed.'''
+        '''Called when the program ends and if the resources fails. Should be used to stop hardware
+        and can be used to zero/clear resource's data in object dictionary as needed.'''
 
         pass
 

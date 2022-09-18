@@ -46,8 +46,8 @@ class UpdaterState(IntEnum):
     UPDATE_SUCCESSFUL = 0x0
     '''The last update was successfully installed. Default State.'''
     PRE_UPDATE_FAILED = 0x1
-    '''The last update failed during the inital non critical section. Either the was an error using the
-    file cache, when opening tarfile, or reading the instructions file.'''
+    '''The last update failed during the inital non critical section. Either the was an error using
+    the file cache, when opening tarfile, or reading the instructions file.'''
     UPDATE_FAILED = 0x2
     '''The update failed during the critical section. The updater fail while following the
     instructions.'''
