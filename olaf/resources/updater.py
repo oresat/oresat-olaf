@@ -4,6 +4,7 @@ from enum import IntEnum, auto
 from loguru import logger
 
 from ..common.resource import Resource
+from ..common.timer_loop import TimerLoop
 from ..updater import Updater, UpdaterError
 
 
@@ -21,8 +22,6 @@ class UpdaterResource(Resource):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.delay = 1.0
-
         self._updater = Updater('/tmp/updater', f'{Path.home()}/.cache/oresat/updates')
 
         self.index = 0x3100
@@ -34,7 +33,9 @@ class UpdaterResource(Resource):
         self.update_obj.value = False
         self.make_status_obj.value = False
 
-    def on_loop(self):
+        self.timer_loop = TimerLoop('updater resource', self._loop, 0.5)
+
+    def _loop(self):
 
         for i in self.fwrite_cache.files('update'):
             self._updater.add_update(self.fwrite_cache.dir + '/' + i)
@@ -43,7 +44,7 @@ class UpdaterResource(Resource):
             try:
                 self._updater.update()
             except UpdaterError as exc:
-                logger.error(exc)
+                logger.critical(exc)
             self.update_obj.value = False
 
         if self.make_status_obj.value:
@@ -51,16 +52,12 @@ class UpdaterResource(Resource):
             self.fread_cache.add(status_archive_file_path, consume=True)
             self.make_status_obj.value = False
 
-    def on_read(self, index, subindex, od):
+        return True
 
-        ret = None
+    def on_start(self):
 
-        if index == self.index:
-            if subindex == Subindex.STATUS:
-                ret = self._updater.status.value
-            elif subindex == Subindex.UPDATES_CACHED:
-                ret = self._updater.updates_cached
-            elif subindex == Subindex.LIST_AVAILABLE:
-                ret = ' '.join(self._cache.files())
+        self.timer_loop.start()
 
-        return ret
+    def on_end(self):
+
+        self.timer_loop.stop()

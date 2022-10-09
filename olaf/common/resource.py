@@ -10,18 +10,10 @@ class Resource:
     '''OreSat Linux app resource.
 
     All the ``on_*`` members can be overridden as needed.
-
-    Derived class must set :py:data:`self.delay` if `on_loop` functionality is wanted.
     '''
 
-    def __init__(
-        self,
-        node: canopen.LocalNode,
-        fread_cache: OreSatFileCache,
-        fwrite_cache: OreSatFileCache,
-        mock_hw: bool,
-        send_tpdo
-    ):
+    def __init__(self, node: canopen.LocalNode, fread_cache: OreSatFileCache,
+                 fwrite_cache: OreSatFileCache, mock_hw: bool, send_tpdo):
         '''
         Parameters
         ----------
@@ -37,7 +29,6 @@ class Resource:
             function callback for :py:func:`App.send_tpdo`.
         '''
 
-        self._delay = -1
         self._od = node.object_dictionary
         self._fread_cache = fread_cache
         self._fwrite_cache = fwrite_cache
@@ -49,12 +40,6 @@ class Resource:
 
     def on_start(self) -> None:
         '''Start the resource. Should be used to setup hardware or anything that is slow.'''
-
-        pass
-
-    def on_loop(self) -> None:
-        '''This is called all in loop every :py:data:`self.delay` seconds, if :py:data:`self.delay`
-        is set to a non-negative number.'''
 
         pass
 
@@ -87,13 +72,8 @@ class Resource:
 
         pass
 
-    def on_write(
-        self,
-        index: int,
-        subindex: int, od:
-        canopen.objectdictionary.Variable,
-        data: bytes
-    ) -> None:
+    def on_write(self, index: int, subindex: int, od: canopen.objectdictionary.Variable,
+                 data: bytes):
         '''SDO write callback function. Gives access to the data being received on a SDO write.
 
         *Note:* data is still written to object dictionary before call.
@@ -128,23 +108,13 @@ class Resource:
         '''bool: Resource should mock all hardware when set to ``True``. :py:class:`App` will set
         this based of runtime args.
         '''
+
         return self._mock_hw
-
-    @property
-    def delay(self):
-        '''int: If set to a non-negative number :py:class:`App` will make set up a thread just for
-        :py:func:`on_loop`. Value must be set in :py:func:`__init__` or :py:func:`on_start`
-        otherwise default value is -1.
-        '''
-        return self._delay
-
-    @delay.setter
-    def delay(self, delay: int):
-        self._delay = delay
 
     @property
     def od(self):
         '''canopen.ObjectDictionary: Access the object dictionary.'''
+
         return self._od
 
     @property
@@ -152,6 +122,7 @@ class Resource:
         '''OreSatFileCache: The file read over CAN cache (the file cache a master node can read
         from). Resources can add files to this cache to have them transfer to the master node.
         '''
+
         return self._fread_cache
 
     @property
@@ -160,4 +131,5 @@ class Resource:
         to). Resources can consume files from this cache that were transfer from the master node to
         the app.
         '''
+
         return self._fwrite_cache

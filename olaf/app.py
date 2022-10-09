@@ -292,7 +292,6 @@ class App:
             Errno value or 0 for on no error.
         '''
         tpdo_threads = []
-        resource_threads = {}
 
         logger.info(f'{self.name} app is starting')
         if geteuid() != 0:  # running as root
@@ -306,17 +305,9 @@ class App:
             try:
                 resource.on_start()
             except Exception as exc:
-                name = resource.__class__.__name__
                 msg = f'{resource} resource\'s on_start raised an uncaught exception: {exc}'
                 logger.critical(msg)
                 continue
-
-            if resource.delay >= 0:
-                name = resource.__class__.__name__
-                t = Thread(name=name, target=self._run_resource, args=(resource,))
-                logger.debug(f'starting {t.name} resource thread')
-                t.start()
-                resource_threads[t] = resource
 
         for i in range(len(self.node.tpdo)):
             transmission_type = self.od[0x1800 + i][2].default
@@ -344,22 +335,12 @@ class App:
                 else:
                     self.first_bus_error = True  # reset flag
 
-                # monitor threads
+                # monitor tpdo threads
                 for t in tpdo_threads:
                     if not t.is_alive:
                         logger.error(f'tpdo thread {t.name} has ended')
                         t.join()
                         tpdo_threads.remove(t)
-                for t in resource_threads:
-                    if not t.is_alive:
-                        logger.error(f'resource thread {t.name} has ended')
-                        t.join()
-                        try:
-                            resource_threads[t].on_end()
-                        except Exception as exc:
-                            logger.critical(f'{resource_threads[t].name} resource\'s on_end raised'
-                                            f' an uncaught exception: {exc}')
-                        del resource_threads[t]
 
             self.event.wait(1)
 
@@ -372,10 +353,6 @@ class App:
 
         for t in tpdo_threads:
             logger.debug(f'joining {t.name} thread')
-            t.join()
-
-        for t in resource_threads:
-            logger.debug(f'joining {t.name} resource thread')
             t.join()
 
         logger.info(f'{self.name} app has ended')

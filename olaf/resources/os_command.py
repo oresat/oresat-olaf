@@ -4,6 +4,7 @@ from enum import IntEnum
 from loguru import logger
 
 from ..common.resource import Resource
+from ..common.timer_loop import TimerLoop
 
 
 class OSCommandState(IntEnum):
@@ -20,9 +21,6 @@ class OSCommandResource(Resource):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.delay = 0.5
-        self.failed = False
-
         self.index = 0x1023
         self.sub_command = 0x01
         self.sub_state = 0x02
@@ -33,7 +31,10 @@ class OSCommandResource(Resource):
         self.reply = ''
         self.reply_max_len = 10000
 
-    def on_loop(self):
+        self.timer_loop = TimerLoop('os command resource', self._loop, 0.5, self._loop_error)
+        self.failed = False
+
+    def _loop(self):
 
         if self.state == OSCommandState.EXECUTING:
             logger.info('Running OS command: ' + self.command)
@@ -52,11 +53,22 @@ class OSCommandResource(Resource):
                 else:
                     self.state = OSCommandState.NO_ERROR_NO_REPLY
 
-    def on_end(self):
+        return True
+
+    def _loop_error(self, exc: Exception):
+
         self.failed = True
         self.command = ''
         self.state = OSCommandState.ERROR_NO_REPLY
         self.reply = ''
+
+    def on_start(self):
+
+        self.timer_loop.start()
+
+    def on_end(self):
+
+        self.timer_loop.stop()
 
     def on_read(self, index, subindex, od):
 

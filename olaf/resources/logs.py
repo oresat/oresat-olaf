@@ -5,6 +5,7 @@ from loguru import logger
 
 from ..common.resource import Resource
 from ..common.oresat_file import new_oresat_file
+from ..common.timer_loop import TimerLoop
 
 
 class LogsResource(Resource):
@@ -13,16 +14,17 @@ class LogsResource(Resource):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.delay = 1.0
-
         self.index = 0x3006
         self.logs_dir_path = '/var/log/journal/'
         self.obj = self.od[self.index]
+        self.obj.value = False  # make sure this is False by default
 
-    def on_loop(self):
+        self.timer_loop = TimerLoop('logs resource', self._loop, 0.5)
+        self.failed = True
+
+    def _loop(self):
 
         if self.obj.value:
-            self.obj.value = False
             logger.info('Making a copy of logs')
 
             tar_file_path = '/tmp/' + new_oresat_file('logs', ext='.tar.xz')
@@ -32,3 +34,14 @@ class LogsResource(Resource):
                     t.add(self.logs_dir_path + '/' + i, arcname=i)
 
             self.fread_cache.add(tar_file_path, consume=True)
+            self.obj.value = False
+
+        return True
+
+    def on_start(self):
+
+        self.timer_loop.start()
+
+    def on_end(self):
+
+        self.timer_loop.stop()
