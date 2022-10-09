@@ -5902,7 +5902,7 @@ ParameterValue=
 PDOMapping=0
 
 [3000]
-ParameterName=OLM control
+ParameterName=OLAF control
 Denotation=
 ObjectType=0x9
 SubNumber=0x5

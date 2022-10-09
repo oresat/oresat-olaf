@@ -48,15 +48,15 @@ def write_file(node, file: str):
 
 
 def main():
-    parser = ArgumentParser(description='OLM file transfer')
+    parser = ArgumentParser(description='OLAF file transfer')
     parser.add_argument('bus', help='CAN bus to use')
     parser.add_argument('node', help='device node name in hex')
     parser.add_argument('-l', '--list', dest='cache', default=None,
                         help='list files in cache, where CACHE is fread or fwrite')
     parser.add_argument('-r', '--read', dest='read_file',
-                        help='read file from OLM fread cache')
+                        help='read file from OLAF app fread cache')
     parser.add_argument('-w', '--write', dest='write_file',
-                        help='write file to OLM')
+                        help='write file to OLAF app')
 
     args = parser.parse_args()
     network = canopen.Network()
