@@ -37,7 +37,7 @@ First time setup
 
     .. code-block:: text
 
-        $ pip install -r requirements-dev.txt
+        $ pip install -r requirements.txt
 
 -   Install `can-utils` for your system. This will give access to the `candump`
     command which will display all message on the CAN bus.
@@ -153,7 +153,7 @@ Build the docs using `Sphinx`_.
 
 .. code-block:: text
 
-    $ pip install -r requirements-dev.txt
+    $ pip install -r requirements.txt
     $ cd docs
     $ make html
 
