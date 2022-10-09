@@ -61,3 +61,17 @@ class UpdaterResource(Resource):
     def on_end(self):
 
         self.timer_loop.stop()
+
+    def on_read(self, index, subindex, od):
+
+        ret = None
+
+        if index == self.index:
+            if subindex == Subindex.STATUS:
+                ret = self._updater.status.value
+            elif subindex == Subindex.UPDATES_CACHED:
+                ret = self._updater.updates_cached
+            elif subindex == Subindex.LIST_AVAILABLE:
+                ret = ' '.join(self._cache.files())
+
+        return ret

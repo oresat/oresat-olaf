@@ -4,7 +4,7 @@ import signal
 import subprocess
 from os import geteuid
 from pathlib import Path
-from threading import Thread, Event
+from threading import Event
 from time import sleep
 
 import canopen
@@ -12,6 +12,7 @@ import psutil
 from loguru import logger
 
 from .common.resource import Resource
+from .common.timer_loop import TimerLoop
 from .common.oresat_file_cache import OreSatFileCache
 from .resources.os_command import OSCommandResource
 from .resources.system_info import SystemInfoResource
@@ -205,50 +206,31 @@ class App:
             data += value_bytes
 
         try:
-            self.network.send_message(cob_id, data)
-        except Exception:
-            pass
+            i = self.network.send_message(cob_id, data)
+        except Exception as exc:
+            logger.debug(f'TPDO{tpdo} failed with: {exc}')
 
-    def _send_tpdo_loop(self, tpdo: int):
+    def _send_tpdo_loop(self, tpdo: int) -> bool:
 
-        while not self.event.is_set():
-            self.send_tpdo(tpdo)
+        self.send_tpdo(tpdo)
 
-            # get event time
-            value = self.od[0x1800 + tpdo][5].value
+        # get event time
+        value = self.od[0x1800 + tpdo][5].value
 
-            # milliseconds as int to seconds as a float
-            delay = float(value) / 1000
+        # milliseconds as int to seconds as a float
+        delay = float(value) / 1000
 
-            self.event.wait(delay)
+        self.event.wait(delay)
+
+        return True
 
     def add_resource(self, resource: Resource):
         '''Add a resource for the app'''
 
-        res = resource(
-            self.node,
-            self.fread_cache,
-            self.fwrite_cache,
-            self.mock_hw,
-            self.send_tpdo
-        )
+        res = resource(self.node, self.fread_cache, self.fwrite_cache, self.mock_hw,
+                       self.send_tpdo)
         logger.debug(f'adding {res.__class__.__name__} resources')
         self.resources.append(res)
-
-    def _run_resource(self, resource):
-        '''Run the resource'''
-
-        while not self.event.is_set():
-            try:
-                resource.on_loop()
-            except Exception as exc:  # nothing fancy just end return if the resource loop fails
-                name = resource.__class__.__name__
-                msg = f'{name} resource\'s on_loop raised an uncaught exception: {exc}'
-                logger.critical(msg)
-                break
-
-            if resource.delay > 0:
-                self.event.wait(resource.delay)
 
     def _restart_bus(self):
         '''Reset the can bus to up'''
@@ -268,7 +250,7 @@ class App:
     def _restart_network(self):
         '''Restart the canopen network'''
 
-        logger.debug('(re)starting can network')
+        logger.debug('(re)starting CANopen network')
 
         self.network = canopen.Network()
         self.network.connect(bustype='socketcan', channel=self.bus)
@@ -278,9 +260,9 @@ class App:
             self.node.nmt.state = 'PRE-OPERATIONAL'
             self.node.nmt.start_heartbeat(self.od[0x1017].default)
             self.node.nmt.state = 'OPERATIONAL'
-            logger.info('(re)started network')
+            logger.info('(re)started CANopen network')
         except Exception as exc:
-            logger.error(exc)
+            logger.error(f'failed to (re)start CANopen network with {exc}')
 
     def run(self) -> int:
         '''Go into operational mode, start all the resources, start all the threads, and monitor
@@ -291,7 +273,7 @@ class App:
         int
             Errno value or 0 for on no error.
         '''
-        tpdo_threads = []
+        tpdo_timers = []
 
         logger.info(f'{self.name} app is starting')
         if geteuid() != 0:  # running as root
@@ -300,6 +282,9 @@ class App:
         if not psutil.net_if_stats().get(self.bus):
             logger.critical(f'{self.bus} does not exist, nothing OLAF can do, exiting')
             return errno.ENETUNREACH
+
+        # start the CANopen network
+        self._restart_network()
 
         for resource in self.resources:
             try:
@@ -314,10 +299,9 @@ class App:
             event_time = self.od[0x1800 + i][5].default
 
             if transmission_type in [0xFE, 0xFF] and event_time and event_time > 0:
-                t = Thread(name='TPDO' + str(i + 1), target=self._send_tpdo_loop, args=(i,))
-                logger.debug(f'starting {t.name} thread')
+                t = TimerLoop(f'TPDO{i + 1}', self._send_tpdo_loop, 0, args=(i,))
                 t.start()
-                tpdo_threads.append(t)
+                tpdo_timers.append(t)
 
         self.first_bus_error = True  # flag to only log error message on first error
         logger.info(f'{self.name} app is running')
@@ -335,13 +319,6 @@ class App:
                 else:
                     self.first_bus_error = True  # reset flag
 
-                # monitor tpdo threads
-                for t in tpdo_threads:
-                    if not t.is_alive:
-                        logger.error(f'tpdo thread {t.name} has ended')
-                        t.join()
-                        tpdo_threads.remove(t)
-
             self.event.wait(1)
 
         for resource in self.resources:
@@ -351,9 +328,8 @@ class App:
                 msg = f'{resource.name} resource\'s on_end raised an uncaught exception: {exc}'
                 logger.critical(msg)
 
-        for t in tpdo_threads:
-            logger.debug(f'joining {t.name} thread')
-            t.join()
+        for t in tpdo_timers:
+            t.stop()
 
         logger.info(f'{self.name} app has ended')
         return 0

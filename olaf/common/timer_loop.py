@@ -6,7 +6,7 @@ from .. import logger
 class TimerLoop:
     '''Call a function in a loop after a delay.'''
 
-    def __init__(self, name: str, loop_func, delay: float, exc_func=None):
+    def __init__(self, name: str, loop_func, delay: float, args=(), exc_func=None):
         '''
         Parameters
         ----------
@@ -16,21 +16,23 @@ class TimerLoop:
             The function to call in a loop. Function must return True to be called again.
         delay: float
             The delay between calls in seconds.
+        args: tulip
+            Optional arguments to pass to loop_func
         exc_func
             Optional function to call if the loop raises an exception. Exception will be pass to
             the function as a argument.
         '''
 
         if not isinstance(delay, (int, float)):
-            raise ValueError(f'{delay} is not a float')
+            raise ValueError(f'{delay} is not a int or float')
 
         self._name = name
-        self._thread = Thread(target=self._loop)
-        self._event = Event()
-        self._delay = delay
         self._loop_func = loop_func
+        self._delay = delay
+        self._args = args
         self._exc_func = exc_func
-        self._looping = False
+        self._thread = Thread(name=name, target=self._loop)
+        self._event = Event()
 
     def __del__(self):
 
@@ -41,19 +43,17 @@ class TimerLoop:
 
         logger.debug(f'starting {self._name} timer loop')
 
-        self._thread.start()
-
         if self._event.is_set():
             self._event = Event()
 
-    def _loop(self):
+        self._thread.start()
 
-        self._looping = True
+    def _loop(self):
 
         ret = True
         while ret is True and not self._event.is_set():
             try:
-                self._loop_func()
+                ret = self._loop_func(*self._args)
             except Exception as exc:
                 self._event.set()
                 logger.error(f'{self._name} timer loop loop_func raise: {exc}')
@@ -62,18 +62,14 @@ class TimerLoop:
                         self._exc_func(exc)
                     except Exception:
                         logger.error(f'{self._name} timer loop exc_func raise: {exc}')
-                    break
 
-            ret = self._event.wait(self._delay)
-
-        self._looping = False
+            self._event.wait(self._delay)
 
     def stop(self):
         '''Stop the timer'''
 
-        logger.debug(f'stopping {self._name} timer loop')
-
         if not self._event.is_set():
+            logger.debug(f'stopping {self._name} timer loop')
             self._event.set()
 
         if self._thread.is_alive():
@@ -97,4 +93,10 @@ class TimerLoop:
     def is_running(self) -> bool:
         '''bool: Status of the timer loop.'''
 
-        return self._looping
+        return self._thread.is_alive()
+
+    @property
+    def name(self) -> str:
+        '''str: The name of the TimerLoop.'''
+
+        return self._name
