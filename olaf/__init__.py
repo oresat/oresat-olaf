@@ -14,12 +14,6 @@ from .common.pru import PRU, PRUError, PRUState
 
 __version__ = '0.3.0'
 
-LOG_FORMAT = '<green>{time}</green> | {level} | <level>{message}</level>'
-'''Logger message format'''
-
-logger.remove()  # remove default logger
-logger.add(sys.stderr, format=LOG_FORMAT, level='INFO')
-
 app_args_parser = ArgumentParser(add_help=False)
 '''The optional, but recommend **parent** :py:class:`ArgumentParser` object to use.'''
 
@@ -47,8 +41,8 @@ def parse_app_args(args):
     else:
         level = 'INFO'
 
-    logger.remove()
+    logger.remove()  # remove default logger
     if args.log:
-        logger.add(SysLogHandler(address='/dev/log'), format=LOG_FORMAT, level=level)
+        logger.add(SysLogHandler(address='/dev/log'), level=level)
     else:
-        logger.add(sys.stdout, format=LOG_FORMAT, level=level)
+        logger.add(sys.stdout, level=level)
