@@ -23,12 +23,15 @@ INSTRUCTIONS = {
     'DPKG_INSTALL': 'dpkg -i',
     'DPKG_REMOVE': 'dpkg -r',
     'DPKG_PURGE': 'dpkg -P',
+    'PIP_INSTALL': 'python -m pip install',
+    'PIP_UNINSTALL': 'python -m pip uninstall',
 }
 '''All the valid instruction. Values are the commands.'''
 
 INSTRUCTIONS_WITH_FILES = [
     'BASH_SCRIPT',
     'DPKG_INSTALL',
+    'PIP_INSTALL',
 ]
 '''The list of instructions from INSTRUCTIONS that require file(s).'''
 

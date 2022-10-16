@@ -41,6 +41,8 @@ by bash scripts as needed.
     bash_script1.sh
     bash_script2.sh
     bash_script3.sh
+    py_package1.whl
+    py_package2.whl
 
 instructions.txt
 ----------------
@@ -52,9 +54,11 @@ order.
 **Type values**:
 
 * BASH_SCIPT - run a bash script
-* DPKG_INSTALL - install deb package(s) using dpkg
-* DPKG_REMOVE - remove deb package(s) using dpkg
-* DPKG_PURGE - purge deb package(s) using dpkg
+* DPKG_INSTALL - install debian package(s) using dpkg
+* DPKG_REMOVE - remove debian package(s) using dpkg
+* DPKG_PURGE - purge debian package(s) using dpkg
+* PIP_INSTALL - install python package(s) using pip
+* PIP_UNINSTALL - uninstall python package(s) using pip
 
 **Example instructions.txt**::
 
@@ -82,7 +86,15 @@ order.
         {
             "type": "BASH_SCIPT",
             "items": ["bash_script3.sh"]
-        }
+        },
+        {
+            "type": "PIP_INSTALL",
+            "items": ["py_package1.whl", "py_package2.whl"]
+        },
+        {
+            "type": "PIP_UNINSTALL",
+            "items": ["py_package3.whl"]
+        },
         {
             "type": "DPKG_PURGE",
             "items": ["package5", "package6"]
