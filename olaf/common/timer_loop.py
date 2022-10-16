@@ -6,7 +6,8 @@ from .. import logger
 class TimerLoop:
     '''Call a function in a loop after a delay.'''
 
-    def __init__(self, name: str, loop_func, delay: float, args=(), exc_func=None):
+    def __init__(self, name: str, loop_func, delay: float, start_delay=0.0, args=(),
+                 exc_func=None):
         '''
         Parameters
         ----------
@@ -14,8 +15,10 @@ class TimerLoop:
             name to use when logging.
         loop_func
             The function to call in a loop. Function must return True to be called again.
-        delay: float
+        delay: int, float
             The delay between calls in seconds.
+        start_delay: int,float
+            Optional delay in seconds before the loop_func is called the first time.
         args: tulip
             Optional arguments to pass to loop_func
         exc_func
@@ -24,11 +27,15 @@ class TimerLoop:
         '''
 
         if not isinstance(delay, (int, float)):
-            raise ValueError(f'{delay} is not a int or float')
+            raise ValueError(f'delay of {delay} is not a int or float')
+
+        if not isinstance(start_delay, (int, float)):
+            raise ValueError(f'start_delay of {start_delay} is not a int or float')
 
         self._name = name
         self._loop_func = loop_func
-        self._delay = delay
+        self._delay = float(delay)
+        self._start_delay = float(start_delay)
         self._args = args
         self._exc_func = exc_func
         self._thread = Thread(name=name, target=self._loop)
@@ -49,6 +56,9 @@ class TimerLoop:
         self._thread.start()
 
     def _loop(self):
+
+        if self._start_delay > 0:
+            self._event.wait(self._start_delay)
 
         ret = True
         while ret is True and not self._event.is_set():
