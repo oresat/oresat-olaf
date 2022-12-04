@@ -22,6 +22,8 @@ from .resources.fwrite import FwriteResource
 from .resources.ecss import ECSSResource
 from .resources.updater import UpdaterResource
 from .resources.logs import LogsResource
+from .rest_api.rest_api import RestAPI
+from .rest_api.od import od_bp
 
 
 class App:
@@ -108,6 +110,8 @@ class App:
                 for j in self.od[i]:
                     self.od[i][j].value = self.od[i][j].default
 
+        self.rest_api = RestAPI(self.name, self.node)
+
         default_rpdos = [
             0x200 + self.node_id,
             0x300 + self.node_id,
@@ -150,6 +154,9 @@ class App:
         self.add_resource(FwriteResource)
         self.add_resource(UpdaterResource)
         self.add_resource(LogsResource)
+
+        # defualt rest api blueprints
+        self.add_blueprint(od_bp)
 
     def __del__(self):
 
@@ -232,6 +239,9 @@ class App:
         logger.debug(f'adding {res.__class__.__name__} resources')
         self.resources.append(res)
 
+    def add_blueprint(self, blueprint):
+        self.rest_api.add_blueprint(blueprint)
+
     def _restart_bus(self):
         '''Reset the can bus to up'''
 
@@ -303,6 +313,11 @@ class App:
                 t.start()
                 tpdo_timers.append(t)
 
+        try:
+            self.rest_api.start()
+        except Exception as exc:
+            logger.error(str(exc))
+
         self.first_bus_error = True  # flag to only log error message on first error
         logger.info(f'{self.name} app is running')
         while not self.event.is_set():
@@ -320,6 +335,11 @@ class App:
                     self.first_bus_error = True  # reset flag
 
             self.event.wait(1)
+
+        try:
+            self.rest_api.stop()
+        except Exception as exc:
+            logger.error(str(exc))
 
         for resource in self.resources:
             try:
