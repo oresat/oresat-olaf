@@ -2,7 +2,8 @@
 
 from argparse import ArgumentParser
 
-from olaf import app_args_parser, parse_app_args, App
+from olaf import app_args_parser, parse_app_args, app
+from olaf.rest_api import rest_api
 
 if __name__ == '__main__':
 
@@ -10,6 +11,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     parse_app_args(args)  # parse the standard app args
 
-    app = App('olaf/data/oresat_app.eds', args.bus, args.node_id)
-
-    exit(app.run())
+    rest_api.start()
+    app.run()
+    rest_api.stop()

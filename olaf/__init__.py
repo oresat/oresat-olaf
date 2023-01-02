@@ -4,8 +4,9 @@ from argparse import ArgumentParser
 
 from loguru import logger
 
+from ._app import App
+
 # public api here
-from .app import App
 from .common.resource import Resource
 from .common.ecss import scet_int_from_time, scet_int_to_time, utc_int_from_time, utc_int_to_time
 from .common.oresat_file import OreSatFile, new_oresat_file
@@ -24,6 +25,9 @@ app_args_parser.add_argument('-v', '--verbose', action='store_true', help='verbo
 app_args_parser.add_argument('-l', '--log', action='store_true', help='log to only journald')
 app_args_parser.add_argument('-e', '--eds', metavar='FILE', help='EDS/DCF file to use')
 app_args_parser.add_argument('-m', '--mock-hw', action='store_true', help='mock the hardware')
+
+app = App()
+'''The global instance of the OLAF app.'''
 
 
 def parse_app_args(args):
@@ -45,3 +49,5 @@ def parse_app_args(args):
         logger.add(SysLogHandler(address='/dev/log'), level=level)
     else:
         logger.add(sys.stdout, level=level)
+
+    app.setup(args.eds, args.bus, args.node_id, args.mock_hw)

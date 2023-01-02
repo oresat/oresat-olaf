@@ -1,18 +1,154 @@
 <!DOCTYPE html>
 <html lang='en'>
 <head>
-  <title>OLAF</title>
+  <title>{{title}}</title>
 </head>
 <body>
-  OLAF
+  <style>
+    #page {
+      text-align: center;
+    }
+    table {
+      font-family: arial, sans-serif;
+      border-collapse: collapse;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    td, th {
+      border: 1px solid #dddddd;
+      text-align: left;
+      padding: 8px;
+    }
+    a, label {
+      font-weight: bold;
+    }
+    textarea {
+      width: 20%;
+      height: 20%;
+    }
+    #variableObj, #arrayRecordObj, #varNewValueInput {
+      display: none;
+    }
+  </style>
+  <div id='page'>
+    <h2 id='pageTitle'>Object Dictionary</h2>
+    <br/>
+    <label for="objIndex">Index:</label>
+    <input type="text" id="objIndex" name="objIndex" placeholder="0x1000"/>
+    <label for="objSubindex">Subindex:</label>
+    <input type="text" id="objSubindex" name="objSubindex" placeholder="0x00"/>
+    <button onclick='getObjectInfo()'>Get Info</button>
+    <br/>
+    <br/>
+    <div id='variableObj'>
+      <table>
+        <tr>
+          <td>Object Type</td>
+          <td>VARIABLE</td>
+        </tr>
+        <tr>
+          <td>Name</td>
+          <td><span id='varName'></span></td>
+        </tr>
+        <tr>
+          <td>Data Type</td>
+          <td><span id='varDataType'></span></td>
+        </tr>
+        <tr>
+          <td>Access Type</td>
+          <td><span id='varAccessType'></span></td>
+        </tr>
+        <tr>
+          <td>Value</td>
+          <td><span id='varValue'></span></td>
+        </tr>
+      </table>
+      <br/>
+      <div id='varNewValueInput'>
+        <label for="objNewValue">New Value:</label>
+        <input type="text" id="objNewValue" name="objNewValue"/>
+        <button id='setObjectValueButton' onclick='setObjectValue()'>Change</button>
+      </div>
+    </div>
+    <div id='arrayRecordObj'>
+      <table>
+        <tr>
+          <td>Object Type</td>
+          <td><span id='objType'></span></td>
+        </tr>
+        <tr>
+          <td>Name</td>
+          <td><span id='objName'></span></td>
+        </tr>
+        <tr>
+          <td>Subindexes</td>
+          <td><span id='objSubindexes'></span></td>
+        </tr>
+      </table>
+    </div>
+  </div>
   <script>
-    fetch(`http://${window.location.host}/od/0x12`, {'method': 'GET'})
-      .then(response => response.json())
-      .then(data => console.log(data));
+    function setData(data) {
+      if (data['error'] !== undefined) {
+        alert(data['error']);
+        return;
+      }
 
-    fetch(`http://${window.location.host}/od/0x12/0x11`, {'method': 'GET'})
-      .then(response => response.json())
-      .then(data => console.log(data));
+      if (data['object_type'] === 'VARIABLE') {
+        document.getElementById("variableObj").style.display = 'inline';
+        document.getElementById("arrayRecordObj").style.display = 'none';
+
+        document.getElementById("varName").textContent = data['name'];
+        document.getElementById("varDataType").textContent = data['data_type'];
+        document.getElementById("varAccessType").textContent = data['access_type'];
+        document.getElementById("varValue").textContent = data['value'];
+
+        if (data['access_type'] === 'ro') {
+          document.getElementById("varNewValueInput").style.display = 'none';
+        } else {
+          document.getElementById("varNewValueInput").style.display = 'inline';
+        }
+      } else {
+        document.getElementById("variableObj").style.display = 'none';
+        document.getElementById("arrayRecordObj").style.display = 'inline';
+
+        document.getElementById("objType").textContent = data['object_type'];
+        document.getElementById("objName").textContent = data['name'];
+        document.getElementById("objSubindexes").textContent = data['subindexes'];
+      }
+    }
+
+    function getUrl() {
+      const index = document.getElementById("objIndex").value;
+      let subindex = document.getElementById("objSubindex").value;
+
+      let url = `http://${window.location.host}/od/${index}`;
+      if (subindex !== '') {
+        url = `http://${window.location.host}/od/${index}/${subindex}`;
+      }
+
+      return url;
+    }
+
+    function getObjectInfo() {
+      const url = getUrl();
+
+      fetch(url, {'method': 'GET'})
+        .then(response => response.json())
+        .then(data => setData(data));
+    }
+
+    function setObjectValue() {
+      const url = getUrl();
+
+      const body = {
+        'value': document.getElementById("objNewValue").value,
+      }
+
+      fetch(url, {'method': 'PUT', body})
+        .then(response => response.json())
+        .then(data => console.log(data));
+    }
   </script>
 </body>
 </html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+  <title>{{title}}</title>
+</head>
+<body>
+  <style>
+    #pageTitle {
+      text-align: center;
+    }
+  </style>
+  <h2 id='pageTitle'>{{title}}</h2>
+  <br/>
+  <a>Endpoints:</a>
+  <br/>
+  {% for route in routes %}
+  <a>-</a>
+  <a href="{{route}}">{{route}}</a>
+  <br/>
+  {% endfor %}
+</body>
+</html>

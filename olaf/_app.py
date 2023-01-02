@@ -22,14 +22,25 @@ from .resources.fwrite import FwriteResource
 from .resources.ecss import ECSSResource
 from .resources.updater import UpdaterResource
 from .resources.logs import LogsResource
-from .rest_api.rest_api import RestAPI
-from .rest_api.od import od_bp
 
 
 class App:
     '''The application class that manages the CAN bus, resources, and threads.'''
 
-    def __init__(self, eds: str, bus: str, node_id=0, mock_hw=False):
+    def __init__(self):
+
+        self.bus = None
+        self.event = Event()
+        self.resources = []
+        self.network = None
+        self.mock_hw = False
+        self.name = 'OLAF'
+
+        # setup event
+        for sig in ['SIGTERM', 'SIGHUP', 'SIGINT']:
+            signal.signal(getattr(signal, sig), self._quit)
+
+    def setup(self, eds: str, bus: str, node_id=0, mock_hw=False):
         '''
         Parameters
         ----------
@@ -50,11 +61,7 @@ class App:
         '''
 
         self.bus = bus
-        self.event = Event()
-        self.resources = []
-        self.network = None
         self.mock_hw = mock_hw
-        self.name = 'OLAF'
 
         if not psutil.net_if_stats().get(self.bus):
             logger.error(f'{self.bus} does not exist, waiting for bus to appear')
@@ -88,10 +95,6 @@ class App:
         self.fread_cache = OreSatFileCache(fread_path)
         self.fwrite_cache = OreSatFileCache(fwrite_path)
 
-        # setup event
-        for sig in ['SIGTERM', 'SIGHUP', 'SIGINT']:
-            signal.signal(getattr(signal, sig), self._quit)
-
         dcf_node_id = canopen.import_od(eds).node_id
         if node_id != 0:
             self.node_id = node_id
@@ -109,8 +112,8 @@ class App:
             if not isinstance(self.od[i], canopen.objectdictionary.Variable):
                 for j in self.od[i]:
                     self.od[i][j].value = self.od[i][j].default
-
-        self.rest_api = RestAPI(self.name, self.node)
+            else:
+                self.od[i].value = self.od[i].default
 
         default_rpdos = [
             0x200 + self.node_id,
@@ -154,9 +157,6 @@ class App:
         self.add_resource(FwriteResource)
         self.add_resource(UpdaterResource)
         self.add_resource(LogsResource)
-
-        # defualt rest api blueprints
-        self.add_blueprint(od_bp)
 
     def __del__(self):
 
@@ -239,9 +239,6 @@ class App:
         logger.debug(f'adding {res.__class__.__name__} resources')
         self.resources.append(res)
 
-    def add_blueprint(self, blueprint):
-        self.rest_api.add_blueprint(blueprint)
-
     def _restart_bus(self):
         '''Reset the can bus to up'''
 
@@ -313,11 +310,6 @@ class App:
                 t.start()
                 tpdo_timers.append(t)
 
-        try:
-            self.rest_api.start()
-        except Exception as exc:
-            logger.error(str(exc))
-
         self.first_bus_error = True  # flag to only log error message on first error
         logger.info(f'{self.name} app is running')
         while not self.event.is_set():
@@ -335,11 +327,6 @@ class App:
                     self.first_bus_error = True  # reset flag
 
             self.event.wait(1)
-
-        try:
-            self.rest_api.stop()
-        except Exception as exc:
-            logger.error(str(exc))
 
         for resource in self.resources:
             try:

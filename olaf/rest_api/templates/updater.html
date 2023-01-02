@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+  <title>{{title}}</title>
+</head>
+<body>
+  <style>
+    #page {
+      text-align: center;
+    }
+    table {
+      font-family: arial, sans-serif;
+      border-collapse: collapse;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    td, th {
+      border: 1px solid #dddddd;
+      text-align: left;
+      padding: 8px;
+    }
+  </style>
+  <div id='page'>
+    <h2>Updater</h2>
+    <br/>
+    <table>
+      <tr>
+        <td>Status</td>
+        <td><span id='status'></span></td>
+      </tr>
+      <tr>
+        <td>Updates Available</td>
+        <td><span id='updatesAvailable'></span></td>
+      </tr>
+    </table>
+    <br/>
+    <button disabled>Start Update</button>
+    <button>Generate Status File</button>
+  </div>
+  <script>
+    const interval = setInterval(function() {
+      fetch(`http://${window.location.host}/od/0x3100/0x01`, {'method': 'GET'})
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById("status").textContent = data['value'];
+        });
+
+      fetch(`http://${window.location.host}/od/0x3100/0x02`, {'method': 'GET'})
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById("updatesAvailable").textContent = data['value'];
+        });
+    }, 1000);
+  </script>
+</body>
+</html>
