@@ -11,8 +11,8 @@ _B_TO_MB = 1024 * 1024
 
 
 class Subindex(IntEnum):
-    OS_DISTRO = auto()
     OS_NAME = auto()
+    OS_DISTRO = auto()
     OS_KERNEL_VER = auto()
     HOSTNAME = auto()
     UPTIME = auto()
@@ -55,8 +55,8 @@ class SystemInfoResource(Resource):
             os_release = f.readlines()
 
         si_record = self.od[self.index]
-        si_record[Subindex.OS_DISTRO.value].value = os_release[1].split('"')[1]
         si_record[Subindex.OS_NAME.value].value = platform.system()
+        si_record[Subindex.OS_DISTRO.value].value = os_release[1].split('"')[1]
         si_record[Subindex.OS_KERNEL_VER.value].value = platform.release()
         si_record[Subindex.HOSTNAME.value].value = platform.node()
         si_record[Subindex.NUM_OF_CPUS.value].value = psutil.cpu_count()
@@ -103,11 +103,11 @@ class SystemInfoResource(Resource):
                 with open(file_path, 'r') as f:
                     ret = f.read()
         elif subindex == Subindex.LOAD_AVG_1MIN.value:
-            ret = int(psutil.getloadavg()[0])
+            ret = int(psutil.getloadavg()[0] * 100)
         elif subindex == Subindex.LOAD_AVG_5MIN.value:
-            ret = int(psutil.getloadavg()[1])
+            ret = int(psutil.getloadavg()[1] * 100)
         elif subindex == Subindex.LOAD_AVG_15MIN.value:
-            ret = int(psutil.getloadavg()[2])
+            ret = int(psutil.getloadavg()[2] * 100)
         elif subindex == Subindex.RAM_FREE.value:
             ret = psutil.virtual_memory().free // _B_TO_MB
         elif subindex == Subindex.RAM_SHARED.value:

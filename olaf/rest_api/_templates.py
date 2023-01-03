@@ -10,3 +10,8 @@ core_templates_bp = Blueprint('olaf_templates', __name__, template_folder='templ
 @core_templates_bp.route('/updater')
 def updater_template():
     return render_template('updater.html', title=TITLE)
+
+
+@core_templates_bp.route('/system_info')
+def system_info_template():
+    return render_template('system_info.html', title=TITLE)
