@@ -5,6 +5,7 @@ from enum import IntEnum, auto
 
 from loguru import logger
 
+from ..common.oresat_file import OreSatFile
 from ..common.resource import Resource
 
 
@@ -33,7 +34,7 @@ class FwriteResource(Resource):
 
         ret = None
 
-        if index == self.index and self.file_path and subindex == Subindex.FILE_NAME:
+        if index == self.index and subindex == Subindex.FILE_NAME:
             ret = basename(self.file_path)
 
         return ret
@@ -45,7 +46,14 @@ class FwriteResource(Resource):
 
         if subindex == Subindex.FILE_NAME:
             file_name = data.decode()
-            self.file_path = self.tmp_dir + '/' + file_name
+
+            try:
+                OreSatFile(file_name)  # valiate file name format
+                self.file_path = self.tmp_dir + '/' + file_name
+            except ValueError:
+                logger.error(f'{file_name} is not a valid file name format')
+                self.file_path = ''
+
         elif subindex == Subindex.FILE_DATA:
             if not self.file_path:
                 logger.error('fwrite file path was not set before file data was sent')

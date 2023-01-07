@@ -39,7 +39,7 @@
             if (data.error !== undefined) {
               alert(data.error);
             } else {
-              writeData(fileReader.result);
+              writeData(file.name, fileReader.result);
             }
           });
       }
@@ -48,7 +48,25 @@
       }
     }
 
-    function writeData(data) {
+    function writeData(file_name, file_data) {
+      const options = {
+        'method': 'GET',
+      };
+
+      fetch(`http://${window.location.host}/od/0x3004/0x01`, options)
+        .then(response => response.json())
+        .then(data => {
+          console.log(data.value);
+          console.log(file_name);
+          if (data.value === file_name) {
+            _writeData(file_data);
+          } else {
+            alert('invalid file name format');
+          }
+        });
+    }
+
+    function _writeData(data) {
       const options = {
         'method': 'PUT',
         headers: {

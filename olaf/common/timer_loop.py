@@ -19,7 +19,7 @@ class TimerLoop:
             The delay between calls in seconds.
         start_delay: int,float
             Optional delay in seconds before the loop_func is called the first time.
-        args: tulip
+        args: tuple
             Optional arguments to pass to loop_func
         exc_func
             Optional function to call if the loop raises an exception. Exception will be pass to
