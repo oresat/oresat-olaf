@@ -20,3 +20,8 @@ def system_info_template():
 @core_templates_bp.route('/updater')
 def updater_template():
     return render_template('updater.html', title=TITLE)
+
+
+@core_templates_bp.route('/fwrite')
+def fwrite_template():
+    return render_template('fwrite.html', title=TITLE)

@@ -56,7 +56,7 @@ class FwriteResource(Resource):
                     f.write(data)
                 logger.info(f'receive new file: {basename(self.file_path)}')
                 self.fwrite_cache.add(self.file_path, consume=True)
-            except FileNotFoundError as exc:
+            except Exception as exc:
                 logger.error(exc)
 
             self.file_path = ''

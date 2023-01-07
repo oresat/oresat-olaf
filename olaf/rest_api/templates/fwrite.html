@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+  <title>{{title}}</title>
+</head>
+<body>
+  <style>
+    #page {
+      text-align: center;
+    }
+  </style>
+  <div id='page'>
+    <h2>Fwrite</h2>
+    <br/>
+    <label for='filename'>File:</label>
+    <input type='file' id='filename' name='filename'/>
+    <button onclick='fwrite()'>Write</button>
+  </div>
+  <script>
+    function fwrite() {
+      const file = document.getElementById('filename').files[0];
+
+      const options = {
+        'method': 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        'body': JSON.stringify({
+          'value': file.name,
+        }),
+      };
+
+      const fileReader = new FileReader();
+      fileReader.readAsBinaryString(file);
+      fileReader.onload = function() {
+        fetch(`http://${window.location.host}/od/0x3004/0x01`, options)
+          .then(response => response.json())
+          .then(data => {
+            if (data.error !== undefined) {
+              alert(data.error);
+            } else {
+              writeData(fileReader.result);
+            }
+          });
+      }
+      fileReader.onerror = function() {
+        alert(fileReader.error);
+      }
+    }
+
+    function writeData(data) {
+      const options = {
+        'method': 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        'body': JSON.stringify({
+          'value': btoa(data),
+        }),
+      };
+
+      fetch(`http://${window.location.host}/od/0x3004/0x02`, options)
+        .then(response => response.json())
+        .then(data => {
+          if (data.error !== undefined) {
+            alert(data.error);
+          }
+        });
+    }
+  </script>
+</body>
+</html>

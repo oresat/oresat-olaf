@@ -44,7 +44,7 @@ def od_index(index: str):
         raw = request.json['value']
         data_type = app.od[index].data_type
         if data_type == DataType.DOMAIN:
-            app.node.sdo[index].raw = raw.encode()
+            app.node.sdo[index].raw = base64.decodebytes(raw.encode('utf-8'))
         else:
             app.node.sdo[index].phys = raw_to_value(data_type, raw)
 
@@ -61,14 +61,14 @@ def od_subindex(index: str, subindex: str):
         raw = request.json['value']
         data_type = app.od[index][subindex].data_type
         if data_type == DataType.DOMAIN:
-            app.node.sdo[index][subindex].raw = raw.encode()
+            app.node.sdo[index][subindex].raw = base64.decodebytes(raw.encode('utf-8'))
         else:
             app.node.sdo[index][subindex].phys = raw_to_value(data_type, raw)
 
     return jsonify(object_to_json(index, subindex))
 
 
-def raw_to_value(data_type, raw):
+def raw_to_value(data_type: DataType, raw: str):
     value = None
 
     if data_type == DataType.BOOLEAN:

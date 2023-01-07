@@ -29,7 +29,10 @@ class OreSatFileCache:
         Path(self._dir).mkdir(parents=True, exist_ok=True)
 
         for f in listdir(self._dir):
-            oresat_file = OreSatFile(self._dir + f)
+            try:
+                oresat_file = OreSatFile(self._dir + f)
+            except Exception:
+                remove(self._dir + f)  # invalid file name
             self._data.append(oresat_file)
         self._data = sorted(self._data)
 
