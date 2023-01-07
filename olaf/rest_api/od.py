@@ -1,4 +1,5 @@
 import os
+import base64
 from enum import IntEnum
 
 import canopen
@@ -39,12 +40,15 @@ def od_index(index: str):
 
     index = int(index, 16) if index.startswith('0x') else int(index)
 
-    if request.method == 'GET':
-        return jsonify(object_to_json(index))
-    elif request.method == 'PUT':
+    if request.method == 'PUT':
         raw = request.json['value']
         data_type = app.od[index].data_type
-        app.node.sdo[index].phys = raw_to_value(data_type, raw)
+        if data_type == DataType.DOMAIN:
+            app.node.sdo[index].raw = raw.encode()
+        else:
+            app.node.sdo[index].phys = raw_to_value(data_type, raw)
+
+    return jsonify(object_to_json(index))
 
 
 @od_bp.route('/od/<index>/<subindex>/', methods=['GET', 'PUT'])
@@ -53,15 +57,20 @@ def od_subindex(index: str, subindex: str):
     index = int(index, 16) if index.startswith('0x') else int(index)
     subindex = int(subindex, 16) if subindex.startswith('0x') else int(subindex)
 
-    if request.method == 'GET':
-        return jsonify(object_to_json(index, subindex))
-    elif request.method == 'PUT':
+    if request.method == 'PUT':
         raw = request.json['value']
         data_type = app.od[index][subindex].data_type
-        app.node.sdo[index][subindex].phys = raw_to_value(data_type, raw)
+        if data_type == DataType.DOMAIN:
+            app.node.sdo[index][subindex].raw = raw.encode()
+        else:
+            app.node.sdo[index][subindex].phys = raw_to_value(data_type, raw)
+
+    return jsonify(object_to_json(index, subindex))
 
 
 def raw_to_value(data_type, raw):
+    value = None
+
     if data_type == DataType.BOOLEAN:
         value = True if raw.lower() == 'true' else False
     elif data_type in [DataType.INTEGER8, DataType.INTEGER16, DataType.INTEGER32,
@@ -70,8 +79,6 @@ def raw_to_value(data_type, raw):
         value = int(value, 16) if value.startswith('0x') else int(value)
     elif data_type in [DataType.REAL32, DataType.REAL64]:
         value = float(raw)
-    elif data_type == DataType.DOMAIN:
-        return {'error': 'OLAF REST API does not support DOMAIN type currently'}
     else:
         value = raw
 
@@ -84,13 +91,21 @@ def object_to_json(index: int, subindex: int = None) -> dict:
         try:
             obj = app.od[index]
             if isinstance(obj, canopen.objectdictionary.Variable):
-                value = app.node.sdo[index].phys
+                if obj.data_type == DataType.DOMAIN:
+                    raw = app.node.sdo[index].raw
+                    value = base64.encodebytes(raw).decode('utf-8')
+                else:
+                    value = app.node.sdo[index].phys
         except Exception:
             return {'error': f'0x{index:04X} is not a valid index'}
     else:
         try:
             obj = app.od[index][subindex]
-            value = app.node.sdo[index][subindex].phys
+            if obj.data_type == DataType.DOMAIN:
+                raw = app.node.sdo[index][subindex].raw
+                value = base64.encodebytes(raw).decode('utf-8')
+            else:
+                value = app.node.sdo[index][subindex].phys
         except Exception:
             return {'error': f'0x{subindex:02X} not a valid subindex for index 0x{index:04X}'}
 

@@ -54,6 +54,8 @@ class OSCommandResource(Resource):
                 else:
                     self.state = OSCommandState.NO_ERROR_NO_REPLY
 
+            logger.info('OS command has completed')
+
         return True
 
     def _loop_error(self, exc: Exception):

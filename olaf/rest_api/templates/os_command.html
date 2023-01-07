@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+  <title>{{title}}</title>
+</head>
+<body>
+  <style>
+    #title {
+      text-align: center;
+    }
+    #page {
+      justify-content: center;
+      display: flex;
+    }
+    #abc {
+      width: 50%;
+      text-align: left;
+    }
+    a, label {
+      font-weight: bold;
+    }
+    #command {
+      width: 95%;
+    }
+    textarea {
+      resize: none;
+      width: 100%;
+    }
+  </style>
+  <div id='title'>
+    <h2 id='pageTitle'>OS Command</h2>
+    <br/>
+  <div>
+  <div id='page'>
+    <div id='abc'>
+      <a>Status: </a><span id='status'></span>
+      <br/>
+      <br/>
+      <label for='command'>Bash Command:</label>
+      <br/>
+      <input type='text' id='command' name='command'/>
+      <button onclick='runCommand()'>Run</button>
+      <br/>
+      <br/>
+      <a>Reply:</a>
+      <br/>
+      <textarea id='reply' rows=30 disabled></textarea>
+    </div>
+  </div>
+  <script>
+    const states = {
+        0: 'NO_ERROR_NO_REPLY',
+        1: 'NO_ERROR_REPLY',
+        2: 'ERROR_NO_REPLY',
+        3: 'ERROR_REPLY',
+        255: 'EXECUTING',
+    };
+
+    function runCommand() {
+      // clear last reply
+      document.getElementById('reply').value = '';
+
+      // reset field incase of very quick commands
+      document.getElementById('status').textContent = 'EXECUTING';
+
+      const options = {
+        'method': 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        'body': JSON.stringify({
+          'value': document.getElementById('command').value,
+        }),
+      };
+
+      fetch(`http://${window.location.host}/od/0x1023/0x01`, options)
+        .then(response => response.json())
+        .then(data => {
+          if (data.error !== undefined) {
+            alert(data.error);
+          }
+        });
+    }
+
+    function updateStatus() {
+      const reply_states = ['NO_ERROR_REPLY', 'ERROR_REPLY'];
+
+      fetch(`http://${window.location.host}/od/0x1023/0x02`, {'method': 'GET'})
+        .then(response => response.json())
+        .then(data => {
+          const status = document.getElementById('status');
+          const new_status = states[data['value']];
+
+          // state has change to a new state with a reply, display reply
+          if (status.textContent === 'EXECUTING' && reply_states.includes(new_status)) {
+            fetch(`http://${window.location.host}/od/0x1023/0x03`, {'method': 'GET'})
+              .then(response => response.json())
+              .then(data => {
+                document.getElementById('reply').value = atob(data['value']);
+              });
+          }
+
+          status.textContent = new_status;
+        });
+    }
+
+    runCommand();
+    updateStatus();
+    const interval = setInterval(function() {
+      updateStatus()
+    }, 1000);
+  </script>
+</body>
+</html>
