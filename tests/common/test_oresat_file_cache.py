@@ -93,9 +93,6 @@ class TestOreSatFileCache(unittest.TestCase):
             with self.assertRaises(ValueError):
                 OreSatFileCache.add(result, name, True)
 
-        with self.assertRaises(ValueError):
-            OreSatFileCache(dir_name)
-
         # cleanup bad_cache directory
         rmtree(abspath(dir_name), ignore_errors=True)
 

@@ -3,9 +3,10 @@ import base64
 from enum import IntEnum
 
 import canopen
+from loguru import logger
 from flask import Blueprint, render_template, jsonify, request
 
-from .. import app
+from ..app import app
 
 
 _TITLE = os.uname()[1]
@@ -51,7 +52,9 @@ def od_index(index: str):
     try:
         obj = app.od[index]
     except Exception:
-        return jsonify({'error': f'no object at index {index}'})
+        msg = f'no object at index {index}'
+        logger.error(f'RestApiError: {msg}')
+        return jsonify({'error': msg})
 
     if request.method == 'PUT':
         raw = request.json['value']
@@ -74,7 +77,9 @@ def od_subindex(index: str, subindex: str):
     try:
         obj = app.od[index][subindex]
     except Exception:
-        return jsonify({'error': f'no object at index {index} subindex {subindex}'})
+        msg = f'no object at index {index} subindex {subindex}'
+        logger.error(f'RestApiError: {msg}')
+        return jsonify({'error': msg})
 
     if request.method == 'PUT':
         raw = request.json['value']
@@ -153,7 +158,6 @@ def object_to_json(index: int, subindex: int = None) -> dict:
 
 @core_templates_bp.route('/od')
 def od_template():
-
     return render_template('od.html', title=_TITLE, name='Object Dictionary')
 
 

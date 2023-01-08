@@ -89,10 +89,10 @@ class OSCommandResource(Resource):
 
     def on_write(self, index, subindex, od, data):
 
-        if index == self.index and \
-                subindex == self.sub_command and \
-                self.state != OSCommandState.EXECUTING and \
-                not self.failed:
+        if index == self.index and subindex == self.sub_command:
+            if self.state == OSCommandState.EXECUTING or self.failed:
+                logger.eror('cannot start another os command when one is running')
+                return
 
             self.reply = ''
             self.command = data.decode()

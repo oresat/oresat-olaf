@@ -33,9 +33,9 @@ class OreSatFileCache:
         for f in listdir(self._dir):
             try:
                 oresat_file = OreSatFile(self._dir + f)
+                self._data.append(oresat_file)
             except Exception:
                 remove(self._dir + f)  # invalid file name
-            self._data.append(oresat_file)
         self._data = natsorted(self._data)
 
     def __len__(self) -> int:

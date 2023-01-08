@@ -1,6 +1,6 @@
 import unittest
 
-from olaf.resources.system_info import SystemInfoResource, Subindex
+from olaf._internals.resources.system_info import SystemInfoResource, Subindex
 
 from . import MockApp
 

@@ -1,6 +1,6 @@
 import unittest
 
-from olaf.resources.ecss import ECSSResource
+from olaf._internals.resources.ecss import ECSSResource
 
 from . import MockApp
 
