@@ -3,8 +3,8 @@ from enum import IntEnum
 
 from loguru import logger
 
-from ..common.resource import Resource
-from ..common.timer_loop import TimerLoop
+from ...common.resource import Resource
+from ...common.timer_loop import TimerLoop
 
 
 class OSCommandState(IntEnum):

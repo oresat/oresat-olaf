@@ -5,7 +5,7 @@ from enum import IntEnum, auto
 
 import psutil
 
-from ..common.resource import Resource
+from ...common.resource import Resource
 
 _B_TO_MB = 1024 * 1024
 

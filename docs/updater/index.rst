@@ -22,7 +22,7 @@ Basics
 States
 ------
 
-.. autoclass:: olaf.updater.UpdaterState
+.. autoclass:: olaf._internals.updater.UpdaterState
    :members:
    :member-order: bysource
    :noindex:

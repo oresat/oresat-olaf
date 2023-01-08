@@ -8,7 +8,9 @@ from flask import Blueprint, render_template, jsonify, request
 from .. import app
 
 
-od_bp = Blueprint('od', __name__, template_folder='templates')
+_TITLE = os.uname()[1]
+
+core_templates_bp = Blueprint('olaf_templates', __name__, template_folder='templates')
 
 
 class DataType(IntEnum):
@@ -41,13 +43,7 @@ INT_TYPES = [
 ]
 
 
-@od_bp.route('/od')
-def od_template():
-
-    return render_template('od.html', title=os.uname()[1], name='Object Dictionary')
-
-
-@od_bp.route('/od/<index>/', methods=['GET', 'PUT'])
+@core_templates_bp.route('/od/<index>/', methods=['GET', 'PUT'])
 def od_index(index: str):
 
     index = int(index, 16) if index.startswith('0x') else int(index)
@@ -69,7 +65,7 @@ def od_index(index: str):
     return jsonify(object_to_json(index))
 
 
-@od_bp.route('/od/<index>/<subindex>/', methods=['GET', 'PUT'])
+@core_templates_bp.route('/od/<index>/<subindex>/', methods=['GET', 'PUT'])
 def od_subindex(index: str, subindex: str):
 
     index = int(index, 16) if index.startswith('0x') else int(index)
@@ -153,3 +149,34 @@ def object_to_json(index: int, subindex: int = None) -> dict:
         data['subindexes'] = len(obj)
 
     return data
+
+
+@core_templates_bp.route('/od')
+def od_template():
+
+    return render_template('od.html', title=_TITLE, name='Object Dictionary')
+
+
+@core_templates_bp.route('/os_command')
+def os_command_template():
+    return render_template('os_command.html', title=_TITLE, name='OS Command')
+
+
+@core_templates_bp.route('/system_info')
+def system_info_template():
+    return render_template('system_info.html', title=_TITLE, name='System Info')
+
+
+@core_templates_bp.route('/updater')
+def updater_template():
+    return render_template('updater.html', title=_TITLE, name='Updater')
+
+
+@core_templates_bp.route('/fwrite')
+def fwrite_template():
+    return render_template('fwrite.html', title=_TITLE, name='Fwrite')
+
+
+@core_templates_bp.route('/fread')
+def fread_template():
+    return render_template('fread.html', title=_TITLE, name='Fread')

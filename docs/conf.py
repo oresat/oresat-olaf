@@ -17,8 +17,9 @@ sys.path.insert(0, os.path.abspath('..'))
 
 # -- Project information -----------------------------------------------------
 
+from datetime import datetime
 project = 'OreSat Linux App Framework'
-copyright = '2022, Portland State Aerospace Society'
+copyright = f'{datetime.now().date().year}, Portland State Aerospace Society'
 author = 'PSAS'
 
 

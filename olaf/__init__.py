@@ -1,12 +1,12 @@
+import os
 import sys
 from logging.handlers import SysLogHandler
 from argparse import ArgumentParser
 
 from loguru import logger
 
-from ._app import App
-
-# public api here
+from ._internals.app import app
+from ._internals.rest_api import rest_api
 from .common.resource import Resource
 from .common.ecss import scet_int_from_time, scet_int_to_time, utc_int_from_time, utc_int_to_time
 from .common.oresat_file import OreSatFile, new_oresat_file
@@ -14,30 +14,26 @@ from .common.oresat_file_cache import OreSatFileCache
 
 __version__ = '0.3.0'
 
-app_args_parser = ArgumentParser(add_help=False)
-'''The optional, but recommend **parent** :py:class:`ArgumentParser` object to use.'''
 
-app_args_parser.add_argument('-b', '--bus', default='vcan0',
-                             help='CAN bus to use, defaults to vcan0')
-app_args_parser.add_argument('-n', '--node-id', type=str, default='0', metavar='ID',
-                             help='set the node ID')
-app_args_parser.add_argument('-v', '--verbose', action='store_true', help='verbose logging')
-app_args_parser.add_argument('-l', '--log', action='store_true', help='log to only journald')
-app_args_parser.add_argument('-e', '--eds', metavar='FILE', help='EDS/DCF file to use')
-app_args_parser.add_argument('-m', '--mock-hw', action='store_true', help='mock the hardware')
-
-app = App()
-'''The global instance of the OLAF app.'''
-
-
-def parse_app_args(args):
-    '''Parse the standard OreSat Linux App args.
+def olaf_run(eds_path: str = None):
+    '''Start the app and rest api.
 
     Parameters
     ----------
-    args
-        args from :py:func:`ArgumentParser.parse_args` to parse
+    eds_path: str
+        The path to the eds or dcf file
     '''
+
+    parser = ArgumentParser(prog='OLAF')
+    parser.add_argument('-b', '--bus', default='vcan0', help='CAN bus to use, defaults to vcan0')
+    parser.add_argument('-n', '--node-id', type=str, default='0', metavar='ID',
+                        help='set the node ID')
+    parser.add_argument('-v', '--verbose', action='store_true', help='verbose logging')
+    parser.add_argument('-l', '--log', action='store_true', help='log to only journald')
+    parser.add_argument('-e', '--eds', metavar='FILE', help='EDS/DCF file to use')
+    parser.add_argument('-m', '--mock-hw', action='store_true', help='mock the hardware')
+    parser.add_argument('-p', '--port', type=int, default=5000, help='rest api port number')
+    args = parser.parse_args()
 
     if args.verbose:
         level = 'DEBUG'
@@ -49,3 +45,12 @@ def parse_app_args(args):
         logger.add(SysLogHandler(address='/dev/log'), level=level)
     else:
         logger.add(sys.stdout, level=level)
+
+    if eds_path is None:
+        eds_path = args.eds
+
+    app.setup(eds_path, args.bus, args.node_id, args.mock_hw)
+
+    rest_api.start(port=args.port)
+    app.run()
+    rest_api.stop()

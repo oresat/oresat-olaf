@@ -94,7 +94,7 @@
         document.getElementById("varAccessType").textContent = obj['access_type'];
         document.getElementById("varValue").textContent = obj['value'];
 
-        if (obj['access_type'] === 'ro') {
+        if (obj['access_type'] === 'ro' || obj['access_type'] === 'const') {
           document.getElementById("varNewValueInput").style.display = 'none';
         } else {
           document.getElementById("varNewValueInput").style.display = 'inline';

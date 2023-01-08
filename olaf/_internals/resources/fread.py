@@ -6,7 +6,7 @@ from enum import IntEnum, auto
 
 from loguru import logger
 
-from ..common.resource import Resource
+from ...common.resource import Resource
 
 
 class Subindex(IntEnum):

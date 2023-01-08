@@ -5,8 +5,8 @@ from enum import IntEnum, auto
 
 from loguru import logger
 
-from ..common.oresat_file import OreSatFile
-from ..common.resource import Resource
+from ...common.oresat_file import OreSatFile
+from ...common.resource import Resource
 
 
 class Subindex(IntEnum):

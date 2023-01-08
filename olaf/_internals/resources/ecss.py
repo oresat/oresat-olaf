@@ -3,8 +3,8 @@ from time import time, clock_settime, CLOCK_REALTIME
 
 from loguru import logger
 
-from ..common.resource import Resource
-from ..common.ecss import scet_int_from_time, utc_int_from_time, scet_int_to_time, utc_int_to_time
+from ...common.resource import Resource
+from ...common.ecss import scet_int_from_time, utc_int_from_time, scet_int_to_time, utc_int_to_time
 
 
 class ECSSResource(Resource):

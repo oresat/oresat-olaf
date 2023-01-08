@@ -3,8 +3,8 @@ from enum import IntEnum, auto
 
 from loguru import logger
 
-from ..common.resource import Resource
-from ..common.timer_loop import TimerLoop
+from ...common.resource import Resource
+from ...common.timer_loop import TimerLoop
 from ..updater import Updater, UpdaterError
 
 

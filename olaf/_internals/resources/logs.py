@@ -3,9 +3,9 @@ from os import listdir
 
 from loguru import logger
 
-from ..common.resource import Resource
-from ..common.oresat_file import new_oresat_file
-from ..common.timer_loop import TimerLoop
+from ...common.resource import Resource
+from ...common.oresat_file import new_oresat_file
+from ...common.timer_loop import TimerLoop
 
 
 class LogsResource(Resource):

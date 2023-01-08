@@ -3,6 +3,7 @@ import struct
 import signal
 import subprocess
 from os import geteuid
+from os.path import abspath, dirname
 from pathlib import Path
 from threading import Event
 from time import sleep
@@ -11,9 +12,9 @@ import canopen
 import psutil
 from loguru import logger
 
-from .common.resource import Resource
-from .common.timer_loop import TimerLoop
-from .common.oresat_file_cache import OreSatFileCache
+from ..common.resource import Resource
+from ..common.timer_loop import TimerLoop
+from ..common.oresat_file_cache import OreSatFileCache
 from .resources.os_command import OSCommandResource
 from .resources.system_info import SystemInfoResource
 from .resources.file_caches import FileCachesResource
@@ -22,6 +23,9 @@ from .resources.fwrite import FwriteResource
 from .resources.ecss import ECSSResource
 from .resources.updater import UpdaterResource
 from .resources.logs import LogsResource
+
+_BACKUP_EDS = abspath(dirname(__file__)) + '/data/oresat_app.eds'
+'''Internal eds file incase app's is misformatted or missing.'''
 
 
 class App:
@@ -35,10 +39,33 @@ class App:
         self.network = None
         self.mock_hw = False
         self.name = 'OLAF'
+        self.node = None
+        self.node_id = 0
 
         # setup event
         for sig in ['SIGTERM', 'SIGHUP', 'SIGINT']:
             signal.signal(getattr(signal, sig), self._quit)
+
+    def __del__(self):
+
+        self.stop()
+
+        if self.network:
+            try:
+                self.network.disconnect()
+            except Exception:
+                pass
+
+    def _load_node(self, node_id: int, eds: str):
+        dcf_node_id = canopen.import_od(eds).node_id
+        if node_id != 0:
+            self.node_id = node_id
+        elif dcf_node_id:
+            self.node_id = dcf_node_id
+        else:
+            self.node_id = 0x7C
+        self.node = canopen.LocalNode(self.node_id, eds)
+        self.node.object_dictionary.node_id = self.node_id
 
     def setup(self, eds: str, bus: str, node_id=0, mock_hw=False):
         '''
@@ -95,15 +122,15 @@ class App:
         self.fread_cache = OreSatFileCache(fread_path)
         self.fwrite_cache = OreSatFileCache(fwrite_path)
 
-        dcf_node_id = canopen.import_od(eds).node_id
-        if node_id != 0:
-            self.node_id = node_id
-        elif dcf_node_id:
-            self.node_id = dcf_node_id
+        if eds is not None:
+            try:
+                self._load_node(node_id, eds)
+            except Exception:
+                logger.warning(f'failed to read in {eds}, using OLAF\'s internal eds as backup')
+                self._load_node(node_id, _BACKUP_EDS)
         else:
-            self.node_id = 0x7C
-        self.node = canopen.LocalNode(self.node_id, eds)
-        self.node.object_dictionary.node_id = self.node_id
+            logger.warning('No eds or dcf was supplied, using OLAF\'s internal eds')
+            self._load_node(node_id, _BACKUP_EDS)
 
         self.name = self.node.object_dictionary.device_information.product_name
 
@@ -157,15 +184,6 @@ class App:
         self.add_resource(FwriteResource)
         self.add_resource(UpdaterResource)
         self.add_resource(LogsResource)
-
-    def __del__(self):
-
-        self.stop()
-
-        try:
-            self.network.disconnect()
-        except Exception:
-            pass
 
     def _quit(self, signo, _frame):
         '''Called when signals are caught'''
@@ -344,7 +362,6 @@ class App:
     def stop(self):
         '''End the run loop'''
 
-        logger.info(f'{self.name} app is stopping')
         self.event.set()
 
     @property
@@ -352,3 +369,7 @@ class App:
         '''For convenience. Access to the object dictionary.'''
 
         return self.node.object_dictionary
+
+
+app = App()
+'''The global instance of the OLAF app.'''

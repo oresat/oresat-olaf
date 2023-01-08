@@ -11,8 +11,8 @@ from enum import IntEnum
 
 from loguru import logger
 
-from .common.oresat_file import OreSatFile, new_oresat_file
-from .common.oresat_file_cache import OreSatFileCache
+from ..common.oresat_file import OreSatFile, new_oresat_file
+from ..common.oresat_file_cache import OreSatFileCache
 
 INSTRUCTIONS_FILE = 'instructions.txt'
 '''The instructions file that is always in a OreSat Linux update archive. It
