@@ -12,7 +12,6 @@ from ..common.resource import Resource
 class Subindex(IntEnum):
     FILE_NAME = auto()
     FILE_DATA = auto()
-    RESET = auto()
 
 
 class FwriteResource(Resource):

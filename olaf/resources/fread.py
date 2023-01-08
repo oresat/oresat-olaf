@@ -1,3 +1,4 @@
+import zlib
 from os import remove, listdir
 from os.path import basename
 from pathlib import Path
@@ -11,7 +12,7 @@ from ..common.resource import Resource
 class Subindex(IntEnum):
     FILE_NAME = auto()
     FILE_DATA = auto()
-    RESET = auto()
+    CRC32 = auto()
     DELETE_FILE = auto()
 
 
@@ -40,6 +41,12 @@ class FreadResource(Resource):
 
         if subindex == Subindex.FILE_NAME:
             ret = basename(self.file_path)
+        elif subindex == Subindex.CRC32:
+            try:
+                with open(self.file_path, 'rb') as f:
+                    ret = zlib.crc32(f.read())
+            except FileNotFoundError as exc:
+                logger.error(exc)
         elif subindex == Subindex.FILE_DATA:
             if not self.file_path:
                 logger.error('fread file path was not set before trying to read file data')
