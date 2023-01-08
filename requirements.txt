@@ -7,3 +7,4 @@ sphinx-rtd-theme
 canopen
 psutil
 loguru
+natsort
