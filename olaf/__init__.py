@@ -49,5 +49,3 @@ def parse_app_args(args):
         logger.add(SysLogHandler(address='/dev/log'), level=level)
     else:
         logger.add(sys.stdout, level=level)
-
-    app.setup(args.eds, args.bus, args.node_id, args.mock_hw)
