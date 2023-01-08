@@ -1,13 +1,7 @@
-<!DOCTYPE html>
-<html lang='en'>
-<head>
-  <title>{{title}}</title>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block content %}
   <style>
-    #page {
-      text-align: center;
-    }
     table {
       font-family: arial, sans-serif;
       border-collapse: collapse;
@@ -20,37 +14,64 @@
       padding: 8px;
     }
   </style>
-  <div id='page'>
-    <h2>Updater</h2>
-    <br/>
-    <table>
-      <tr>
-        <td>Status</td>
-        <td><span id='status'></span></td>
-      </tr>
-      <tr>
-        <td>Updates Available</td>
-        <td><span id='updatesAvailable'></span></td>
-      </tr>
-    </table>
-    <br/>
-    <button disabled>Start Update</button>
-    <button>Generate Status File</button>
-  </div>
+  <table>
+    <tr>
+      <td>Status</td>
+      <td><span id='status'></span></td>
+    </tr>
+    <tr>
+      <td>Updates Available</td>
+      <td><span id='updatesAvailable'></span></td>
+    </tr>
+  </table>
+  <br/>
+  <button id='startUpdateButton' onclick='startUpdate()' disabled>Start Update</button>
+  <button id='makeStatusFileButton' onclick='makeStatusFile()'>Generate Status File</button>
   <script>
-    const interval = setInterval(function() {
-      fetch(`http://${window.location.host}/od/0x3100/0x01`, {'method': 'GET'})
-        .then(response => response.json())
-        .then(data => {
-          document.getElementById("status").textContent = data['value'];
-        });
+    const STATES = {
+      0: 'UPDATE_SUCCESSFUL',
+      1: 'PRE_UPDATE_FAILED',
+      2: 'UPDATE_FAILED',
+      255: 'UPDATING',
+    }
 
-      fetch(`http://${window.location.host}/od/0x3100/0x02`, {'method': 'GET'})
-        .then(response => response.json())
-        .then(data => {
-          document.getElementById("updatesAvailable").textContent = data['value'];
-        });
-    }, 1000);
+    async function updaterInfo() {
+      const statusObj = await readValue('0x3100', '0x01');
+      const newState = STATES[statusObj['value']];
+      document.getElementById('status').textContent = newState;
+
+      const updatesObj = await readValue('0x3100', '0x02');
+      document.getElementById('updatesAvailable').textContent = updatesObj['value'];
+
+      if (newState === 'UPDATING') {
+        document.getElementById('startUpdateButton').disabled = true;
+        document.getElementById('makeStatusFileButton').disabled = true;
+      } else {
+        if (updatesObj['value'] === 0) {
+          document.getElementById('startUpdateButton').disabled = true;
+          document.getElementById('makeStatusFileButton').disabled = false;
+        } else {
+          document.getElementById('startUpdateButton').disabled = false;
+          document.getElementById('makeStatusFileButton').disabled = false;
+        }
+      }
+    }
+
+    async function startUpdate() {
+      document.getElementById('startUpdateButton').disabled = false;
+      document.getElementById('makeStatusFileButton').disabled = true;
+      writeValue('0x3100', '0x04', true);
+    }
+
+    async function makeStatusFile() {
+      document.getElementById('startUpdateButton').disabled = true;
+      document.getElementById('makeStatusFileButton').disabled = false;
+      writeValue('0x3100', '0x05', true);
+    }
+
+    updaterInfo();
+    const interval = setInterval(function() {
+      updaterInfo();
+    }, 10000);
   </script>
-</body>
-</html>
+{% endblock %}

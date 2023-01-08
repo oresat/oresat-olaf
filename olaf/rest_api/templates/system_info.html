@@ -1,13 +1,7 @@
-<!DOCTYPE html>
-<html lang='en'>
-<head>
-  <title>{{title}}</title>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block content %}
   <style>
-    #page {
-      text-align: center;
-    }
     table {
       font-family: arial, sans-serif;
       border-collapse: collapse;
@@ -20,107 +14,104 @@
       padding: 8px;
     }
   </style>
-  <div id='page'>
-    <h2>System Info</h2>
-    <br/>
-    <table>
-      <tr>
-        <td>OS Name</td>
-        <td><span id='osName'></span></td>
-      </tr>
-      <tr>
-        <td>OS Distro</td>
-        <td><span id='osDistro'></span></td>
-      </tr>
-      <tr>
-        <td>OS Kernel Version</td>
-        <td><span id='osKernelVersion'></span></td>
-      </tr>
-      <tr>
-        <td>Hostname</td>
-        <td><span id='hostname'></span></td>
-      </tr>
-      <tr>
-        <td>Uptime</td>
-        <td><span id='uptime'></span> s</td>
-      </tr>
-      <tr>
-        <td>Number of CPUs</td>
-        <td><span id='cpuNum'></span></td>
-      </tr>
-      <tr>
-        <td>CPU Architecture</td>
-        <td><span id='cpuArch'></span></td>
-      </tr>
-      <tr>
-        <td>CPU Governor</td>
-        <td><span id='cpuGov'></span></td>
-      </tr>
-      <tr>
-        <td>CPU Frequency</td>
-        <td><span id='cpuFreq'></span> MHz</td>
-      </tr>
-      <tr>
-        <td>Number of Remote Processors</td>
-        <td><span id='remoteProcNum'></span></td>
-      </tr>
-      <tr>
-        <td>Load 1 minute</td>
-        <td><span id='load1Min'></span></td>
-      </tr>
-      <tr>
-        <td>Load 5 minute</td>
-        <td><span id='load5Min'></span></td>
-      </tr>
-      <tr>
-        <td>Load 15 minute</td>
-        <td><span id='load15Min'></span></td>
-      </tr>
-      <tr>
-        <td>RAM Total</td>
-        <td><span id='ramTotal'></span> MB</td>
-      </tr>
-      <tr>
-        <td>RAM Free</td>
-        <td><span id='ramFree'></span> MB</td>
-      </tr>
-      <tr>
-        <td>RAM Shared</td>
-        <td><span id='ramShared'></span> MB</td>
-      </tr>
-      <tr>
-        <td>RAM Buffered</td>
-        <td><span id='ramBuffered'></span> MB</td>
-      </tr>
-      <tr>
-        <td>RAM Percent</td>
-        <td><span id='ramPercent'></span> %</td>
-      </tr>
-      <tr>
-        <td>Swap Total</td>
-        <td><span id='swapTotal'></span> MB</td>
-      </tr>
-      <tr>
-        <td>Swap Free</td>
-        <td><span id='swapFree'></span> MB</td>
-      </tr>
-      <tr>
-        <td>Swap Percent</td>
-        <td><span id='swapPercent'></span> %</td>
-      </tr>
-      <tr>
-        <td>Number of Current Processes</td>
-        <td><span id='procs'></span></td>
-      </tr>
-      <tr>
-        <td>Root Partition Total</td>
-        <td><span id='rootPartTotal'></span> MB</td>
-      </tr>
-      <tr>
-        <td>Root Partition Free</td>
-        <td><span id='rootPartFree'></span> MB</td>
-      </tr>
-      <tr>
+  <table>
+    <tr>
+      <td>OS Name</td>
+      <td><span id='osName'></span></td>
+    </tr>
+    <tr>
+      <td>OS Distro</td>
+      <td><span id='osDistro'></span></td>
+    </tr>
+    <tr>
+      <td>OS Kernel Version</td>
+      <td><span id='osKernelVersion'></span></td>
+    </tr>
+    <tr>
+      <td>Hostname</td>
+      <td><span id='hostname'></span></td>
+    </tr>
+    <tr>
+      <td>Uptime</td>
+      <td><span id='uptime'></span> s</td>
+    </tr>
+    <tr>
+      <td>Number of CPUs</td>
+      <td><span id='cpuNum'></span></td>
+    </tr>
+    <tr>
+      <td>CPU Architecture</td>
+      <td><span id='cpuArch'></span></td>
+    </tr>
+    <tr>
+      <td>CPU Governor</td>
+      <td><span id='cpuGov'></span></td>
+    </tr>
+    <tr>
+      <td>CPU Frequency</td>
+      <td><span id='cpuFreq'></span> MHz</td>
+    </tr>
+    <tr>
+      <td>Number of Remote Processors</td>
+      <td><span id='remoteProcNum'></span></td>
+    </tr>
+    <tr>
+      <td>Load 1 minute</td>
+      <td><span id='load1Min'></span></td>
+    </tr>
+    <tr>
+      <td>Load 5 minute</td>
+      <td><span id='load5Min'></span></td>
+    </tr>
+    <tr>
+      <td>Load 15 minute</td>
+      <td><span id='load15Min'></span></td>
+    </tr>
+    <tr>
+      <td>RAM Total</td>
+      <td><span id='ramTotal'></span> MB</td>
+    </tr>
+    <tr>
+      <td>RAM Free</td>
+      <td><span id='ramFree'></span> MB</td>
+    </tr>
+    <tr>
+      <td>RAM Shared</td>
+      <td><span id='ramShared'></span> MB</td>
+    </tr>
+    <tr>
+      <td>RAM Buffered</td>
+      <td><span id='ramBuffered'></span> MB</td>
+    </tr>
+    <tr>
+      <td>RAM Percent</td>
+      <td><span id='ramPercent'></span> %</td>
+    </tr>
+    <tr>
+      <td>Swap Total</td>
+      <td><span id='swapTotal'></span> MB</td>
+    </tr>
+    <tr>
+      <td>Swap Free</td>
+      <td><span id='swapFree'></span> MB</td>
+    </tr>
+    <tr>
+      <td>Swap Percent</td>
+      <td><span id='swapPercent'></span> %</td>
+    </tr>
+    <tr>
+      <td>Number of Current Processes</td>
+      <td><span id='procs'></span></td>
+    </tr>
+    <tr>
+      <td>Root Partition Total</td>
+      <td><span id='rootPartTotal'></span> MB</td>
+    </tr>
+    <tr>
+      <td>Root Partition Free</td>
+      <td><span id='rootPartFree'></span> MB</td>
+    </tr>
+    <tr>
         <td>Root Partition Percent</td>
         <td><span id='rootPartPercent'></span> %</td>
       </tr>
@@ -155,13 +146,10 @@
       '0x1C': 'rootPartPercent',
     }
 
-    function updateAll() {
+    async  function updateAll() {
       for (const index in indexNames) {
-        fetch(`http://${window.location.host}/od/0x3001/${index}`, {'method': 'GET'})
-        .then(response => response.json())
-        .then(data => {
-          document.getElementById(indexNames[index]).textContent = data['value'];
-        });
+        const obj = await readValue('0x3001', index)
+        document.getElementById(indexNames[index]).textContent = obj['value'];
       }
     }
 
@@ -171,5 +159,4 @@
       updateAll()
     }, 30000);
   </script>
-</body>
-</html>
+{% endblock %}

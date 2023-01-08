@@ -32,7 +32,7 @@ class DataType(IntEnum):
 @od_bp.route('/od')
 def od_template():
 
-    return render_template('od.html', title=os.uname()[1])
+    return render_template('od.html', title=os.uname()[1], name='Object Dictionary')
 
 
 @od_bp.route('/od/<index>/', methods=['GET', 'PUT'])
@@ -40,9 +40,15 @@ def od_index(index: str):
 
     index = int(index, 16) if index.startswith('0x') else int(index)
 
+    try:
+        obj = app.od[index]
+    except Exception:
+        return jsonify({'error': f'no object at index {index}'})
+
     if request.method == 'PUT':
         raw = request.json['value']
-        data_type = app.od[index].data_type
+        data_type = obj.data_type
+
         if data_type == DataType.DOMAIN:
             app.node.sdo[index].raw = base64.decodebytes(raw.encode('utf-8'))
         else:
@@ -57,9 +63,15 @@ def od_subindex(index: str, subindex: str):
     index = int(index, 16) if index.startswith('0x') else int(index)
     subindex = int(subindex, 16) if subindex.startswith('0x') else int(subindex)
 
+    try:
+        obj = app.od[index][subindex]
+    except Exception:
+        return jsonify({'error': f'no object at index {index} subindex {subindex}'})
+
     if request.method == 'PUT':
         raw = request.json['value']
-        data_type = app.od[index][subindex].data_type
+        data_type = obj.data_type
+
         if data_type == DataType.DOMAIN:
             app.node.sdo[index][subindex].raw = base64.decodebytes(raw.encode('utf-8'))
         else:
@@ -90,6 +102,8 @@ def object_to_json(index: int, subindex: int = None) -> dict:
     if subindex is None:
         try:
             obj = app.od[index]
+            if obj is None:
+                print('object does not exist')
             if isinstance(obj, canopen.objectdictionary.Variable):
                 if obj.data_type == DataType.DOMAIN:
                     raw = app.node.sdo[index].raw
@@ -101,6 +115,8 @@ def object_to_json(index: int, subindex: int = None) -> dict:
     else:
         try:
             obj = app.od[index][subindex]
+            if obj is None:
+                print('object does not exist')
             if obj.data_type == DataType.DOMAIN:
                 raw = app.node.sdo[index][subindex].raw
                 value = base64.encodebytes(raw).decode('utf-8')

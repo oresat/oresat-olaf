@@ -1,13 +1,7 @@
-<!DOCTYPE html>
-<html lang='en'>
-<head>
-  <title>{{title}}</title>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block content %}
   <style>
-    #page {
-      text-align: center;
-    }
     table {
       font-family: arial, sans-serif;
       border-collapse: collapse;
@@ -26,80 +20,81 @@
       display: none;
     }
   </style>
-  <div id='page'>
-    <h2 id='pageTitle'>Object Dictionary</h2>
+  <label for="objIndex">Index:</label>
+  <input type="text" id="objIndex" name="objIndex" placeholder="0x1000"/>
+  <label for="objSubindex">Subindex:</label>
+  <input type="text" id="objSubindex" name="objSubindex" placeholder="0x00"/>
+  <button onclick='getObjectInfo()'>Get Info</button>
+  <br/>
+  <br/>
+  <div id='variableObj'>
+    <table>
+      <tr>
+        <td>Object Type</td>
+        <td>VARIABLE</td>
+      </tr>
+      <tr>
+        <td>Name</td>
+        <td><span id='varName'></span></td>
+      </tr>
+      <tr>
+        <td>Data Type</td>
+        <td><span id='varDataType'></span></td>
+      </tr>
+      <tr>
+        <td>Access Type</td>
+        <td><span id='varAccessType'></span></td>
+      </tr>
+      <tr>
+        <td>Value</td>
+        <td><span id='varValue'></span></td>
+      </tr>
+    </table>
     <br/>
-    <label for="objIndex">Index:</label>
-    <input type="text" id="objIndex" name="objIndex" placeholder="0x1000"/>
-    <label for="objSubindex">Subindex:</label>
-    <input type="text" id="objSubindex" name="objSubindex" placeholder="0x00"/>
-    <button onclick='getObjectInfo()'>Get Info</button>
-    <br/>
-    <br/>
-    <div id='variableObj'>
-      <table>
-        <tr>
-          <td>Object Type</td>
-          <td>VARIABLE</td>
-        </tr>
-        <tr>
-          <td>Name</td>
-          <td><span id='varName'></span></td>
-        </tr>
-        <tr>
-          <td>Data Type</td>
-          <td><span id='varDataType'></span></td>
-        </tr>
-        <tr>
-          <td>Access Type</td>
-          <td><span id='varAccessType'></span></td>
-        </tr>
-        <tr>
-          <td>Value</td>
-          <td><span id='varValue'></span></td>
-        </tr>
-      </table>
-      <br/>
-      <div id='varNewValueInput'>
-        <label for="objNewValue">New Value:</label>
-        <input type="text" id="objNewValue" name="objNewValue"/>
-        <button id='setObjectValueButton' onclick='setObjectValue()'>Change</button>
-      </div>
-    </div>
-    <div id='arrayRecordObj'>
-      <table>
-        <tr>
-          <td>Object Type</td>
-          <td><span id='objType'></span></td>
-        </tr>
-        <tr>
-          <td>Name</td>
-          <td><span id='objName'></span></td>
-        </tr>
-        <tr>
-          <td>Subindexes</td>
-          <td><span id='objSubindexes'></span></td>
-        </tr>
-      </table>
+    <div id='varNewValueInput'>
+      <label for="objNewValue">New Value:</label>
+      <input type="text" id="objNewValue" name="objNewValue"/>
+      <button id='setObjectValueButton' onclick='setObjectValue()'>Change</button>
     </div>
   </div>
+  <div id='arrayRecordObj'>
+    <table>
+      <tr>
+        <td>Object Type</td>
+        <td><span id='objType'></span></td>
+      </tr>
+      <tr>
+        <td>Name</td>
+        <td><span id='objName'></span></td>
+      </tr>
+      <tr>
+        <td>Subindexes</td>
+        <td><span id='objSubindexes'></span></td>
+      </tr>
+    </table>
+  </div>
   <script>
-    function setData(data) {
-      if (data['error'] !== undefined) {
-        alert(data['error']);
-        return;
-      }
+    async function updateData() {
+      const index = document.getElementById("objIndex").value;
+      const subindex = document.getElementById("objSubindex").value;
 
-      if (data['object_type'] === 'VARIABLE') {
+      const obj = await readValue(index, subindex);
+
+      if (obj['error'] !== undefined) {
+        document.getElementById("variableObj").style.display = 'none';
+        document.getElementById("arrayRecordObj").style.display = 'none';
+
+        alert(obj['error']);
+      } else if (obj['object_type'] === 'VARIABLE') {
         document.getElementById("variableObj").style.display = 'inline';
         document.getElementById("arrayRecordObj").style.display = 'none';
 
-        document.getElementById("varName").textContent = data['name'];
-        document.getElementById("varDataType").textContent = data['data_type'];
-        document.getElementById("varAccessType").textContent = data['access_type'];
-        document.getElementById("varValue").textContent = data['value'];
+        document.getElementById("varName").textContent = obj['name'];
+        document.getElementById("varDataType").textContent = obj['data_type'];
+        document.getElementById("varAccessType").textContent = obj['access_type'];
+        document.getElementById("varValue").textContent = obj['value'];
 
-        if (data['access_type'] === 'ro') {
+        if (obj['access_type'] === 'ro') {
           document.getElementById("varNewValueInput").style.display = 'none';
         } else {
           document.getElementById("varNewValueInput").style.display = 'inline';
@@ -108,43 +103,18 @@
         document.getElementById("variableObj").style.display = 'none';
         document.getElementById("arrayRecordObj").style.display = 'inline';
 
-        document.getElementById("objType").textContent = data['object_type'];
-        document.getElementById("objName").textContent = data['name'];
-        document.getElementById("objSubindexes").textContent = data['subindexes'];
+        document.getElementById("objType").textContent = obj['object_type'];
+        document.getElementById("objName").textContent = obj['name'];
+        document.getElementById("objSubindexes").textContent = obj['subindexes'];
       }
-    }
-
-    function getUrl() {
-      const index = document.getElementById("objIndex").value;
-      let subindex = document.getElementById("objSubindex").value;
-
-      let url = `http://${window.location.host}/od/${index}`;
-      if (subindex !== '') {
-        url = `http://${window.location.host}/od/${index}/${subindex}`;
-      }
-
-      return url;
     }
 
     function getObjectInfo() {
-      const url = getUrl();
-
-      fetch(url, {'method': 'GET'})
-        .then(response => response.json())
-        .then(data => setData(data));
+      updateData();
     }
 
     function setObjectValue() {
-      const url = getUrl();
-
-      const body = {
-        'value': document.getElementById("objNewValue").value,
-      }
-
-      fetch(url, {'method': 'PUT', body})
-        .then(response => response.json())
-        .then(data => console.log(data));
+      writeValue(index, subindex, value);
     }
   </script>
-</body>
-</html>
+{% endblock %}

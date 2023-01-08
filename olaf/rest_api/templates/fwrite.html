@@ -1,90 +1,45 @@
-<!DOCTYPE html>
-<html lang='en'>
-<head>
-  <title>{{title}}</title>
-</head>
-<body>
-  <style>
-    #page {
-      text-align: center;
-    }
-  </style>
-  <div id='page'>
-    <h2>Fwrite</h2>
-    <br/>
-    <label for='filename'>File:</label>
-    <input type='file' id='filename' name='filename'/>
-    <button onclick='fwrite()'>Write</button>
-  </div>
-  <script>
-    function fwrite() {
-      const file = document.getElementById('filename').files[0];
+{% extends 'base.html' %}
 
-      const options = {
-        'method': 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        'body': JSON.stringify({
-          'value': file.name,
-        }),
-      };
+{% block content %}
+  <label for='filename'>File:</label>
+  <input type='file' id='filename' name='filename'/>
+  <button onclick='uploadFile()'>Upload</button>
+  <script>
+    /** Callback when the upload button is clicked. */
+    function uploadFile() {
+      const file = document.getElementById('filename').files[0];
 
       const fileReader = new FileReader();
       fileReader.readAsBinaryString(file);
       fileReader.onload = function() {
-        fetch(`http://${window.location.host}/od/0x3004/0x01`, options)
-          .then(response => response.json())
-          .then(data => {
-            if (data.error !== undefined) {
-              alert(data.error);
-            } else {
-              writeData(file.name, fileReader.result);
-            }
-          });
+        fwrite(file.name, fileReader.result);
       }
       fileReader.onerror = function() {
         alert(fileReader.error);
       }
     }
 
-    function writeData(file_name, file_data) {
-      const options = {
-        'method': 'GET',
-      };
+    /**
+     * Write file to OLAF app.
+     *
+     * @param fileName {String} The file name to write.
+     * @param fileData {String} The file data as a binary string to write.
+     */
+    async function fwrite(fileName, fileData) {
+     // Write the file name to OD.
+      const obj = await writeValue('0x3004','0x01', fileName);
 
-      fetch(`http://${window.location.host}/od/0x3004/0x01`, options)
-        .then(response => response.json())
-        .then(data => {
-          console.log(data.value);
-          console.log(file_name);
-          if (data.value === file_name) {
-            _writeData(file_data);
-          } else {
-            alert('invalid file name format');
-          }
-        });
-    }
+      // Validate the file name was set to new value in OD, if it wasn't it was not a
+      // valid file name.
+      if (obj.value !== fileName) {
+        alert('fwrite failed due to an invalid file name format');
+        return;
+      }
 
-    function _writeData(data) {
-      const options = {
-        'method': 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        'body': JSON.stringify({
-          'value': btoa(data),
-        }),
-      };
-
-      fetch(`http://${window.location.host}/od/0x3004/0x02`, options)
-        .then(response => response.json())
-        .then(data => {
-          if (data.error !== undefined) {
-            alert(data.error);
-          }
-        });
+     // Write the file data to OD.
+      await writeValue('0x3004','0x02', btoa(fileData));
+      
+      alert('fwrite was successful');
     }
   </script>
-</body>
-</html>
+{% endblock %}
