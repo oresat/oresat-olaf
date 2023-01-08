@@ -1,7 +1,7 @@
 import os
 from threading import Thread
 
-from flask import Flask, render_template
+from flask import Flask, render_template, send_from_directory
 from werkzeug.serving import make_server
 from loguru import logger
 
@@ -49,10 +49,17 @@ def root():
     routes = []
     for p in rest_api._app.url_map.iter_rules():
         route = str(p)
-        if not route.startswith('/static/') and not route.startswith('/od/') and route != '/':
+        if not route.startswith('/static/') and not route.startswith('/od/') and route \
+                not in ['/', '/favicon.ico' ]:
             routes.append(str(p))
 
     title = os.uname()[1]
     routes = sorted(routes)
 
     return render_template('root.html', title=title, routes=routes)
+
+
+@rest_api._app.route('/favicon.ico')
+def favicon():
+    path = os.path.dirname(os.path.abspath(__file__))
+    return send_from_directory(f'{path}/static', 'favicon.ico')
