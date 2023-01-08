@@ -11,6 +11,7 @@ from ..common.resource import Resource
 class Subindex(IntEnum):
     FILE_NAME = auto()
     FILE_DATA = auto()
+    RESET = auto()
     DELETE_FILE = auto()
 
 
@@ -37,13 +38,13 @@ class FreadResource(Resource):
         if index != self.index:
             return ret
 
-        if not self.file_path:
-            logger.error('fread file path was not set before trying to read info')
-            return b''
-
         if subindex == Subindex.FILE_NAME:
             ret = basename(self.file_path)
         elif subindex == Subindex.FILE_DATA:
+            if not self.file_path:
+                logger.error('fread file path was not set before trying to read file data')
+                return b''
+
             try:
                 with open(self.file_path, 'rb') as f:
                     ret = f.read()
@@ -75,5 +76,6 @@ class FreadResource(Resource):
                 self.fread_cache.remove(basename(self.file_path))
                 remove(self.file_path)
                 self.file_path = ''
+                logger.info(f'{basename(self.file_path)} was deleted from fread cache')
             else:
                 logger.error('fread file path was not set before trying to delete file')

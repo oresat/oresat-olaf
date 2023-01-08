@@ -29,6 +29,18 @@ class DataType(IntEnum):
     UNSIGNED64 = 0x1B
 
 
+INT_TYPES = [
+    DataType.INTEGER8,
+    DataType.INTEGER16,
+    DataType.INTEGER32,
+    DataType.INTEGER64,
+    DataType.UNSIGNED8,
+    DataType.UNSIGNED16,
+    DataType.UNSIGNED32,
+    DataType.UNSIGNED64
+]
+
+
 @od_bp.route('/od')
 def od_template():
 
@@ -83,12 +95,10 @@ def od_subindex(index: str, subindex: str):
 def raw_to_value(data_type: DataType, raw: str):
     value = None
 
-    if data_type == DataType.BOOLEAN:
+    if data_type == DataType.BOOLEAN and not isinstance(raw, bool):
         value = True if raw.lower() == 'true' else False
-    elif data_type in [DataType.INTEGER8, DataType.INTEGER16, DataType.INTEGER32,
-                       DataType.INTEGER64, DataType.UNSIGNED8, DataType.UNSIGNED16,
-                       DataType.UNSIGNED32, DataType.UNSIGNED64]:
-        value = int(value, 16) if value.startswith('0x') else int(value)
+    elif data_type in INT_TYPES and not isinstance(raw, int):
+        value = int(raw, 16) if raw.startswith('0x') else int(raw)
     elif data_type in [DataType.REAL32, DataType.REAL64]:
         value = float(raw)
     else:
@@ -102,8 +112,6 @@ def object_to_json(index: int, subindex: int = None) -> dict:
     if subindex is None:
         try:
             obj = app.od[index]
-            if obj is None:
-                print('object does not exist')
             if isinstance(obj, canopen.objectdictionary.Variable):
                 if obj.data_type == DataType.DOMAIN:
                     raw = app.node.sdo[index].raw

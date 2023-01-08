@@ -25,3 +25,8 @@ def updater_template():
 @core_templates_bp.route('/fwrite')
 def fwrite_template():
     return render_template('fwrite.html', title=TITLE, name='Fwrite')
+
+
+@core_templates_bp.route('/fread')
+def fread_template():
+    return render_template('fread.html', title=TITLE, name='Fread')
