@@ -28,11 +28,6 @@ Install using pip:
 
    $ pip install oresat-olaf
 
-Example App
------------
-
-For an example OLAF app see `<example/README.rst>`_.
-
 Contributing
 ------------
 

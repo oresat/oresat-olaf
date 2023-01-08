@@ -1,8 +1,0 @@
-services:
-  example-app:
-    build: .
-    container_name: example-app
-    network_mode: 'host'
-    volumes:
-      - ./example_app:/example_app
-    command: "python3 -m example_app"
