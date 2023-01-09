@@ -18,6 +18,8 @@ Society).
 
    glossary
    contributing_link
+   canopen
+   canopen_on_oresat
    api/index
    updater/index
 
