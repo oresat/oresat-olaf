@@ -5,7 +5,7 @@ from flask import Flask, Blueprint, render_template, send_from_directory
 from werkzeug.serving import make_server
 from loguru import logger
 
-from ._blueprints import core_templates_bp
+from .blueprints import core_templates_bp
 
 
 class RestAPI:

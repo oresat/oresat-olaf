@@ -52,7 +52,7 @@ def od_index(index: str):
     try:
         obj = app.od[index]
     except Exception:
-        msg = f'no object at index {index}'
+        msg = f'no object at index {index:02X}'
         logger.error(f'RestApiError: {msg}')
         return jsonify({'error': msg})
 
@@ -77,7 +77,7 @@ def od_subindex(index: str, subindex: str):
     try:
         obj = app.od[index][subindex]
     except Exception:
-        msg = f'no object at index {index} subindex {subindex}'
+        msg = f'no object at index {index:04X} subindex {subindex:02X}'
         logger.error(f'RestApiError: {msg}')
         return jsonify({'error': msg})
 
