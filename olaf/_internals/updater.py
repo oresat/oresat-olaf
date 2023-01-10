@@ -37,6 +37,7 @@ INSTRUCTIONS_WITH_FILES = [
 
 OLU_STATUS_KEYWORD = 'olu-status'
 DPKG_STATUS_KEYWORD = 'dpkg-status'
+PIP_STATUS_KEYWORD = 'pip-status'
 
 
 class UpdaterError(Exception):
@@ -360,8 +361,8 @@ class Updater:
         self._instruction_percent = 100
 
     def make_status_archive(self) -> str:
-        '''Make status tar file with a copy of the dpkg status file and a file with the list of
-        updates in cache.
+        '''Make status tar file with a copy of the dpkg status file, a file with the out put of
+        ``pip freeze`` (the list of python packages), and a file with the list ofupdates in cache.
 
         Returns
         -------
@@ -374,12 +375,20 @@ class Updater:
         olu_tar = '/tmp/' + new_oresat_file(keyword=OLU_STATUS_KEYWORD, ext='.tar.xz')
         if self._has_dpkg:
             dpkg_file = new_oresat_file(keyword=DPKG_STATUS_KEYWORD)
+        pip_file = '/tmp/' + new_oresat_file(keyword=PIP_STATUS_KEYWORD)
+
+        out = subprocess.run('pip freeze', capture_output=True, shell=True)
+        if out.returncode != 0:
+            with open(pip_file, 'w') as f:
+                f.write(out.stdout.decode('utf-8'))
 
         with open(olu_file, 'w') as f:
             f.write(json.dumps(listdir(self._cache_dir)))
 
         with tarfile.open(olu_tar, 'w:xz') as t:
             t.add(olu_file, arcname=basename(olu_file))
+            if isfile(pip_file):
+                t.add(pip_file, arcname=basename(pip_file))
 
             if self._has_dpkg:
                 dpkg_status_file = '/var/lib/dpkg/status'
