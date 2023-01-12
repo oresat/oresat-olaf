@@ -51,6 +51,8 @@ class SystemInfoResource(Resource):
         self.rprocs = 0
         self.rproc_iter = 0
 
+    def on_start(self):
+
         with open('/etc/os-release', 'r') as f:
             os_release = f.readlines()
 
@@ -67,8 +69,6 @@ class SystemInfoResource(Resource):
         if os.path.isdir('/sys/class/remoteproc'):
             self.rprocs = len(os.listdir('/sys/class/remoteproc'))
             # save for `on_read`
-        else:
-            self.rprocs = 0
         si_record[Subindex.NUM_OF_RPROCS.value].value = self.rprocs
 
     def on_read(self, index, subindex, od):

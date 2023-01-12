@@ -13,7 +13,7 @@ from .common.oresat_file import OreSatFile, new_oresat_file
 from .common.oresat_file_cache import OreSatFileCache
 from .common.timer_loop import TimerLoop
 
-__version__ = '0.3.0'
+__version__ = '1.0.0'
 
 
 def olaf_run(eds_path: str = None):

@@ -2,6 +2,7 @@
 from typing import Any
 
 import canopen
+from loguru import logger
 
 from .oresat_file_cache import OreSatFileCache
 
@@ -12,13 +13,11 @@ class Resource:
     All the ``on_*`` members can be overridden as needed.
     '''
 
-    def __init__(self, node: canopen.LocalNode, fread_cache: OreSatFileCache,
-                 fwrite_cache: OreSatFileCache, mock_hw: bool, send_tpdo):
+    def __init__(self, fread_cache: OreSatFileCache, fwrite_cache: OreSatFileCache,
+                 mock_hw: bool, send_tpdo):
         '''
         Parameters
         ----------
-        node: canopen.LocalNode
-            The CANopen node. Gives acces object dictionary.
         fread_cache: OreSatFileCache
             The file read over CAN cache (the file cache a master node can read from).
         fwrite_cache: OreSatFileCache
@@ -29,14 +28,43 @@ class Resource:
             function callback for :py:func:`App.send_tpdo`.
         '''
 
-        self._od = node.object_dictionary
+        self._od = None
         self._fread_cache = fread_cache
         self._fwrite_cache = fwrite_cache
         self._mock_hw = mock_hw
         self._send_tpdo_cb = send_tpdo
 
+    def start(self, node: canopen.LocalNode):
+        '''
+        Start the resource
+
+        Parameters
+        ----------
+        node: canopen.LocalNode
+            The CANopen node. Gives acces object dictionary.
+        '''
+        logger.debug(f'starting resource {self.__class__.__name__}')
+
+        self._od = node.object_dictionary
         node.add_read_callback(self.on_read)
         node.add_write_callback(self.on_write)
+
+        try:
+            self.on_start()
+        except Exception as exc:
+            logger.critical(f'{self.__class__.__name__}\'s on_start raised an uncaught exception:'
+                            f'{exc}')
+
+    def end(self):
+        '''Start the resource'''
+
+        logger.debug(f'stopping resource {self.__class__.__name__}')
+
+        try:
+            self.on_end()
+        except Exception as exc:
+            logger.critical(f'{self.__class__.__name__}\'s on_end raised an uncaught exception:'
+                            f' {exc}')
 
     def on_start(self) -> None:
         '''Start the resource. Should be used to setup hardware or anything that is slow.'''

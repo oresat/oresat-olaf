@@ -1,4 +1,4 @@
-'''Linux updater updater'''
+'''OreSat Linux updater'''
 
 import json
 import tarfile

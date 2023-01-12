@@ -16,8 +16,6 @@ class LogsResource(Resource):
 
         self.index = 0x3006
         self.logs_dir_path = '/var/log/journal/'
-        self.obj = self.od[self.index]
-        self.obj.value = False  # make sure this is False by default
 
         self.timer_loop = TimerLoop('logs resource', self._loop, 0.5)
         self.failed = True
@@ -39,6 +37,9 @@ class LogsResource(Resource):
         return True
 
     def on_start(self):
+
+        self.obj = self.od[self.index]
+        self.obj.value = False  # make sure this is False by default
 
         self.timer_loop.start()
 

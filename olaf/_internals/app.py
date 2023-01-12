@@ -35,7 +35,7 @@ class App:
 
         self.bus = None
         self.event = Event()
-        self.resources = []
+        self._res = []
         self.network = None
         self.mock_hw = False
         self.name = 'OLAF'
@@ -45,6 +45,31 @@ class App:
         # setup event
         for sig in ['SIGTERM', 'SIGHUP', 'SIGINT']:
             signal.signal(getattr(signal, sig), self._quit)
+
+        if geteuid() == 0:  # running as root
+            self.work_base_dir = '/var/lib/oresat'
+            self.cache_base_dir = '/var/cache/oresat'
+        else:
+            self.work_base_dir = str(Path.home()) + '/.oresat'
+            self.cache_base_dir = str(Path.home()) + '/.cache/oresat'
+
+        fread_path = self.cache_base_dir + '/fread'
+        fwrite_path = self.cache_base_dir + '/fwrite'
+        logger.debug(f'fread cache path {fread_path}')
+        logger.debug(f'fwrite cache path {fwrite_path}')
+
+        self.fread_cache = OreSatFileCache(fread_path)
+        self.fwrite_cache = OreSatFileCache(fwrite_path)
+
+        # default resources
+        self.add_resource(OSCommandResource)
+        self.add_resource(ECSSResource)
+        self.add_resource(SystemInfoResource)
+        self.add_resource(FileCachesResource)
+        self.add_resource(FreadResource)
+        self.add_resource(FwriteResource)
+        self.add_resource(UpdaterResource)
+        self.add_resource(LogsResource)
 
     def __del__(self):
 
@@ -57,6 +82,7 @@ class App:
                 pass
 
     def _load_node(self, node_id: int, eds: str):
+
         dcf_node_id = canopen.import_od(eds).node_id
         if node_id != 0:
             self.node_id = node_id
@@ -90,6 +116,9 @@ class App:
         self.bus = bus
         self.mock_hw = mock_hw
 
+        if self.mock_hw:
+            logger.warning('mock hardware flag enabled')
+
         if not psutil.net_if_stats().get(self.bus):
             logger.error(f'{self.bus} does not exist, waiting for bus to appear')
             while not psutil.net_if_stats().get(self.bus):
@@ -106,21 +135,6 @@ class App:
                 node_id = int(node_id)
         elif not isinstance(node_id, int):
             raise ValueError('node_id is not a int/hex str or a int')
-
-        if geteuid() == 0:  # running as root
-            self.work_base_dir = '/var/lib/oresat'
-            self.cache_base_dir = '/var/cache/oresat'
-        else:
-            self.work_base_dir = str(Path.home()) + '/.oresat'
-            self.cache_base_dir = str(Path.home()) + '/.cache/oresat'
-
-        fread_path = self.cache_base_dir + '/fread'
-        fwrite_path = self.cache_base_dir + '/fwrite'
-        logger.debug(f'fread cache path {fread_path}')
-        logger.debug(f'fwrite cache path {fwrite_path}')
-
-        self.fread_cache = OreSatFileCache(fread_path)
-        self.fwrite_cache = OreSatFileCache(fwrite_path)
 
         if eds is not None:
             try:
@@ -174,16 +188,6 @@ class App:
             else:
                 cob_id = self.od[0x1800 + i][1].default
             self.od[0x1800 + i][1].value = cob_id
-
-        # default resources
-        self.add_resource(OSCommandResource)
-        self.add_resource(ECSSResource)
-        self.add_resource(SystemInfoResource)
-        self.add_resource(FileCachesResource)
-        self.add_resource(FreadResource)
-        self.add_resource(FwriteResource)
-        self.add_resource(UpdaterResource)
-        self.add_resource(LogsResource)
 
     def _quit(self, signo, _frame):
         '''Called when signals are caught'''
@@ -252,10 +256,7 @@ class App:
     def add_resource(self, resource: Resource):
         '''Add a resource for the app'''
 
-        res = resource(self.node, self.fread_cache, self.fwrite_cache, self.mock_hw,
-                       self.send_tpdo)
-        logger.debug(f'adding {res.__class__.__name__} resources')
-        self.resources.append(res)
+        self._res.append(resource)
 
     def _restart_bus(self):
         '''Reset the can bus to up'''
@@ -299,6 +300,7 @@ class App:
             Errno value or 0 for on no error.
         '''
         tpdo_timers = []
+        resources = []
 
         logger.info(f'{self.name} app is starting')
         if geteuid() != 0:  # running as root
@@ -311,13 +313,10 @@ class App:
         # start the CANopen network
         self._restart_network()
 
-        for resource in self.resources:
-            try:
-                resource.on_start()
-            except Exception as exc:
-                msg = f'{resource} resource\'s on_start raised an uncaught exception: {exc}'
-                logger.critical(msg)
-                continue
+        for resource in self._res:
+            res = resource(self.fread_cache, self.fwrite_cache, self.mock_hw, self.send_tpdo)
+            resources.append(res)
+            res.start(self.node)
 
         for i in range(len(self.node.tpdo)):
             transmission_type = self.od[0x1800 + i][2].default
@@ -346,12 +345,8 @@ class App:
 
             self.event.wait(1)
 
-        for resource in self.resources:
-            try:
-                resource.on_end()
-            except Exception as exc:
-                msg = f'{resource.name} resource\'s on_end raised an uncaught exception: {exc}'
-                logger.critical(msg)
+        for res in resources:
+            res.end()
 
         for t in tpdo_timers:
             t.stop()

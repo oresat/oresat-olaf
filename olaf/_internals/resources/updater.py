@@ -25,13 +25,6 @@ class UpdaterResource(Resource):
         self._updater = Updater('/tmp/updater', f'{Path.home()}/.cache/oresat/updates')
 
         self.index = 0x3100
-        record = self.od[self.index]
-        self.update_obj = record[Subindex.UPDATE.value]
-        self.make_status_obj = record[Subindex.MAKE_STATUS_FILE.value]
-
-        # make sure defaults are set correctly (override the values from eds/dcf)
-        self.update_obj.value = False
-        self.make_status_obj.value = False
 
         self.timer_loop = TimerLoop('updater resource', self._loop, 0.5)
 
@@ -56,7 +49,14 @@ class UpdaterResource(Resource):
 
     def on_start(self):
 
+        record = self.od[self.index]
+        self.update_obj = record[Subindex.UPDATE.value]
+        self.make_status_obj = record[Subindex.MAKE_STATUS_FILE.value]
         self.timer_loop.start()
+
+        # make sure defaults are set correctly (override the values from eds/dcf)
+        self.update_obj.value = False
+        self.make_status_obj.value = False
 
     def on_end(self):
 

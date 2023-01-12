@@ -14,8 +14,10 @@ class ECSSResource(Resource):
         super().__init__(*args, **kwargs)
 
         self.scet_index = 0x2010
-        self.scet_obj = self.od[self.scet_index]
         self.utc_index = 0x2011
+
+    def on_start(self):
+        self.scet_obj = self.od[self.scet_index]
         self.utc_obj = self.od[self.utc_index]
 
     def on_read(self, index, subindex, od):
