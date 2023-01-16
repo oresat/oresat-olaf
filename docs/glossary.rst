@@ -24,3 +24,13 @@
     CANopen
         A communication protocol and device profile specification for a CAN 
         bus defined by CAN in Automation. More info at https://can-cia.org/
+
+    OD
+        Object Dictionary. The main data structure of a CANopen node.
+
+    Node
+        A device on a CANopen network.
+
+    Node ID
+        A unquie ID for a device on a CANopen Network. Defined as a uint8 with
+        values from 0x01 to 0x7F.

@@ -24,23 +24,27 @@ from .resources.ecss import ECSSResource
 from .resources.updater import UpdaterResource
 from .resources.logs import LogsResource
 
-_BACKUP_EDS = abspath(dirname(__file__)) + '/data/oresat_app.eds'
-'''Internal eds file incase app's is misformatted or missing.'''
-
 
 class App:
-    '''The application class that manages the CAN bus, resources, and threads.'''
+    '''
+    The application class that manages the CAN bus and resources.
+
+    Use the global `olaf.app` obect.
+    '''
+
+    _BACKUP_EDS = abspath(dirname(__file__)) + '/data/oresat_app.eds'
+    '''Internal eds file incase app's is misformatted or missing.'''
 
     def __init__(self):
 
-        self.bus = None
-        self.event = Event()
+        self._bus = None
+        self._event = Event()
         self._res = []
-        self.network = None
-        self.mock_hw = False
-        self.name = 'OLAF'
-        self.node = None
-        self.node_id = 0
+        self._network = None
+        self._mock_hw = False
+        self._name = 'OLAF'
+        self._node = None
+        self._node_id = 0
 
         # setup event
         for sig in ['SIGTERM', 'SIGHUP', 'SIGINT']:
@@ -75,9 +79,9 @@ class App:
 
         self.stop()
 
-        if self.network:
+        if self._network:
             try:
-                self.network.disconnect()
+                self._network.disconnect()
             except Exception:
                 pass
 
@@ -85,16 +89,18 @@ class App:
 
         dcf_node_id = canopen.import_od(eds).node_id
         if node_id != 0:
-            self.node_id = node_id
+            self._node_id = node_id
         elif dcf_node_id:
-            self.node_id = dcf_node_id
+            self._node_id = dcf_node_id
         else:
-            self.node_id = 0x7C
-        self.node = canopen.LocalNode(self.node_id, eds)
-        self.node.object_dictionary.node_id = self.node_id
+            self._node_id = 0x7C
+        self._node = canopen.LocalNode(self._node_id, eds)
+        self._node.object_dictionary.node_id = self._node_id
 
     def setup(self, eds: str, bus: str, node_id=0, mock_hw=False):
         '''
+        Setup the app. Must be called after all `self.add_resource` calls.
+
         Parameters
         ----------
         eds: str
@@ -113,20 +119,20 @@ class App:
             Invalid parameter(s)
         '''
 
-        self.bus = bus
-        self.mock_hw = mock_hw
+        self._bus = bus
+        self._mock_hw = mock_hw
 
-        if self.mock_hw:
+        if self._mock_hw:
             logger.warning('mock hardware flag enabled')
 
-        if not psutil.net_if_stats().get(self.bus):
-            logger.error(f'{self.bus} does not exist, waiting for bus to appear')
-            while not psutil.net_if_stats().get(self.bus):
+        if not psutil.net_if_stats().get(self._bus):
+            logger.error(f'{self._bus} does not exist, waiting for bus to appear')
+            while not psutil.net_if_stats().get(self._bus):
                 try:
                     sleep(1)
                 except KeyboardInterrupt:
                     exit(0)
-            logger.info(f'{self.bus} now exists')
+            logger.info(f'{self._bus} now exists')
 
         if isinstance(node_id, str):
             if node_id.startswith('0x'):
@@ -141,12 +147,12 @@ class App:
                 self._load_node(node_id, eds)
             except Exception:
                 logger.warning(f'failed to read in {eds}, using OLAF\'s internal eds as backup')
-                self._load_node(node_id, _BACKUP_EDS)
+                self._load_node(node_id, self._BACKUP_EDS)
         else:
             logger.warning('No eds or dcf was supplied, using OLAF\'s internal eds')
-            self._load_node(node_id, _BACKUP_EDS)
+            self._load_node(node_id, self._BACKUP_EDS)
 
-        self.name = self.node.object_dictionary.device_information.product_name
+        self._name = self._node.object_dictionary.device_information.product_name
 
         # python canopen does not set the value to default for some reason
         for i in self.od:
@@ -157,16 +163,16 @@ class App:
                 self.od[i].value = self.od[i].default
 
         default_rpdos = [
-            0x200 + self.node_id,
-            0x300 + self.node_id,
-            0x400 + self.node_id,
-            0x500 + self.node_id
+            0x200 + self._node_id,
+            0x300 + self._node_id,
+            0x400 + self._node_id,
+            0x500 + self._node_id
         ]
         default_tpdos = [
-            0x180 + self.node_id,
-            0x280 + self.node_id,
-            0x380 + self.node_id,
-            0x480 + self.node_id
+            0x180 + self._node_id,
+            0x280 + self._node_id,
+            0x380 + self._node_id,
+            0x480 + self._node_id
         ]
 
         # fix COB-IDs for invaild PDOs
@@ -174,17 +180,17 @@ class App:
         # all oresat node RPDO COB-ID follow values of 0x[2345]00 + $NODEID
         # all oresat node TPDO COB-ID follow values of 0x[1234]80 + $NODEID
         # this fixes the values for all 16 RPDOs/TPDOs
-        for i in range(len(self.node.rpdo)):
+        for i in range(len(self._node.rpdo)):
             cob_id = self.od[0x1400 + i][1].default & 0xFFF
             if cob_id in default_rpdos:
-                cob_id = 0x200 + 0x100 * (i % 4) + self.node_id + i // 4
+                cob_id = 0x200 + 0x100 * (i % 4) + self._node_id + i // 4
             else:
                 cob_id = self.od[0x1400 + i][1].default
             self.od[0x1400 + i][1].value = cob_id
-        for i in range(len(self.node.tpdo)):
+        for i in range(len(self._node.tpdo)):
             cob_id = self.od[0x1800 + i][1].default & 0xFFF
             if cob_id in default_tpdos:
-                cob_id = 0x180 + 0x100 * (i % 4) + self.node_id + i // 4
+                cob_id = 0x180 + 0x100 * (i % 4) + self._node_id + i // 4
             else:
                 cob_id = self.od[0x1800 + i][1].default
             self.od[0x1800 + i][1].value = cob_id
@@ -206,8 +212,8 @@ class App:
 
         # PDOs can't be sent if CAN bus is down and PDOs should not be sent if CAN bus not in
         # 'OPERATIONAL' state
-        can_bus = psutil.net_if_stats().get(self.bus)
-        if not can_bus or (can_bus.isup and self.node.nmt.state != 'OPERATIONAL'):
+        can_bus = psutil.net_if_stats().get(self._bus)
+        if not can_bus or (can_bus.isup and self._node.nmt.state != 'OPERATIONAL'):
             return
 
         cob_id = self.od[0x1800 + tpdo][1].value
@@ -225,17 +231,17 @@ class App:
 
             # call sdo callback(s) and convert data to bytes
             if isinstance(self.od[index], canopen.objectdictionary.Variable):
-                value = self.node.sdo[index].phys
+                value = self._node.sdo[index].phys
                 value_bytes = self.od[index].encode_raw(value)
             else:  # record or array
-                value = self.node.sdo[index][subindex].phys
+                value = self._node.sdo[index][subindex].phys
                 value_bytes = self.od[index][subindex].encode_raw(value)
 
             # pack pdo with bytes
             data += value_bytes
 
         try:
-            i = self.network.send_message(cob_id, data)
+            i = self._network.send_message(cob_id, data)
         except Exception as exc:
             logger.debug(f'TPDO{tpdo} failed with: {exc}')
 
@@ -249,7 +255,7 @@ class App:
         # milliseconds as int to seconds as a float
         delay = float(value) / 1000
 
-        self.event.wait(delay)
+        self._event.wait(delay)
 
         return True
 
@@ -262,14 +268,14 @@ class App:
         '''Reset the can bus to up'''
 
         if self.first_bus_error:
-            logger.error(f'{self.bus} is down')
+            logger.error(f'{self._bus} is down')
             self.first_bus_error = False
 
         if geteuid() == 0:  # running as root
             if self.first_bus_error:
-                logger.info(f'trying to restart CAN bus {self.bus}')
+                logger.info(f'trying to restart CAN bus {self._bus}')
 
-            out = subprocess.run(f'ip link set {self.bus} up', shell=True)
+            out = subprocess.run(f'ip link set {self._bus} up', shell=True)
             if out.returncode != 0:
                 logger.error(out)
 
@@ -278,14 +284,14 @@ class App:
 
         logger.debug('(re)starting CANopen network')
 
-        self.network = canopen.Network()
-        self.network.connect(bustype='socketcan', channel=self.bus)
-        self.network.add_node(self.node)
+        self._network = canopen.Network()
+        self._network.connect(bustype='socketcan', channel=self._bus)
+        self._network.add_node(self._node)
 
         try:
-            self.node.nmt.state = 'PRE-OPERATIONAL'
-            self.node.nmt.start_heartbeat(self.od[0x1017].default)
-            self.node.nmt.state = 'OPERATIONAL'
+            self._node.nmt.state = 'PRE-OPERATIONAL'
+            self._node.nmt.start_heartbeat(self.od[0x1017].default)
+            self._node.nmt.state = 'OPERATIONAL'
             logger.info('(re)started CANopen network')
         except Exception as exc:
             logger.error(f'failed to (re)start CANopen network with {exc}')
@@ -302,23 +308,23 @@ class App:
         tpdo_timers = []
         resources = []
 
-        logger.info(f'{self.name} app is starting')
+        logger.info(f'{self._name} app is starting')
         if geteuid() != 0:  # running as root
             logger.warning('not running as root, cannot restart CAN bus if it goes down')
 
-        if not psutil.net_if_stats().get(self.bus):
-            logger.critical(f'{self.bus} does not exist, nothing OLAF can do, exiting')
+        if not psutil.net_if_stats().get(self._bus):
+            logger.critical(f'{self._bus} does not exist, nothing OLAF can do, exiting')
             return errno.ENETUNREACH
 
         # start the CANopen network
         self._restart_network()
 
         for resource in self._res:
-            res = resource(self.fread_cache, self.fwrite_cache, self.mock_hw, self.send_tpdo)
+            res = resource(self.fread_cache, self.fwrite_cache, self._mock_hw, self.send_tpdo)
             resources.append(res)
-            res.start(self.node)
+            res.start(self._node)
 
-        for i in range(len(self.node.tpdo)):
+        for i in range(len(self._node.tpdo)):
             transmission_type = self.od[0x1800 + i][2].default
             event_time = self.od[0x1800 + i][5].default
 
@@ -328,22 +334,22 @@ class App:
                 tpdo_timers.append(t)
 
         self.first_bus_error = True  # flag to only log error message on first error
-        logger.info(f'{self.name} app is running')
-        while not self.event.is_set():
-            if not psutil.net_if_stats().get(self.bus):  # bus does not exist
-                logger.critical(f'{self.bus} no longer exists, nothing OLAF can do, exiting')
-                self.event.set()
+        logger.info(f'{self._name} app is running')
+        while not self._event.is_set():
+            if not psutil.net_if_stats().get(self._bus):  # bus does not exist
+                logger.critical(f'{self._bus} no longer exists, nothing OLAF can do, exiting')
+                self._event.set()
                 break
-            elif not psutil.net_if_stats().get(self.bus).isup:  # bus is down
-                self.network = None  # make sure the canopen network is down
+            elif not psutil.net_if_stats().get(self._bus).isup:  # bus is down
+                self._network = None  # make sure the canopen network is down
                 self._restart_bus()
             else:  # bus is up
-                if not self.network:  # network is down
+                if not self._network:  # network is down
                     self._restart_network()
                 else:
                     self.first_bus_error = True  # reset flag
 
-            self.event.wait(1)
+            self._event.wait(1)
 
         for res in resources:
             res.end()
@@ -351,20 +357,25 @@ class App:
         for t in tpdo_timers:
             t.stop()
 
-        logger.info(f'{self.name} app has ended')
+        logger.info(f'{self._name} app has ended')
         return 0
 
     def stop(self):
         '''End the run loop'''
 
-        self.event.set()
+        self._event.set()
 
     @property
     def od(self):
         '''For convenience. Access to the object dictionary.'''
 
-        return self.node.object_dictionary
+        return self._node.object_dictionary
 
+    @property
+    def node(self):
+        '''For convenience. Access to the CANopen node.'''
+
+        return self._node
 
 app = App()
 '''The global instance of the OLAF app.'''

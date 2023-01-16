@@ -36,7 +36,8 @@ class Resource:
 
     def start(self, node: canopen.LocalNode):
         '''
-        Start the resource
+        App will call this to start the resource. This will call `self.on_start()` after the
+        `self.od` is set. Initialize any values in the OD here, not in the constructor.
 
         Parameters
         ----------
@@ -56,7 +57,9 @@ class Resource:
                             f'{exc}')
 
     def end(self):
-        '''Start the resource'''
+        '''
+        App will call this to stop the resource. This will call `self.on_end()`.
+        '''
 
         logger.debug(f'stopping resource {self.__class__.__name__}')
 

@@ -119,7 +119,8 @@ def object_to_json(index: int, subindex: int = None) -> dict:
                     value = base64.encodebytes(raw).decode('utf-8')
                 else:
                     value = app.node.sdo[index].phys
-        except Exception:
+        except Exception as e:
+            logger.debug(e)
             return {'error': f'0x{index:04X} is not a valid index'}
     else:
         try:
@@ -131,7 +132,8 @@ def object_to_json(index: int, subindex: int = None) -> dict:
                 value = base64.encodebytes(raw).decode('utf-8')
             else:
                 value = app.node.sdo[index][subindex].phys
-        except Exception:
+        except Exception as e:
+            logger.debug(e)
             return {'error': f'0x{subindex:02X} not a valid subindex for index 0x{index:04X}'}
 
     data = {

@@ -22,6 +22,9 @@ class RestAPI:
     **NOTE:** This will automatically add the core blueprint which includes the ``/od/<index>``
     and ``/od/<index>/<subindex>`` endpoints as well as the all the core templates endpoints.
 
+
+    Use the global `olaf.rest_api` object.
+
     .. _Flask: https://github.com/pallets/flask
     '''
 
