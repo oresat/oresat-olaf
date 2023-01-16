@@ -37,10 +37,10 @@ class RestAPI:
         # add core blueprint
         self._app.register_blueprint(core_templates_bp)
 
-    def start(self, port: int):
+    def start(self, address: str, port: int):
         '''Start the REST API thread'''
         logger.info('starting rest api')
-        self._server = make_server('localhost', port, self._app)
+        self._server = make_server(address, port, self._app)
         self._ctx = self._app.app_context()
         self._ctx.push()
         self._thread.start()
