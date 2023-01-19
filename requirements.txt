@@ -2,6 +2,7 @@ setuptools
 build
 wheel
 flake8
+flask
 sphinx
 sphinx-rtd-theme
 canopen
