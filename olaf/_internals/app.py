@@ -29,7 +29,7 @@ class App:
     '''
     The application class that manages the CAN bus and resources.
 
-    Use the global `olaf.app` obect.
+    Use the global ``olaf.app`` obect.
     '''
 
     _BACKUP_EDS = abspath(dirname(__file__)) + '/data/oresat_app.eds'
@@ -59,8 +59,6 @@ class App:
 
         fread_path = self.cache_base_dir + '/fread'
         fwrite_path = self.cache_base_dir + '/fwrite'
-        logger.debug(f'fread cache path {fread_path}')
-        logger.debug(f'fwrite cache path {fwrite_path}')
 
         self.fread_cache = OreSatFileCache(fread_path)
         self.fwrite_cache = OreSatFileCache(fwrite_path)
@@ -121,6 +119,9 @@ class App:
 
         self._bus = bus
         self._mock_hw = mock_hw
+
+        logger.debug(f'fread cache path {self.fread_cache.dir}')
+        logger.debug(f'fwrite cache path {self.fwrite_cache.dir}')
 
         if self._mock_hw:
             logger.warning('mock hardware flag enabled')
@@ -376,6 +377,7 @@ class App:
         '''For convenience. Access to the CANopen node.'''
 
         return self._node
+
 
 app = App()
 '''The global instance of the OLAF app.'''

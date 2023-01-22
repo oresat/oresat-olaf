@@ -10,22 +10,9 @@ from .blueprints import core_templates_bp
 
 class RestAPI:
     '''
-    An optional `Flask`_ app that can run in a background thread.
+    An optional Flask app for reading and writing values into the OD.
 
-    The REST API is to give insight into what the OLAF app is doing during testing and system
-    integration without using the CAN bus.
-
-    The REST API provides the ``/od/<index>`` and ``/od/<index>/<subindex>`` endpoints that will
-    call the internal SDO uploads / downloads, then all other endpoints can be used to render Flask
-    templates that can use those two endpoints.
-
-    **NOTE:** This will automatically add the core blueprint which includes the ``/od/<index>``
-    and ``/od/<index>/<subindex>`` endpoints as well as the all the core templates endpoints.
-
-
-    Use the global `olaf.rest_api` object.
-
-    .. _Flask: https://github.com/pallets/flask
+    Use the global ``olaf.rest_api`` object.
     '''
 
     def __init__(self):

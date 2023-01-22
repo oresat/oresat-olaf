@@ -1,29 +1,20 @@
 '''ECSS Space engineering CANbus extension protocol
 
-SpaceCraft Elapsed Time (SCET)
-------------------------------
-
 SCET definition:
 
-.. code-block: c
+struct {
+    unsigned 32 Coarse Time
+    unsigned 24 Fine Time (sub seconds)
+} SCET
 
-    struct {
-        unsigned 32 Coarse Time
-        unsigned 24 Fine Time (sub seconds)
-    } SCET
-
-Spacecraft Universal Time Coordinated (UTC)
--------------------------------------------
 
 UTC definition:
 
-.. code-block: c
-
-    struct {
-        Unsigned 16 Day
-        Unsigned 32 ms of day
-        Unsigned 16 submilliseconds of ms
-    } UTC
+struct {
+    unsigned 16 Day
+    unsigned 32 ms of day
+    unsigned 16 submilliseconds of ms
+} UTC
 '''
 
 

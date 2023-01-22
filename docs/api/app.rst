@@ -5,3 +5,6 @@ App
    :class-doc-from: both
    :members:
    :member-order: bysource
+
+
+.. autofunction:: olaf.olaf_run
