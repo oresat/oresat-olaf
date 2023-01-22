@@ -146,7 +146,8 @@ class App:
         if eds is not None:
             try:
                 self._load_node(node_id, eds)
-            except Exception:
+            except Exception as e:
+                logger.error(f'{e.__class__.__name__}: {e}')
                 logger.warning(f'failed to read in {eds}, using OLAF\'s internal eds as backup')
                 self._load_node(node_id, self._BACKUP_EDS)
         else:
