@@ -68,6 +68,31 @@
         .then(response => response.json())
         .then(data => { return data; });
     }
+
+    /**
+     * Convert a SCET value to a data object.
+     *
+     * @param {Number} scet The SCET value.
+     *
+     * @return {Date} The date object.
+     */
+    function scetToDate(scet) {
+      // convert to binary
+      let base2 = scet.toString(2);
+      const leadingZeros = '0'.repeat(64 - base2.length);
+      base2 = leadingZeros + base2;
+
+      const coarseStr = base2.substring(32);
+      const fineStr = base2.substring(8, 32);
+
+      const coarse = parseInt(coarseStr, 2);
+      const fine = parseInt(fineStr, 2);
+
+      // make unix time in ms
+      const time = coarse * 1000 + fine / 1000;
+
+      return new Date(time);
+    }
   </script>
   <div id='content'>
     {% block content %}{% endblock %}

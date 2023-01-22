@@ -10,7 +10,8 @@ call the internal SDO uploads / downloads, then all other endpoints should be us
 
 OLAF also include a base template for all other `Flask templates`_ to use. The base templates
 includes ``readValue()`` and ``writeValue()`` functions for reading and writing values to the
-OD using the index and subindex endpoints, as well as a very basic standarized layout.
+OD using the index and subindex endpoints, the ``scetToDate()`` function for convert SCET
+values to the native JavaScript ``Date`` object, as well as a very basic standarized layout.
 
 .. note:: OLAF will automatically add the core blueprint which includes the ``/od/<index>``
    and ``/od/<index>/<subindex>`` endpoints as well as the all the core templates endpoints.
