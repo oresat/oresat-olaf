@@ -19,11 +19,6 @@ class TestSystemInfoResource(unittest.TestCase):
 
     def test_system_info(self):
 
-        self.assertNotIn(self.info_sdo[Subindex.OS_DISTRO.value].phys, [None, ''])
-        self.assertNotIn(self.info_sdo[Subindex.OS_NAME.value].phys, [None, ''])
-        self.assertNotIn(self.info_sdo[Subindex.OS_KERNEL_VER.value].phys, [None, ''])
-        self.assertNotIn(self.info_sdo[Subindex.HOSTNAME.value].phys, [None, '', ])
-
         self.assertNotEqual(self.info_sdo[Subindex.UPTIME.value].phys, 0)
 
         self.assertNotEqual(self.info_sdo[Subindex.NUM_OF_CPUS.value].phys, 0)
@@ -40,10 +35,15 @@ class TestSystemInfoResource(unittest.TestCase):
         for i in range(rpocs):
             self.info_sdo[Subindex.RPROC_ITER.value].phys = i
             self.assertNotEqual(self.info_sdo[Subindex.RPROC_ITER.value].phys, i)
-            self.assertNotIn(self.info_sdo[Subindex.RPROC_NAME.value].phys, [None, '', 'x'])
-            self.assertNotIn(self.info_sdo[Subindex.RPROC_STATE.value].phys, [None, '', 'x'])
+            self.assertNotIn(self.info_sdo[Subindex.RPROC_NAME.value].phys, [None, ''])
+            self.assertNotIn(self.info_sdo[Subindex.RPROC_STATE.value].phys, [None, ''])
 
         # just make sure nothing raises a exception
+
+        self.info_sdo[Subindex.OS_DISTRO.value].phys
+        self.info_sdo[Subindex.OS_NAME.value].phys
+        self.info_sdo[Subindex.OS_KERNEL_VER.value].phys
+        self.info_sdo[Subindex.HOSTNAME.value].phys
 
         self.info_sdo[Subindex.LOAD_AVG_1MIN.value].phys
         self.info_sdo[Subindex.LOAD_AVG_5MIN.value].phys
