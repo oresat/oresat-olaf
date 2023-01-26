@@ -26,7 +26,6 @@ class MockApp(Thread):
 
     def add_resource(self, resource: Resource):
         self.resource = resource(
-            self.node,
             self.fread_cache,
             self.fwrite_cache,
             True,
@@ -35,9 +34,9 @@ class MockApp(Thread):
 
     def run(self):
         self.event = Event()
-        self.resource.on_start()
-        self.resource.on_end()
+        self.resource.start(self.node)
 
     def stop(self):
+        self.resource.end()
         self.event.set()
         self.join()

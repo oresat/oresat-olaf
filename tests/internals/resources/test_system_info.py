@@ -19,10 +19,10 @@ class TestSystemInfoResource(unittest.TestCase):
 
     def test_system_info(self):
 
-        self.assertNotIn(self.info_sdo[Subindex.OS_DISTRO.value].phys, [None, '', 'x'])
-        self.assertNotIn(self.info_sdo[Subindex.OS_NAME.value].phys, [None, '', 'x'])
-        self.assertNotIn(self.info_sdo[Subindex.OS_KERNEL_VER.value].phys, [None, '', 'x'])
-        self.assertNotIn(self.info_sdo[Subindex.HOSTNAME.value].phys, [None, '', 'x'])
+        self.assertNotIn(self.info_sdo[Subindex.OS_DISTRO.value].phys, [None, ''])
+        self.assertNotIn(self.info_sdo[Subindex.OS_NAME.value].phys, [None, ''])
+        self.assertNotIn(self.info_sdo[Subindex.OS_KERNEL_VER.value].phys, [None, ''])
+        self.assertNotIn(self.info_sdo[Subindex.HOSTNAME.value].phys, [None, '', ])
 
         self.assertNotEqual(self.info_sdo[Subindex.UPTIME.value].phys, 0)
 
