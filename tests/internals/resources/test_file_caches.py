@@ -38,7 +38,7 @@ class TestFileCachesResource(unittest.TestCase):
 
         # invalid
         self.file_caches_sdo[Subindex.CACHE_SELECTOR.value].phys = 2
-        #self.assertIn(self.file_caches_sdo[Subindex.CACHE_SELECTOR.value].phys, [0, 1])
+        # self.assertIn(self.file_caches_sdo[Subindex.CACHE_SELECTOR.value].phys, [0, 1])
 
         # check filter
         self.file_caches_sdo[Subindex.FILTER.value].phys = ''
@@ -55,9 +55,9 @@ class TestFileCachesResource(unittest.TestCase):
 
         # check file name
         self.file_caches_sdo[Subindex.CACHE_SELECTOR.value].phys = 0
-        #self.assertEqual(self.file_caches_sdo[Subindex.FILE_NAME.value].phys, '')
+        # self.assertEqual(self.file_caches_sdo[Subindex.FILE_NAME.value].phys, '')
         self.file_caches_sdo[Subindex.CACHE_SELECTOR.value].phys = 1
-        #self.assertEqual(self.file_caches_sdo[Subindex.FILE_NAME.value].phys, '')
+        # self.assertEqual(self.file_caches_sdo[Subindex.FILE_NAME.value].phys, '')
 
         # check file size
         self.file_caches_sdo[Subindex.CACHE_SELECTOR.value].phys = 0
@@ -119,7 +119,7 @@ class TestFileCachesResource(unittest.TestCase):
         self.file_caches_sdo[Subindex.CACHE_SELECTOR.value].phys = 0
         self.assertIn(self.file_caches_sdo[Subindex.FILE_NAME.value].phys, [file_name, file_name2])
         self.file_caches_sdo[Subindex.CACHE_SELECTOR.value].phys = 1
-        #self.assertEqual(self.file_caches_sdo[Subindex.FILE_NAME.value].phys, '')
+        # self.assertEqual(self.file_caches_sdo[Subindex.FILE_NAME.value].phys, '')
 
         # check file sizes
         self.file_caches_sdo[Subindex.CACHE_SELECTOR.value].phys = 0

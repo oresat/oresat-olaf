@@ -39,5 +39,5 @@ class TestOSCommand(unittest.TestCase):
         self.assertIsNotNone(self.node.sdo[INDEX][0x3].raw)
 
         run_os_command(self.node, 'invalid-bash-command')
-        #self.assertEqual(self.node.sdo[INDEX][0x2].phys, OSCommandState.ERROR_REPLY)
-        #self.assertIsNotNone(self.node.sdo[INDEX][0x3].raw)
+        # self.assertEqual(self.node.sdo[INDEX][0x2].phys, OSCommandState.ERROR_REPLY)
+        # self.assertIsNotNone(self.node.sdo[INDEX][0x3].raw)
