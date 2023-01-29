@@ -129,6 +129,9 @@ class App:
         if not psutil.net_if_stats().get(self._bus):
             logger.error(f'{self._bus} does not exist, waiting for bus to appear')
             while not psutil.net_if_stats().get(self._bus):
+                if self._event.is_set():
+                    return
+
                 try:
                     sleep(1)
                 except KeyboardInterrupt:
