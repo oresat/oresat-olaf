@@ -19,8 +19,7 @@ class Subindex(IntEnum):
 class FreadResource(Resource):
     '''Resource for readings file over the CAN bus'''
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def on_start(self, args: tuple = None):
 
         self.tmp_dir = '/tmp/oresat/fread'
         Path(self.tmp_dir).mkdir(parents=True, exist_ok=True)

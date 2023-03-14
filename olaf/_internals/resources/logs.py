@@ -11,14 +11,22 @@ from ...common.timer_loop import TimerLoop
 class LogsResource(Resource):
     '''Resource for getting logs'''
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def on_start(self, args: tuple = None):
 
         self.index = 0x3006
         self.logs_dir_path = '/var/log/journal/'
 
         self.timer_loop = TimerLoop('logs resource', self._loop, 0.5)
         self.failed = True
+
+        self.obj = self.od[self.index]
+        self.obj.value = False  # make sure this is False by default
+
+        self.timer_loop.start()
+
+    def on_end(self):
+
+        self.timer_loop.stop()
 
     def _loop(self):
 
@@ -35,14 +43,3 @@ class LogsResource(Resource):
             self.obj.value = False
 
         return True
-
-    def on_start(self):
-
-        self.obj = self.od[self.index]
-        self.obj.value = False  # make sure this is False by default
-
-        self.timer_loop.start()
-
-    def on_end(self):
-
-        self.timer_loop.stop()

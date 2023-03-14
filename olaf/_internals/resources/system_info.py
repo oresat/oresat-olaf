@@ -44,14 +44,11 @@ class Subindex(IntEnum):
 class SystemInfoResource(Resource):
     '''Resource for getting local system infomation'''
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def on_start(self, args: tuple = None):
 
         self.index = 0x3001
         self.rprocs = 0
         self.rproc_iter = 0
-
-    def on_start(self):
 
         with open('/etc/os-release', 'r') as f:
             os_release = f.readlines()

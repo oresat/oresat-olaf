@@ -34,7 +34,7 @@ class Resource:
         self._mock_hw = mock_hw
         self._send_tpdo_cb = send_tpdo
 
-    def start(self, node: canopen.LocalNode):
+    def start(self, node: canopen.LocalNode, args: tuple = None):
         '''
         App will call this to start the resource. This will call `self.on_start()` after the
         `self.od` is set. Initialize any values in the OD here, not in the constructor.
@@ -43,6 +43,8 @@ class Resource:
         ----------
         node: canopen.LocalNode
             The CANopen node. Gives acces object dictionary.
+        args: tuple
+            Optional args past to resource's on_start from app
         '''
         logger.debug(f'starting resource {self.__class__.__name__}')
 
@@ -51,7 +53,7 @@ class Resource:
         node.add_write_callback(self.on_write)
 
         try:
-            self.on_start()
+            self.on_start(args)
         except Exception as exc:
             logger.critical(f'{self.__class__.__name__}\'s on_start raised an uncaught exception:'
                             f'{exc}')
@@ -69,8 +71,15 @@ class Resource:
             logger.critical(f'{self.__class__.__name__}\'s on_end raised an uncaught exception:'
                             f' {exc}')
 
-    def on_start(self) -> None:
-        '''Start the resource. Should be used to setup hardware or anything that is slow.'''
+    def on_start(self, args: tuple = None) -> None:
+        '''
+        Start the resource. Should be used to setup hardware or anything that is slow.
+
+        Parameters
+        ----------
+        args: tuple
+            Optional args past to resource's on_start
+        '''
 
         pass
 

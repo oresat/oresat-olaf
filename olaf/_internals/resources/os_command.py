@@ -18,8 +18,7 @@ class OSCommandState(IntEnum):
 class OSCommandResource(Resource):
     '''Resource for running OS (bash) commands over CAN bus as defined by CiA 301 specs'''
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def on_start(self, args: tuple = None):
 
         self.index = 0x1023
         self.sub_command = 0x01
@@ -33,7 +32,12 @@ class OSCommandResource(Resource):
 
         self.timer_loop = TimerLoop('os command resource', self._loop, 0.5,
                                     exc_func=self._loop_error)
+        self.timer_loop.start()
         self.failed = False
+
+    def on_end(self):
+
+        self.timer_loop.stop()
 
     def _loop(self):
 
@@ -64,14 +68,6 @@ class OSCommandResource(Resource):
         self.command = ''
         self.state = OSCommandState.ERROR_NO_REPLY
         self.reply = ''
-
-    def on_start(self):
-
-        self.timer_loop.start()
-
-    def on_end(self):
-
-        self.timer_loop.stop()
 
     def on_read(self, index, subindex, od):
 

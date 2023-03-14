@@ -19,14 +19,24 @@ class Subindex(IntEnum):
 class UpdaterResource(Resource):
     '''Resource for interacting with the updater'''
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def on_start(self, args: tuple = None):
 
         self._updater = Updater('/tmp/updater', f'{Path.home()}/.cache/oresat/updates')
-
         self.index = 0x3100
-
         self.timer_loop = TimerLoop('updater resource', self._loop, 0.5)
+
+        record = self.od[self.index]
+        self.update_obj = record[Subindex.UPDATE.value]
+        self.make_status_obj = record[Subindex.MAKE_STATUS_FILE.value]
+        self.timer_loop.start()
+
+        # make sure defaults are set correctly (override the values from eds/dcf)
+        self.update_obj.value = False
+        self.make_status_obj.value = False
+
+    def on_end(self):
+
+        self.timer_loop.stop()
 
     def _loop(self):
 
@@ -46,21 +56,6 @@ class UpdaterResource(Resource):
             self.make_status_obj.value = False
 
         return True
-
-    def on_start(self):
-
-        record = self.od[self.index]
-        self.update_obj = record[Subindex.UPDATE.value]
-        self.make_status_obj = record[Subindex.MAKE_STATUS_FILE.value]
-        self.timer_loop.start()
-
-        # make sure defaults are set correctly (override the values from eds/dcf)
-        self.update_obj.value = False
-        self.make_status_obj.value = False
-
-    def on_end(self):
-
-        self.timer_loop.stop()
 
     def on_read(self, index, subindex, od):
 

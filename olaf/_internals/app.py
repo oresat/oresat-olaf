@@ -264,10 +264,19 @@ class App:
 
         return True
 
-    def add_resource(self, resource: Resource):
-        '''Add a resource for the app'''
+    def add_resource(self, resource: Resource, args: tuple = None):
+        '''
+        Add a resource for the app
 
-        self._res.append(resource)
+        Parameters
+        ----------
+        resource: Resource
+            The resource to add.
+        args: tuple
+            Optional args to pass to resource's on_start function
+        '''
+
+        self._res.append((resource, args))
 
     def _restart_bus(self):
         '''Reset the can bus to up'''
@@ -324,10 +333,10 @@ class App:
         # start the CANopen network
         self._restart_network()
 
-        for resource in self._res:
+        for resource, args in self._res:
             res = resource(self.fread_cache, self.fwrite_cache, self._mock_hw, self.send_tpdo)
             resources.append(res)
-            res.start(self._node)
+            res.start(self._node, args)
 
         for i in range(len(self._node.tpdo)):
             transmission_type = self.od[0x1800 + i][2].default

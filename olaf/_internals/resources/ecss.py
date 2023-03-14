@@ -10,13 +10,9 @@ from ...common.ecss import scet_int_from_time, utc_int_from_time, scet_int_to_ti
 class ECSSResource(Resource):
     '''Resource for ECSS CANBus Extended Protocal standards'''
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
+    def on_start(self, args: tuple = None):
         self.scet_index = 0x2010
         self.utc_index = 0x2011
-
-    def on_start(self):
         self.scet_obj = self.od[self.scet_index]
         self.utc_obj = self.od[self.utc_index]
 

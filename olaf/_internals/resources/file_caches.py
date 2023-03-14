@@ -21,8 +21,7 @@ class Subindex(IntEnum):
 class FileCachesResource(Resource):
     '''Resource for interacting with the fread and fwrite caches'''
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def on_start(self, args: tuple = None):
 
         self.index = 0x3002
         self.file_caches = [self.fread_cache, self.fwrite_cache]
