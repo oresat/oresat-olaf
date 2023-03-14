@@ -206,7 +206,7 @@ class App:
         logger.debug(f'signal {signal.Signals(signo).name} was caught')
         self.stop()
 
-    def send_tpdo(self, tpdo: int):
+    def send_tpdo(self, tpdo: int) -> bool:
         '''Send a TPDO. Will not be sent if not node is not in operational state.
 
         Parameters
@@ -249,18 +249,6 @@ class App:
             i = self._network.send_message(cob_id, data)
         except Exception as exc:
             logger.debug(f'TPDO{tpdo} failed with: {exc}')
-
-    def _send_tpdo_loop(self, tpdo: int) -> bool:
-
-        self.send_tpdo(tpdo)
-
-        # get event time
-        value = self.od[0x1800 + tpdo][5].value
-
-        # milliseconds as int to seconds as a float
-        delay = float(value) / 1000
-
-        self._event.wait(delay)
 
         return True
 
@@ -341,11 +329,12 @@ class App:
         for i in range(len(self._node.tpdo)):
             transmission_type = self.od[0x1800 + i][2].default
             event_time = self.od[0x1800 + i][5].default
-
-            if transmission_type in [0xFE, 0xFF] and event_time and event_time > 0:
-                t = TimerLoop(f'TPDO{i + 1}', self._send_tpdo_loop, 0, args=(i,))
-                t.start()
+            if transmission_type in [0xFE, 0xFF] and event_time > 0:
+                t = TimerLoop(name=f'TPDO{i + 1}', loop_func=self.send_tpdo,
+                              delay=self.od[0x1800 + i][5], start_delay=self.od[0x1800 + i][3],
+                              args=(i,))
                 tpdo_timers.append(t)
+                t.start()
 
         self.first_bus_error = True  # flag to only log error message on first error
         logger.info(f'{self._name} app is running')

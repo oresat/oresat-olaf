@@ -1,41 +1,45 @@
 from threading import Thread, Event
 
+from canopen.objectdictionary import Variable
+
 from .. import logger
 
 
 class TimerLoop:
     '''Call a function in a loop after a delay.'''
 
-    def __init__(self, name: str, loop_func, delay: float, start_delay=0.0, args=(),
-                 exc_func=None):
+    def __init__(self, name: str, loop_func, delay: [int, float, Variable],
+                 start_delay: [int, float, Variable] = 0, args: tuple = (), exc_func=None):
         '''
         Parameters
         ----------
         name: str
-            name to use when logging.
+            Nice name to use when logging.
         loop_func
             The function to call in a loop. Function must return True to be called again.
-        delay: int, float
-            The delay between calls in seconds.
-        start_delay: int,float
-            Optional delay in seconds before the loop_func is called the first time.
+        delay: int, float, Variable
+            The delay between calls in seconds. Can be a Variable to allow the value to be
+            changed with a SDO.
+        start_delay: int, float, Variable
+            Optional delay in seconds before the loop_func is called the first time. Can be a
+            Variable to allow the value to be changed with a SDO. Defaults to 0.
         args: tuple
-            Optional arguments to pass to loop_func
+            Optional arguments to pass to loop_func.
         exc_func
             Optional function to call if the loop raises an exception. Exception will be pass to
             the function as a argument.
         '''
 
-        if not isinstance(delay, (int, float)):
-            raise ValueError(f'delay of {delay} is not a int or float')
+        if not isinstance(delay, (int, float, Variable)):
+            raise ValueError(f'delay of {delay} is not a int, float, Variable')
 
-        if not isinstance(start_delay, (int, float)):
-            raise ValueError(f'start_delay of {start_delay} is not a int or float')
+        if not isinstance(start_delay, (int, float, Variable)):
+            raise ValueError(f'start_delay of {start_delay} is not a int, float, or Variable')
 
         self._name = name
         self._loop_func = loop_func
-        self._delay = float(delay)
-        self._start_delay = float(start_delay)
+        self._delay = delay
+        self._start_delay = start_delay
         self._args = args
         self._exc_func = exc_func
         self._thread = Thread(name=name, target=self._loop)
@@ -57,7 +61,9 @@ class TimerLoop:
 
     def _loop(self):
 
-        if self._start_delay > 0:
+        if isinstance(self._start_delay, Variable) and self._start_delay.value > 0:
+            self._event.wait(self._start_delay.value)
+        elif not isinstance(self._start_delay, Variable) and self._start_delay > 0:
             self._event.wait(self._start_delay)
 
         ret = True
@@ -73,7 +79,10 @@ class TimerLoop:
                     except Exception:
                         logger.error(f'{self._name} timer loop exc_func raise: {exc}')
 
-            self._event.wait(self._delay)
+            if isinstance(self._delay, Variable):
+                self._event.wait(self._delay.value)
+            else:
+                self._event.wait(self._delay)
 
     def stop(self):
         '''Stop the timer'''
@@ -86,16 +95,17 @@ class TimerLoop:
             self._thread.join()
 
     @property
-    def delay(self) -> float:
-        '''float: The delay between loops'''
+    def delay(self) -> [int, float, Variable]:
+        '''int, float, Variable: The delay between loops'''
 
         return self._delay
 
     @delay.setter
-    def delay(self, value: float):
+    def delay(self, value: [int, float, Variable]):
 
-        if not isinstance(value, float):
-            raise ValueError(f'{value} is not a float')
+        if not isinstance(value, int) or not isinstance(value, float) \
+                or not isinstance(value, Variable):
+            raise ValueError(f'{value} is not a int, float, or Variable')
 
         self._delay = value
 
