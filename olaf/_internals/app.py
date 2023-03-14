@@ -39,7 +39,6 @@ class App:
         self._event = Event()
         self._res = []
         self._network = None
-        self._mock_hw = False
         self._name = 'OLAF'
         self._node = None
         self._node_id = 0
@@ -93,7 +92,7 @@ class App:
         self._node = canopen.LocalNode(self._node_id, eds)
         self._node.object_dictionary.node_id = self._node_id
 
-    def setup(self, eds: str, bus: str, node_id=0, mock_hw=False):
+    def setup(self, eds: str, bus: str, node_id=0):
         '''
         Setup the app. Must be called after all `self.add_resource` calls.
 
@@ -106,8 +105,6 @@ class App:
         node_id: int, str
             The node ID. If set to 0 and DCF was used for the eds arg, the value will be pulled
             from the DCF, otherwise, it will be set to 0x7C.
-        mock_hw: bool
-            Flag to mock hardware. This will be pass to any resources added.
 
         Raises
         ------
@@ -116,27 +113,9 @@ class App:
         '''
 
         self._bus = bus
-        self._mock_hw = mock_hw
 
         logger.debug(f'fread cache path {self.fread_cache.dir}')
         logger.debug(f'fwrite cache path {self.fwrite_cache.dir}')
-
-        if self._mock_hw:
-            logger.warning('mock hardware flag enabled')
-
-        '''
-        if not psutil.net_if_stats().get(self._bus):
-            logger.error(f'{self._bus} does not exist, waiting for bus to appear')
-            while not psutil.net_if_stats().get(self._bus):
-                if self._event.is_set():
-                    return
-
-                try:
-                    sleep(1)
-                except KeyboardInterrupt:
-                    exit(0)
-            logger.info(f'{self._bus} now exists')
-        '''
 
         if isinstance(node_id, str):
             if node_id.startswith('0x'):
@@ -340,7 +319,7 @@ class App:
             logger.warning('not running as root, cannot restart CAN bus if it goes down')
 
         for resource, args in self._res:
-            res = resource(self.fread_cache, self.fwrite_cache, self._mock_hw, self.send_tpdo)
+            res = resource(self.fread_cache, self.fwrite_cache, self.send_tpdo)
             resources.append(res)
             res.start(self._node, args)
 

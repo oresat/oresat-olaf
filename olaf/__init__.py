@@ -32,7 +32,8 @@ def olaf_run(eds_path: str = None):
     parser.add_argument('-v', '--verbose', action='store_true', help='verbose logging')
     parser.add_argument('-l', '--log', action='store_true', help='log to only journald')
     parser.add_argument('-e', '--eds', metavar='FILE', help='EDS/DCF file to use')
-    parser.add_argument('-m', '--mock-hw', action='store_true', help='mock the hardware')
+    parser.add_argument('-m', '--mock-hw', nargs='*', metavar='HW', default=[],
+                        help='list the hardware to mock or just "all" to mock all hardware')
     parser.add_argument('-a', '--address', default='localhost', help='rest api address')
     parser.add_argument('-p', '--port', type=int, default=8000, help='rest api port number')
     args = parser.parse_args()
@@ -51,7 +52,7 @@ def olaf_run(eds_path: str = None):
     if eds_path is None:
         eds_path = args.eds
 
-    app.setup(eds_path, args.bus, args.node_id, args.mock_hw)
+    app.setup(eds_path, args.bus, args.node_id)
 
     rest_api.start(address=args.address, port=args.port)
     app.run()

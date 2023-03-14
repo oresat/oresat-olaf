@@ -14,7 +14,7 @@ class Resource:
     '''
 
     def __init__(self, fread_cache: OreSatFileCache, fwrite_cache: OreSatFileCache,
-                 mock_hw: bool, send_tpdo):
+                 send_tpdo):
         '''
         Parameters
         ----------
@@ -22,8 +22,6 @@ class Resource:
             The file read over CAN cache (the file cache a master node can read from).
         fwrite_cache: OreSatFileCache
             The file write over CAN cache (the file cache a master node can write to).
-        mock_hw: bool
-            Resource should mock any hardware when set to ``True``.
         send_tpdo
             function callback for :py:func:`App.send_tpdo`.
         '''
@@ -31,7 +29,6 @@ class Resource:
         self._od = None
         self._fread_cache = fread_cache
         self._fwrite_cache = fwrite_cache
-        self._mock_hw = mock_hw
         self._send_tpdo_cb = send_tpdo
 
     def start(self, node: canopen.LocalNode, args: tuple = None):
@@ -142,14 +139,6 @@ class Resource:
         '''
 
         self._send_tpdo_cb(tpdo)
-
-    @property
-    def mock_hw(self):
-        '''bool: Resource should mock all hardware when set to ``True``. :py:class:`App` will set
-        this based of runtime args.
-        '''
-
-        return self._mock_hw
 
     @property
     def od(self):
