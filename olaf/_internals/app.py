@@ -1,4 +1,3 @@
-import errno
 import struct
 import signal
 import subprocess
@@ -6,7 +5,6 @@ from os import geteuid
 from os.path import abspath, dirname
 from pathlib import Path
 from threading import Event
-from time import sleep
 
 import canopen
 import psutil
@@ -126,6 +124,7 @@ class App:
         if self._mock_hw:
             logger.warning('mock hardware flag enabled')
 
+        '''
         if not psutil.net_if_stats().get(self._bus):
             logger.error(f'{self._bus} does not exist, waiting for bus to appear')
             while not psutil.net_if_stats().get(self._bus):
@@ -137,6 +136,7 @@ class App:
                 except KeyboardInterrupt:
                     exit(0)
             logger.info(f'{self._bus} now exists')
+        '''
 
         if isinstance(node_id, str):
             if node_id.startswith('0x'):
@@ -248,7 +248,7 @@ class App:
         try:
             i = self._network.send_message(cob_id, data)
         except Exception as exc:
-            logger.debug(f'TPDO{tpdo} failed with: {exc}')
+            logger.error(f'TPDO{tpdo} failed with: {exc}')
 
         return True
 
@@ -269,12 +269,12 @@ class App:
     def _restart_bus(self):
         '''Reset the can bus to up'''
 
-        if self.first_bus_error:
+        if self.first_bus_reset:
             logger.error(f'{self._bus} is down')
-            self.first_bus_error = False
+            self.first_bus_reset = False
 
         if geteuid() == 0:  # running as root
-            if self.first_bus_error:
+            if self.first_bus_reset:
                 logger.info(f'trying to restart CAN bus {self._bus}')
 
             out = subprocess.run(f'ip link set {self._bus} up', shell=True)
@@ -282,9 +282,9 @@ class App:
                 logger.error(out)
 
     def _restart_network(self):
-        '''Restart the canopen network'''
+        '''Restart the CANopen network'''
 
-        logger.debug('(re)starting CANopen network')
+        logger.info('(re)starting CANopen network')
 
         self._network = canopen.Network()
         self._network.connect(bustype='socketcan', channel=self._bus)
@@ -294,9 +294,34 @@ class App:
             self._node.nmt.state = 'PRE-OPERATIONAL'
             self._node.nmt.start_heartbeat(self.od[0x1017].default)
             self._node.nmt.state = 'OPERATIONAL'
-            logger.info('(re)started CANopen network')
         except Exception as exc:
             logger.error(f'failed to (re)start CANopen network with {exc}')
+
+    def _disable_network(self):
+        '''Disable the CANopen network'''
+
+        try:
+            if self._network:
+                self._network.disconnect()
+        except Exception:
+            self._network = None  # make sure the canopen network is down
+
+    def _start_tpdo_timer_loops(self) -> list:
+        '''Start TPDO timer loops'''
+
+        tpdo_timers = []
+
+        for i in range(len(self._node.tpdo)):
+            transmission_type = self.od[0x1800 + i][2].default
+            event_time = self.od[0x1800 + i][5].default
+            if transmission_type in [0xFE, 0xFF] and event_time > 0:
+                t = TimerLoop(name=f'TPDO{i + 1}', loop_func=self.send_tpdo,
+                              delay=self.od[0x1800 + i][5], start_delay=self.od[0x1800 + i][3],
+                              args=(i,))
+                tpdo_timers.append(t)
+                t.start()
+
+        return tpdo_timers
 
     def run(self) -> int:
         '''Go into operational mode, start all the resources, start all the threads, and monitor
@@ -314,45 +339,17 @@ class App:
         if geteuid() != 0:  # running as root
             logger.warning('not running as root, cannot restart CAN bus if it goes down')
 
-        if not psutil.net_if_stats().get(self._bus):
-            logger.critical(f'{self._bus} does not exist, nothing OLAF can do, exiting')
-            return errno.ENETUNREACH
-
-        # start the CANopen network
-        self._restart_network()
-
         for resource, args in self._res:
             res = resource(self.fread_cache, self.fwrite_cache, self._mock_hw, self.send_tpdo)
             resources.append(res)
             res.start(self._node, args)
 
-        for i in range(len(self._node.tpdo)):
-            transmission_type = self.od[0x1800 + i][2].default
-            event_time = self.od[0x1800 + i][5].default
-            if transmission_type in [0xFE, 0xFF] and event_time > 0:
-                t = TimerLoop(name=f'TPDO{i + 1}', loop_func=self.send_tpdo,
-                              delay=self.od[0x1800 + i][5], start_delay=self.od[0x1800 + i][3],
-                              args=(i,))
-                tpdo_timers.append(t)
-                t.start()
+        tpdo_timers = self._start_tpdo_timer_loops()
 
-        self.first_bus_error = True  # flag to only log error message on first error
-        logger.info(f'{self._name} app is running')
-        while not self._event.is_set():
-            if not psutil.net_if_stats().get(self._bus):  # bus does not exist
-                logger.critical(f'{self._bus} no longer exists, nothing OLAF can do, exiting')
-                self._event.set()
-                break
-            elif not psutil.net_if_stats().get(self._bus).isup:  # bus is down
-                self._network = None  # make sure the canopen network is down
-                self._restart_bus()
-            else:  # bus is up
-                if not self._network:  # network is down
-                    self._restart_network()
-                else:
-                    self.first_bus_error = True  # reset flag
-
-            self._event.wait(1)
+        try:
+            self._monitor_can()
+        except Exception as e:
+            logger.critical(e)
 
         for res in resources:
             res.end()
@@ -362,6 +359,32 @@ class App:
 
         logger.info(f'{self._name} app has ended')
         return 0
+
+    def _monitor_can(self):
+        '''Monitor the CAN bus and CAN network'''
+
+        first_bus_down = True  # flag to only log error message on first error
+        self.first_bus_reset = True  # flag to only log error message on first error
+        logger.info(f'{self._name} app is running')
+        while not self._event.is_set():
+            bus = psutil.net_if_stats().get(self._bus)
+            if not bus:  # bus does not exist
+                self._disable_network()
+                if first_bus_down:
+                    logger.critical(f'{self._bus} does not exists, nothing OLAF can do')
+                    first_bus_down = False
+            elif not bus.isup:  # bus is down
+                first_bus_down = True  # reset flag
+                self._disable_network()
+                self._restart_bus()
+            elif not self._network:  # bus is up, network is down
+                first_bus_down = True  # reset flag
+                self._restart_network()
+            else:  # bus is up, network is up
+                self.first_bus_reset = True  # reset flag
+                first_bus_down = True  # reset flag
+
+            self._event.wait(1)
 
     def stop(self):
         '''End the run loop'''

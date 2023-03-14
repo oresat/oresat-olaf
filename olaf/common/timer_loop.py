@@ -18,10 +18,10 @@ class TimerLoop:
         loop_func
             The function to call in a loop. Function must return True to be called again.
         delay: int, float, Variable
-            The delay between calls in seconds. Can be a Variable to allow the value to be
+            The delay between calls in milliseconds. Can be a Variable to allow the value to be
             changed with a SDO.
         start_delay: int, float, Variable
-            Optional delay in seconds before the loop_func is called the first time. Can be a
+            Optional delay in milliseconds before the loop_func is called the first time. Can be a
             Variable to allow the value to be changed with a SDO. Defaults to 0.
         args: tuple
             Optional arguments to pass to loop_func.
@@ -62,9 +62,9 @@ class TimerLoop:
     def _loop(self):
 
         if isinstance(self._start_delay, Variable) and self._start_delay.value > 0:
-            self._event.wait(self._start_delay.value)
+            self._event.wait(self._start_delay.value / 1000)
         elif not isinstance(self._start_delay, Variable) and self._start_delay > 0:
-            self._event.wait(self._start_delay)
+            self._event.wait(self._start_delay / 1000)
 
         ret = True
         while ret is True and not self._event.is_set():
@@ -80,9 +80,9 @@ class TimerLoop:
                         logger.error(f'{self._name} timer loop exc_func raise: {exc}')
 
             if isinstance(self._delay, Variable):
-                self._event.wait(self._delay.value)
+                self._event.wait(self._delay.value / 1000)
             else:
-                self._event.wait(self._delay)
+                self._event.wait(self._delay / 1000)
 
     def stop(self):
         '''Stop the timer'''

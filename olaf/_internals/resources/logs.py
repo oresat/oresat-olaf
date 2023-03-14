@@ -16,7 +16,7 @@ class LogsResource(Resource):
         self.index = 0x3006
         self.logs_dir_path = '/var/log/journal/'
 
-        self.timer_loop = TimerLoop('logs resource', self._loop, 0.5)
+        self.timer_loop = TimerLoop('logs resource', self._loop, 500)
         self.failed = True
 
         self.obj = self.od[self.index]

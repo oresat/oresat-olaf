@@ -30,7 +30,7 @@ class OSCommandResource(Resource):
         self.reply = ''
         self.reply_max_len = 10000
 
-        self.timer_loop = TimerLoop('os command resource', self._loop, 0.5,
+        self.timer_loop = TimerLoop('os command resource', self._loop, 500,
                                     exc_func=self._loop_error)
         self.timer_loop.start()
         self.failed = False

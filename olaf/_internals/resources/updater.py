@@ -23,7 +23,7 @@ class UpdaterResource(Resource):
 
         self._updater = Updater('/tmp/updater', f'{Path.home()}/.cache/oresat/updates')
         self.index = 0x3100
-        self.timer_loop = TimerLoop('updater resource', self._loop, 0.5)
+        self.timer_loop = TimerLoop('updater resource', self._loop, 500)
 
         record = self.od[self.index]
         self.update_obj = record[Subindex.UPDATE.value]
