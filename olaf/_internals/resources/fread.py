@@ -19,7 +19,11 @@ class Subindex(IntEnum):
 class FreadResource(Resource):
     '''Resource for readings file over the CAN bus'''
 
-    def on_start(self, args: tuple = None):
+    def __init__(self):
+        super().__init__()
+
+        self.index = 0x3003
+        self.file_path = ''
 
         self.tmp_dir = '/tmp/oresat/fread'
         Path(self.tmp_dir).mkdir(parents=True, exist_ok=True)
@@ -27,11 +31,12 @@ class FreadResource(Resource):
         for i in listdir(self.tmp_dir):
             remove(f'{self.tmp_dir}/{i}')
 
-        self.index = 0x3003
+    def on_start(self):
 
-        self.file_path = ''
+        self.node.add_sdo_read_callback(self.index, self.on_read)
+        self.node.add_sdo_write_callback(self.index, self.on_write)
 
-    def on_read(self, index, subindex, od):
+    def on_read(self, index, subindex):
 
         ret = None
 
@@ -59,27 +64,21 @@ class FreadResource(Resource):
 
         return ret
 
-    def on_write(self, index, subindex, od, data):
+    def on_write(self, index, subindex, value):
 
         if index != self.index:
             return
 
         if subindex == Subindex.FILE_NAME:
-            # delete old file if it exist
-            if self.file_path:
-                remove(self.file_path)
-                self.file_path = ''
-
-            file_name = data.decode()
             try:
-                self.file_path = self.fread_cache.get(file_name, self.tmp_dir, True)
+                self.file_path = self.node.fread_cache.get(value, self.tmp_dir, True)
             except FileNotFoundError:
-                logger.error(f'file {file_name} not in fread cache')
+                logger.error(f'file {value} not in fread cache')
                 self.file_path = ''
         elif subindex == Subindex.DELETE_FILE:
             if self.file_path:
                 # delete file from cache and tmp dir
-                self.fread_cache.remove(basename(self.file_path))
+                self.node.fread_cache.remove(basename(self.file_path))
                 remove(self.file_path)
                 self.file_path = ''
                 logger.info(f'{basename(self.file_path)} was deleted from fread cache')

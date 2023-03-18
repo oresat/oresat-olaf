@@ -17,7 +17,11 @@ class Subindex(IntEnum):
 class FwriteResource(Resource):
     '''Resource for writing files over the CAN bus'''
 
-    def on_start(self, args: tuple = None):
+    def __init__(self):
+        super().__init__()
+
+        self.index = 0x3004
+        self.file_path = ''
 
         self.tmp_dir = '/tmp/oresat/fwrite'
         Path(self.tmp_dir).mkdir(parents=True, exist_ok=True)
@@ -25,11 +29,12 @@ class FwriteResource(Resource):
         for i in listdir(self.tmp_dir):
             remove(f'{self.tmp_dir}/{i}')
 
-        self.index = 0x3004
+    def on_start(self):
 
-        self.file_path = ''
+        self.node.add_sdo_read_callback(self.index, self.on_read)
+        self.node.add_sdo_write_callback(self.index, self.on_write)
 
-    def on_read(self, index, subindex, od):
+    def on_read(self, index, subindex, value):
 
         ret = None
 
@@ -38,19 +43,17 @@ class FwriteResource(Resource):
 
         return ret
 
-    def on_write(self, index, subindex, od, data):
+    def on_write(self, index, subindex, value):
 
         if index != self.index:
             return
 
         if subindex == Subindex.FILE_NAME:
-            file_name = data.decode()
-
             try:
-                OreSatFile(file_name)  # valiate file name format
-                self.file_path = self.tmp_dir + '/' + file_name
+                OreSatFile(value)  # valiate file name format
+                self.file_path = self.tmp_dir + '/' + value
             except ValueError:
-                logger.error(f'{file_name} is not a valid file name format')
+                logger.error(f'{value} is not a valid file name format')
                 self.file_path = ''
 
         elif subindex == Subindex.FILE_DATA:
@@ -60,13 +63,13 @@ class FwriteResource(Resource):
 
             try:
                 with open(self.file_path, 'wb') as f:
-                    f.write(data)
+                    f.write(value)
                 logger.info(f'receive new file: {basename(self.file_path)}')
-                self.fwrite_cache.add(self.file_path, consume=True)
+                self.node.fwrite_cache.add(self.file_path, consume=True)
             except Exception as exc:
                 logger.error(exc)
 
             self.file_path = ''
 
             # clear buffers to not waste memory
-            self.od[index][subindex].value = ''
+            self.node.od[index][subindex].value = ''

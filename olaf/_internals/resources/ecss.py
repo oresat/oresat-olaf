@@ -10,36 +10,41 @@ from ...common.ecss import scet_int_from_time, utc_int_from_time, scet_int_to_ti
 class ECSSResource(Resource):
     '''Resource for ECSS CANBus Extended Protocal standards'''
 
-    def on_start(self, args: tuple = None):
+    def __init__(self):
+        super().__init__()
+
         self.scet_index = 0x2010
         self.utc_index = 0x2011
-        self.scet_obj = self.od[self.scet_index]
-        self.utc_obj = self.od[self.utc_index]
 
-    def on_read(self, index, subindex, od):
+    def on_start(self):
 
-        ret = None
+        self.node.add_sdo_read_callback(self.scet_index, self.on_scet_read)
+        self.node.add_sdo_write_callback(self.scet_index, self.on_scet_write)
+        self.node.add_sdo_read_callback(self.utc_index, self.on_utc_read)
+        self.node.add_sdo_write_callback(self.utc_index, self.on_utc_write)
 
-        if index == self.scet_index:
-            ret = scet_int_from_time(time())
-        elif index == self.utc_index:
-            ret = utc_int_from_time(time())
+    def on_scet_read(self, index: int, subindex: int):
 
-        return ret
+        return scet_int_from_time(time())
 
-    def on_write(self, index, subindex, od, data):
+    def on_scet_write(self, index: int, subindex: int, value):
 
-        if index == self.scet_index:
-            raw = self.scet_obj.decode_raw(data)
-            ts = scet_int_to_time(raw)
-        elif index == self.utc_index:
-            raw = self.utc_index.decode_raw(data)
-            ts = utc_int_to_time(raw)
-        else:
-            return  # write is not for these indexes
+        ts = scet_int_to_time(value)
+        self._set_time(ts)
 
+    def on_utc_read(self, index: int, subindex: int):
+
+        return utc_int_from_time(time())
+
+    def on_utc_write(self, index: int, subinde: int, value):
+
+        ts = utc_int_to_time(value)
+        self._set_time(ts)
+
+    def _set_time(self, ts: float):
         if geteuid() == 0:
             clock_settime(CLOCK_REALTIME, ts)
-            logger.info(f'{self.name} resource has set system time')
+            logger.info(f'{self.__class__.__name__} resource has set system time')
         else:
-            logger.error(f'{self.name} resource cannot set time, not running as root')
+            logger.error(f'{self.__class__.__name__} resource cannot set system time, not running '
+                         'as root')

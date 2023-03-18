@@ -44,16 +44,19 @@ class Subindex(IntEnum):
 class SystemInfoResource(Resource):
     '''Resource for getting local system infomation'''
 
-    def on_start(self, args: tuple = None):
+    def __init__(self):
+        super().__init__()
 
         self.index = 0x3001
         self.rprocs = 0
         self.rproc_iter = 0
 
+    def on_start(self):
+
         with open('/etc/os-release', 'r') as f:
             os_release = f.readlines()
 
-        si_record = self.od[self.index]
+        si_record = self.node.od[self.index]
         si_record[Subindex.OS_NAME.value].value = platform.system()
         si_record[Subindex.OS_DISTRO.value].value = os_release[1].split('"')[1]
         si_record[Subindex.OS_KERNEL_VER.value].value = platform.release()
@@ -64,11 +67,13 @@ class SystemInfoResource(Resource):
         si_record[Subindex.SWAP_TOTAL.value].value = psutil.swap_memory().total // _B_TO_MB
         si_record[Subindex.ROOT_PART_TOTAL.value].value = psutil.disk_usage('/').total // _B_TO_MB
         if os.path.isdir('/sys/class/remoteproc'):
-            self.rprocs = len(os.listdir('/sys/class/remoteproc'))
-            # save for `on_read`
+            self.rprocs = len(os.listdir('/sys/class/remoteproc'))  # save for `on_read`
         si_record[Subindex.NUM_OF_RPROCS.value].value = self.rprocs
 
-    def on_read(self, index, subindex, od):
+        self.node.add_sdo_read_callback(self.index, self.on_read)
+        self.node.add_sdo_write_callback(self.index, self.on_write)
+
+    def on_read(self, index, subindex):
 
         if index != self.index:
             return
@@ -126,11 +131,10 @@ class SystemInfoResource(Resource):
 
         return ret
 
-    def on_write(self, index, subindex, od, data):
+    def on_write(self, index, subindex, value):
 
         if index != self.index or subindex != Subindex.RPROC_ITER.value:
             return
 
-        temp = od.decode_raw(data)
-        if temp < self.rprocs:
-            self.rproc_iter = temp
+        if value < self.rprocs:
+            self.rproc_iter = value

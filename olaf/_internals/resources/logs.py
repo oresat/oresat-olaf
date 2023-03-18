@@ -11,7 +11,8 @@ from ...common.timer_loop import TimerLoop
 class LogsResource(Resource):
     '''Resource for getting logs'''
 
-    def on_start(self, args: tuple = None):
+    def __init__(self):
+        super().__init__()
 
         self.index = 0x3006
         self.logs_dir_path = '/var/log/journal/'
@@ -19,7 +20,9 @@ class LogsResource(Resource):
         self.timer_loop = TimerLoop('logs resource', self._loop, 500)
         self.failed = True
 
-        self.obj = self.od[self.index]
+    def on_start(self):
+
+        self.obj = self.node.od[self.index]
         self.obj.value = False  # make sure this is False by default
 
         self.timer_loop.start()
@@ -39,7 +42,7 @@ class LogsResource(Resource):
                 for i in listdir(self.logs_dir_path):
                     t.add(self.logs_dir_path + '/' + i, arcname=i)
 
-            self.fread_cache.add(tar_file_path, consume=True)
+            self.node.fread_cache.add(tar_file_path, consume=True)
             self.obj.value = False
 
         return True

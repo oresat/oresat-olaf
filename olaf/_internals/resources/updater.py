@@ -19,13 +19,16 @@ class Subindex(IntEnum):
 class UpdaterResource(Resource):
     '''Resource for interacting with the updater'''
 
-    def on_start(self, args: tuple = None):
+    def __init__(self):
+        super().__init__()
 
         self._updater = Updater('/tmp/updater', f'{Path.home()}/.cache/oresat/updates')
         self.index = 0x3100
         self.timer_loop = TimerLoop('updater resource', self._loop, 500)
 
-        record = self.od[self.index]
+    def on_start(self):
+
+        record = self.node.od[self.index]
         self.update_obj = record[Subindex.UPDATE.value]
         self.make_status_obj = record[Subindex.MAKE_STATUS_FILE.value]
         self.timer_loop.start()
@@ -40,8 +43,8 @@ class UpdaterResource(Resource):
 
     def _loop(self):
 
-        for i in self.fwrite_cache.files('update'):
-            self._updater.add_update(self.fwrite_cache.dir + '/' + i)
+        for i in self.node.fwrite_cache.files('update'):
+            self._updater.add_update(self.node.fwrite_cache.dir + '/' + i)
 
         if self.update_obj.value:
             try:
@@ -52,7 +55,7 @@ class UpdaterResource(Resource):
 
         if self.make_status_obj.value:
             status_archive_file_path = self._updater.make_status_archive()
-            self.fread_cache.add(status_archive_file_path, consume=True)
+            self.node.fread_cache.add(status_archive_file_path, consume=True)
             self.make_status_obj.value = False
 
         return True

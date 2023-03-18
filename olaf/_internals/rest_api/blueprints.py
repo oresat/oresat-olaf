@@ -50,7 +50,7 @@ def od_index(index: str):
     index = int(index, 16) if index.startswith('0x') else int(index)
 
     try:
-        obj = app.od[index]
+        obj = app.node.od[index]
     except Exception:
         msg = f'no object at index {index:02X}'
         logger.error(f'RestApiError: {msg}')
@@ -61,9 +61,9 @@ def od_index(index: str):
         data_type = obj.data_type
 
         if data_type == DataType.DOMAIN:
-            app.node.sdo[index].raw = base64.decodebytes(raw.encode('utf-8'))
+            app.node._node.sdo[index].raw = base64.decodebytes(raw.encode('utf-8'))
         else:
-            app.node.sdo[index].phys = raw_to_value(data_type, raw)
+            app.node._node.sdo[index].phys = raw_to_value(data_type, raw)
 
     return jsonify(object_to_json(index))
 
@@ -75,7 +75,7 @@ def od_subindex(index: str, subindex: str):
     subindex = int(subindex, 16) if subindex.startswith('0x') else int(subindex)
 
     try:
-        obj = app.od[index][subindex]
+        obj = app.node.od[index][subindex]
     except Exception:
         msg = f'no object at index {index:04X} subindex {subindex:02X}'
         logger.error(f'RestApiError: {msg}')
@@ -86,9 +86,9 @@ def od_subindex(index: str, subindex: str):
         data_type = obj.data_type
 
         if data_type == DataType.DOMAIN:
-            app.node.sdo[index][subindex].raw = base64.decodebytes(raw.encode('utf-8'))
+            app.node._node.sdo[index][subindex].raw = base64.decodebytes(raw.encode('utf-8'))
         else:
-            app.node.sdo[index][subindex].phys = raw_to_value(data_type, raw)
+            app.node._node.sdo[index][subindex].phys = raw_to_value(data_type, raw)
 
     return jsonify(object_to_json(index, subindex))
 
@@ -112,26 +112,26 @@ def object_to_json(index: int, subindex: int = None) -> dict:
 
     if subindex is None:
         try:
-            obj = app.od[index]
+            obj = app.node.od[index]
             if isinstance(obj, canopen.objectdictionary.Variable):
                 if obj.data_type == DataType.DOMAIN:
-                    raw = app.node.sdo[index].raw
+                    raw = app.node._node.sdo[index].raw
                     value = base64.encodebytes(raw).decode('utf-8')
                 else:
-                    value = app.node.sdo[index].phys
+                    value = app.node._node.sdo[index].phys
         except Exception as e:
             logger.debug(e)
             return {'error': f'0x{index:04X} is not a valid index'}
     else:
         try:
-            obj = app.od[index][subindex]
+            obj = app.node.od[index][subindex]
             if obj is None:
                 print('object does not exist')
             if obj.data_type == DataType.DOMAIN:
-                raw = app.node.sdo[index][subindex].raw
+                raw = app.node._node.sdo[index][subindex].raw
                 value = base64.encodebytes(raw).decode('utf-8')
             else:
-                value = app.node.sdo[index][subindex].phys
+                value = app.node._node.sdo[index][subindex].phys
         except Exception as e:
             logger.debug(e)
             return {'error': f'0x{subindex:02X} not a valid subindex for index 0x{index:04X}'}

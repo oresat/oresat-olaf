@@ -6,63 +6,65 @@ from . import MockApp
 
 
 class TestSystemInfoResource(unittest.TestCase):
+
     def setUp(self):
+
         self.app = MockApp()
-        self.node = self.app.node
-        self.app.add_resource(SystemInfoResource)
+        self.app.add_resource(SystemInfoResource())
         self.app.start()
 
-        self.info_sdo = self.node.sdo[self.app.resource.index]
-
     def tearDown(self):
+
         self.app.stop()
 
     def test_system_info(self):
 
-        '''
-        self.assertNotEqual(self.info_sdo[Subindex.UPTIME.value].phys, 0)
+        index = self.app.resource.index
 
-        self.assertNotEqual(self.info_sdo[Subindex.NUM_OF_CPUS.value].phys, 0)
-        self.assertNotEqual(self.info_sdo[Subindex.CPU_ARCH.value].phys, 0)
-        self.assertNotEqual(self.info_sdo[Subindex.CPU_GOV.value].phys, 0)
-        self.assertNotEqual(self.info_sdo[Subindex.CPU_FREQ.value].phys, 0)
+        ''' TODO depends on system env
+        self.assertNotEqual(self.app.sdo_read(index, Subindex.UPTIME.value), 0)
 
-        self.info_sdo[Subindex.RPROC_ITER.value].phys = 0
-        self.assertEqual(self.info_sdo[Subindex.RPROC_ITER.value].phys, 0)
-        self.info_sdo[Subindex.RPROC_ITER.value].phys = 1
-        self.assertIn(self.info_sdo[Subindex.RPROC_ITER.value].phys, [0, 1])
+        self.assertNotEqual(self.app.sdo_read(index, Subindex.NUM_OF_CPUS.value), 0)
+        self.assertNotEqual(self.app.sdo_read(index, Subindex.CPU_ARCH.value), 0)
+        self.assertNotEqual(self.app.sdo_read(index, Subindex.CPU_GOV.value), 0)
+        self.assertNotEqual(self.app.sdo_read(index, Subindex.CPU_FREQ.value), 0)
 
-        rpocs = self.info_sdo[Subindex.NUM_OF_RPROCS.value].phys
+        self.app.sdo_read(index, Subindex.RPROC_ITER.value) = 0
+        self.assertEqual(self.app.sdo_read(index, Subindex.RPROC_ITER.value), 0)
+        self.app.sdo_read(index, Subindex.RPROC_ITER.value) = 1
+        self.assertIn(self.app.sdo_read(index, Subindex.RPROC_ITER.value), [0, 1])
+
+        rpocs = self.app.sdo_read(index, Subindex.NUM_OF_RPROCS.value)
         for i in range(rpocs):
-            self.info_sdo[Subindex.RPROC_ITER.value].phys = i
-            self.assertNotEqual(self.info_sdo[Subindex.RPROC_ITER.value].phys, i)
-            self.assertNotIn(self.info_sdo[Subindex.RPROC_NAME.value].phys, [None, ''])
-            self.assertNotIn(self.info_sdo[Subindex.RPROC_STATE.value].phys, [None, ''])
+            self.app.sdo_read(index, Subindex.RPROC_ITER.value) = i
+            self.assertNotEqual(self.app.sdo_read(index, Subindex.RPROC_ITER.value), i)
+            self.assertNotIn(self.app.sdo_read(index, Subindex.RPROC_NAME.value), [None, ''])
+            self.assertNotIn(self.app.sdo_read(index, Subindex.RPROC_STATE.value), [None, ''])
         '''
 
         # just make sure nothing raises a exception
 
-        self.info_sdo[Subindex.OS_DISTRO.value].phys
-        self.info_sdo[Subindex.OS_NAME.value].phys
-        self.info_sdo[Subindex.OS_KERNEL_VER.value].phys
-        self.info_sdo[Subindex.HOSTNAME.value].phys
+        self.app.sdo_read(index, Subindex.OS_DISTRO.value)
+        self.app.sdo_read(index, Subindex.OS_NAME.value)
+        self.app.sdo_read(index, Subindex.OS_KERNEL_VER.value)
+        self.app.sdo_read(index, Subindex.HOSTNAME.value)
 
-        self.info_sdo[Subindex.LOAD_AVG_1MIN.value].phys
-        self.info_sdo[Subindex.LOAD_AVG_5MIN.value].phys
-        self.info_sdo[Subindex.LOAD_AVG_15MIN.value].phys
+        self.app.sdo_read(index, Subindex.LOAD_AVG_1MIN.value)
+        self.app.sdo_read(index, Subindex.LOAD_AVG_5MIN.value)
+        self.app.sdo_read(index, Subindex.LOAD_AVG_15MIN.value)
 
-        self.info_sdo[Subindex.RAM_TOTAL.value].phys
-        self.info_sdo[Subindex.RAM_FREE.value].phys
-        self.info_sdo[Subindex.RAM_SHARED.value].phys
-        self.info_sdo[Subindex.RAM_BUFFERED.value].phys
-        self.info_sdo[Subindex.RAM_PERCENT.value].phys
+        self.app.sdo_read(index, Subindex.RAM_TOTAL.value)
+        self.app.sdo_read(index, Subindex.RAM_FREE.value)
+        self.app.sdo_read(index, Subindex.RAM_SHARED.value)
+        self.app.sdo_read(index, Subindex.RAM_BUFFERED.value)
+        self.app.sdo_read(index, Subindex.RAM_PERCENT.value)
 
-        self.info_sdo[Subindex.SWAP_TOTAL.value].phys
-        self.info_sdo[Subindex.SWAP_FREE.value].phys
-        self.info_sdo[Subindex.SWAP_PERCENT.value].phys
+        self.app.sdo_read(index, Subindex.SWAP_TOTAL.value)
+        self.app.sdo_read(index, Subindex.SWAP_FREE.value)
+        self.app.sdo_read(index, Subindex.SWAP_PERCENT.value)
 
-        # self.assertNotEqual(self.info_sdo[Subindex.PROCS.value].phys, 0)
+        # self.assertNotEqual(self.app.sdo_read(index, Subindex.PROCS.value), 0)
 
-        self.info_sdo[Subindex.ROOT_PART_TOTAL.value].phys
-        self.info_sdo[Subindex.ROOT_PART_FREE.value].phys
-        self.info_sdo[Subindex.ROOT_PART_PERCENT.value].phys
+        self.app.sdo_read(index, Subindex.ROOT_PART_TOTAL.value)
+        self.app.sdo_read(index, Subindex.ROOT_PART_FREE.value)
+        self.app.sdo_read(index, Subindex.ROOT_PART_PERCENT.value)

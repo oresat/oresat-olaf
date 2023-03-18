@@ -21,17 +21,21 @@ class Subindex(IntEnum):
 class FileCachesResource(Resource):
     '''Resource for interacting with the fread and fwrite caches'''
 
-    def on_start(self, args: tuple = None):
+    def __init__(self):
+        super().__init__()
 
-        self.index = 0x3002
-        self.file_caches = [self.fread_cache, self.fwrite_cache]
-
-        # defaults
         self.selector = 0
         self.iter = 0
         self.filter = ''
+        self.index = 0x3002
 
-    def on_read(self, index, subindex, od):
+    def on_start(self):
+
+        self.file_caches = [self.node.fread_cache, self.node.fwrite_cache]
+        self.node.add_sdo_read_callback(self.index, self.on_read)
+        self.node.add_sdo_write_callback(self.index, self.on_write)
+
+    def on_read(self, index, subindex):
 
         ret = None
 
@@ -40,9 +44,9 @@ class FileCachesResource(Resource):
 
         try:
             if subindex == Subindex.FREAD_LEN:
-                ret = len(self.fread_cache)
+                ret = len(self.node.fread_cache)
             elif subindex == Subindex.FWRITE_LEN:
-                ret = len(self.fwrite_cache)
+                ret = len(self.node.fwrite_cache)
             elif subindex == Subindex.CACHE_SELECTOR:
                 ret = self.selector
             elif subindex == Subindex.FILTER:
@@ -63,24 +67,24 @@ class FileCachesResource(Resource):
 
         return ret
 
-    def on_write(self, index, subindex, od, data):
+    def on_write(self, index, subindex, value):
 
         if index != self.index:
             return
 
         try:
             if subindex == Subindex.CACHE_SELECTOR:
-                if self.od[index][subindex].decode_raw(data) in [0, 1]:  # check for invalid input
-                    self.selector = self.od[index][subindex].decode_raw(data)
+                if value in [0, 1]:  # check for invalid input
+                    self.selector = value
             elif subindex == Subindex.FILTER:
-                if data == b'\x00':  # just NULL terminator mean no filter
+                if value == '':  # aka no filter
                     self.filter = ''
                     logger.debug('file cache filter clear')
                 else:
-                    self.filter = data.decode()
+                    self.filter = value
                     logger.debug(f'file cache filter now "{self.filter}"')
             elif subindex == Subindex.ITER:
-                self.iter = self.od[index][subindex].decode_raw(data)
+                self.iter = value
             elif subindex == Subindex.DELETE_FILE:
                 file_name = self.file_caches[self.selector].files(self.filter)[self.iter].name
                 self.file_caches[self.selector].remove(file_name)

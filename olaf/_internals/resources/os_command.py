@@ -18,7 +18,8 @@ class OSCommandState(IntEnum):
 class OSCommandResource(Resource):
     '''Resource for running OS (bash) commands over CAN bus as defined by CiA 301 specs'''
 
-    def on_start(self, args: tuple = None):
+    def __init__(self):
+        super().__init__()
 
         self.index = 0x1023
         self.sub_command = 0x01
@@ -29,11 +30,16 @@ class OSCommandResource(Resource):
         self.state = OSCommandState.NO_ERROR_NO_REPLY
         self.reply = ''
         self.reply_max_len = 10000
+        self.failed = False
 
         self.timer_loop = TimerLoop('os command resource', self._loop, 500,
                                     exc_func=self._loop_error)
+
+    def on_start(self):
+
+        self.node.add_sdo_read_callback(self.index, self.on_read)
+        self.node.add_sdo_write_callback(self.index, self.on_write)
         self.timer_loop.start()
-        self.failed = False
 
     def on_end(self):
 
@@ -69,7 +75,7 @@ class OSCommandResource(Resource):
         self.state = OSCommandState.ERROR_NO_REPLY
         self.reply = ''
 
-    def on_read(self, index, subindex, od):
+    def on_read(self, index, subindex):
 
         ret = None
 
@@ -83,7 +89,7 @@ class OSCommandResource(Resource):
 
         return ret
 
-    def on_write(self, index, subindex, od, data):
+    def on_write(self, index, subindex, value):
 
         if index == self.index and subindex == self.sub_command:
             if self.state == OSCommandState.EXECUTING or self.failed:
@@ -91,5 +97,5 @@ class OSCommandResource(Resource):
                 return
 
             self.reply = ''
-            self.command = data.decode()
+            self.command = value.decode()
             self.state = OSCommandState.EXECUTING  # run os command
