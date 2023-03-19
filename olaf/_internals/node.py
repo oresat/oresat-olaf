@@ -52,7 +52,16 @@ class Node:
         for i in self.od:
             if not isinstance(self.od[i], canopen.objectdictionary.Variable):
                 for j in self.od[i]:
-                    self.od[i][j].value = self.od[i][j].default
+                    if self.od[i][j].data_type == canopen.objectdictionary.BOOLEAN:
+                        # fix bools to be bools
+                        self.od[i][j].default = bool(self.od[i][j].default)
+                        self.od[i][j].value = bool(self.od[i][j].default)
+                    else:
+                        self.od[i][j].value = self.od[i][j].default
+            elif self.od[i].data_type == canopen.objectdictionary.BOOLEAN:
+                # fix bools to be bools
+                self.od[i].default = bool(self.od[i].default)
+                self.od[i].value = bool(self.od[i].default)
             else:
                 self.od[i].value = self.od[i].default
 

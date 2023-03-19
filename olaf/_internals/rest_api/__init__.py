@@ -195,7 +195,7 @@ def od_subindex(index: str, subindex: str):
     return jsonify(object_to_json(index, subindex))
 
 
-def raw_to_value(data_type: DataType, raw: str):
+def raw_to_value(data_type: DataType, raw):
     value = None
 
     if data_type == DataType.BOOLEAN and not isinstance(raw, bool):

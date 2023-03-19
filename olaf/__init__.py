@@ -6,7 +6,7 @@ from argparse import ArgumentParser, Namespace
 from loguru import logger
 
 from ._internals.app import app
-from ._internals.rest_api import rest_api
+from ._internals.rest_api import rest_api, render_olaf_template
 from .common.resource import Resource
 from .common.ecss import scet_int_from_time, scet_int_to_time, utc_int_from_time, utc_int_to_time
 from .common.oresat_file import OreSatFile, new_oresat_file
