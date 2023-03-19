@@ -16,6 +16,7 @@ class RestAPI:
     '''
 
     def __init__(self):
+
         self._app = Flask(os.uname()[1])
         self._thread = Thread(target=self._run)
         self._server = None
@@ -24,19 +25,26 @@ class RestAPI:
         # add core blueprint
         self._app.register_blueprint(core_templates_bp)
 
-    def start(self, address: str, port: int):
-        '''Start the REST API thread'''
-        logger.info('starting rest api')
+    def setup(self, address: str, port: int):
+        '''Setup the REST API thread'''
+
         self._server = make_server(address, port, self._app)
+
+    def start(self):
+        '''Start the REST API thread'''
+
+        logger.info('starting rest api')
         self._ctx = self._app.app_context()
         self._ctx.push()
         self._thread.start()
 
     def _run(self):
+
         self._server.serve_forever()
 
     def stop(self):
         '''Stop the REST API thread'''
+
         logger.info('stopping rest api')
         if self._server is not None:
             self._server.shutdown()

@@ -1,7 +1,7 @@
 import os
 import sys
 from logging.handlers import SysLogHandler
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 
 from loguru import logger
 
@@ -16,13 +16,19 @@ from .common.timer_loop import TimerLoop
 __version__ = '1.0.0'
 
 
-def olaf_run(eds_path: str = None):
-    '''Start the app and rest api.
+def olaf_setup(eds_path: str = None) -> Namespace:
+    '''
+    Parse args and setup the app and rest api.
 
     Parameters
     ----------
     eds_path: str
-        The path to the eds or dcf file
+        The path to the eds or dcf file.
+
+    Returns
+    -------
+    Namespace
+        The runtime args.
     '''
 
     parser = ArgumentParser(prog='OLAF')
@@ -53,7 +59,14 @@ def olaf_run(eds_path: str = None):
         eds_path = args.eds
 
     app.setup(eds_path, args.bus, args.node_id)
+    rest_api.setup(address=args.address, port=args.port)
 
-    rest_api.start(address=args.address, port=args.port)
+    return args
+
+
+def olaf_run():
+    '''Start the app and rest api.'''
+
+    rest_api.start()
     app.run()
     rest_api.stop()
