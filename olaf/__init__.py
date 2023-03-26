@@ -16,7 +16,7 @@ from .common.timer_loop import TimerLoop
 __version__ = '1.0.0'
 
 
-def olaf_setup(eds_path: str = None) -> Namespace:
+def olaf_setup(eds_path: str = None, master_node: bool = False) -> Namespace:
     '''
     Parse args and setup the app and rest api.
 
@@ -24,6 +24,8 @@ def olaf_setup(eds_path: str = None) -> Namespace:
     ----------
     eds_path: str
         The path to the eds or dcf file.
+    master_node: bool
+        Run as master node.
 
     Returns
     -------
@@ -58,7 +60,7 @@ def olaf_setup(eds_path: str = None) -> Namespace:
     if eds_path is None:
         eds_path = args.eds
 
-    app.setup(eds_path, args.bus, args.node_id)
+    app.setup(eds_path, args.bus, args.node_id, master_node=master_node)
     rest_api.setup(address=args.address, port=args.port)
 
     return args

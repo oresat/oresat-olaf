@@ -6,6 +6,7 @@ from loguru import logger
 
 from ..common.resource import Resource
 from .node import Node
+from .master_node import MasterNode
 from .resources.os_command import OSCommandResource
 from .resources.system_info import SystemInfoResource
 from .resources.file_caches import FileCachesResource
@@ -60,7 +61,7 @@ class App:
         self._node = canopen.LocalNode(self._node_id, eds)
         self._node.object_dictionary.node_id = self._node_id
 
-    def setup(self, eds: str, bus: str, node_id=0):
+    def setup(self, eds: str, bus: str, node_id: int | str = 0, master_node: bool = False):
         '''
         Setup the app. Must be called after all `self.add_resource` calls.
 
@@ -73,6 +74,8 @@ class App:
         node_id: int, str
             The node ID. If set to 0 and DCF was used for the eds arg, the value will be pulled
             from the DCF, otherwise, it will be set to 0x7C.
+        master_node: bool
+            Node is a master node.
 
         Raises
         ------
@@ -101,7 +104,10 @@ class App:
 
         self._name = self._node.object_dictionary.device_information.product_name
 
-        self._app_node = Node(self._node, bus)
+        if master_node:
+            self._app_node = MasterNode(self._node, bus)
+        else:
+            self._app_node = Node(self._node, bus)
 
         # default resources
         self.add_resource(OSCommandResource())
