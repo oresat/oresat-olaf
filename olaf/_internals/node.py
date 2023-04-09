@@ -117,7 +117,8 @@ class Node:
                 pass
 
     def send_tpdo(self, tpdo: int) -> bool:
-        '''Send a TPDO. Will not be sent if not node is not in operational state.
+        '''
+        Send a TPDO. Will not be sent if not node is not in operational state.
 
         Parameters
         ----------
@@ -246,7 +247,8 @@ class Node:
             self._event.wait(1)
 
     def run(self) -> int:
-        '''Go into operational mode, start all the resources, start all the threads, and monitor
+        '''
+        Go into operational mode, start all the resources, start all the threads, and monitor
         everything in a loop.
 
         Returns
@@ -313,8 +315,26 @@ class Node:
         else:
             self._write_cbs[index].append(sdo_cb)
 
+    def send_emcy(self, code: int, register: int = 0, data: bytes = b''):
+        '''
+        Send a EMCY message. Wrapper on canopen's `EmcyProducer.send`.
+
+        Parameters
+        ----------
+        code: int
+            The EMCY code.
+        register: int
+            Optional error register value in EMCY message (uint8). See Object 1001 def for bit
+            field.
+        manufacturer_code: bytes
+            Optional manufacturer error code (up to 5 bytes).
+        '''
+
+        self._node.emcy.send(code, register, data)
+
     def _on_sdo_read(self, index: int, subindex: int, od: canopen.objectdictionary.Variable):
-        '''SDO read callback function. Allows overriding the data being sent on a SDO read. Return
+        '''
+        SDO read callback function. Allows overriding the data being sent on a SDO read. Return
         valid datatype for object, if overriding read data, or :py:data:`None` to use the the value
         on object dictionary.
 
@@ -380,19 +400,19 @@ class Node:
 
     @property
     def od(self) -> canopen.ObjectDictionary:
-        '''For convenience. Access to the object dictionary.'''
+        '''canopen.ObjectDictionary: Access to the object dictionary.'''
 
         return self._node.object_dictionary
 
     @property
     def fread_cache(self) -> OreSatFileCache:
-        '''Cache the CANopen master node can read to.'''
+        '''OreSatFile: Cache the CANopen master node can read to.'''
 
         return self._fread_cache
 
     @property
     def fwrite_cache(self) -> OreSatFileCache:
-        '''Cache the CANopen master node can write to.'''
+        '''OreSatFile: Cache the CANopen master node can write to.'''
 
         return self._fwrite_cache
 

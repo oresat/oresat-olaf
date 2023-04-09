@@ -5,6 +5,7 @@ from .node import Node
 
 
 class MasterNode(Node):
+    '''OreSat CANopen Master Node'''
 
     def __init__(self, node: canopen.LocalNode, bus: str):
         '''
@@ -43,3 +44,30 @@ class MasterNode(Node):
         node_id = cob_id - 0x700
         value_str = data.hex(sep=' ')
         logger.error(f'Node 0x{node_id:02X} raised emergency: {value_str}')
+
+    def send_sync(self):
+        '''Send a CANopen SYNC message.'''
+
+        self._network.sync.transmit()
+
+    def sdo_read(self, node_id: int, index: int, subindex: int) -> bytes:
+        '''Read a value from a remote node's object dictionary using an SDO.'''
+
+        if node_id in self._network:
+            node = self._network[node_id]
+        else:
+            node = canopen.RemoteNode(node_id, canopen.ObjectDictionary())
+            self._network.add_node(node)
+
+        return node.sdo.upload(index, subindex)
+
+    def sdo_write(self, node_id: int, index: int, subindex: int, value: bytes) -> bytes:
+        '''Write a value to a remote node's object dictionary using an SDO.'''
+
+        if node_id in self._network:
+            node = self._network[node_id]
+        else:
+            node = canopen.RemoteNode(node_id, canopen.ObjectDictionary())
+            self._network.add_node(node)
+
+        node.sdo.download(index, subindex, value)
