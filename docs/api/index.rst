@@ -5,6 +5,7 @@ API
    :maxdepth: 2
 
    app
+   node
    resource
    ecss
    oresat_file

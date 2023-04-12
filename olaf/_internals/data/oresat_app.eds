@@ -110,7 +110,7 @@ AccessType=ro
 DefaultValue=0x00000000
 
 [OptionalObjects]
-SupportedObjects=83
+SupportedObjects=85
 1=0x1002
 2=0x1003
 3=0x1005
@@ -194,6 +194,8 @@ SupportedObjects=83
 81=0x1A0E
 82=0x1A0F
 83=0x1F80
+84=0x1021
+85=0x1022
 
 [1002]
 ParameterName=Manufacturer status register
@@ -506,6 +508,7 @@ ParameterName=Command
 ObjectType=0x07
 DataType=0x000F
 AccessType=rw
+DefaultValue=0
 
 [1023sub2]
 ParameterName=Status
@@ -519,6 +522,7 @@ ParameterName=Reply
 ObjectType=0x07
 DataType=0x000F
 AccessType=ro
+DefaultValue=0
 
 [1029]
 ParameterName=Error behavior
@@ -3016,7 +3020,7 @@ SubNumber=7
 ParameterName=Highest sub-index supported
 ObjectType=0x07
 DataType=0x0005
-AccessType=ro
+AccessType=const
 DefaultValue=0x06
 
 [180Fsub1]
@@ -4022,7 +4026,7 @@ SubNumber=9
 ParameterName=Number of mapped application objects in PDO
 ObjectType=0x07
 DataType=0x0005
-AccessType=rw
+AccessType=const
 DefaultValue=0x08
 
 [1A0Esub1]
@@ -4156,6 +4160,22 @@ DataType=0x0007
 AccessType=rw
 DefaultValue=0x00000008
 
+;A master node can read this for a copy of the node's EDS file
+[1021]
+ParameterName=Store EDS
+ObjectType=0x07
+DataType=0x000F
+AccessType=ro
+DefaultValue=0
+
+;Indicate the format of the Store EDS
+[1022]
+ParameterName=Store format
+ObjectType=0x07
+DataType=0x0005
+AccessType=ro
+DefaultValue=0
+
 [ManufacturerObjects]
 SupportedObjects=12
 1=0x2000
@@ -4181,7 +4201,7 @@ SubNumber=5
 ParameterName=Highest sub-index supported
 ObjectType=0x07
 DataType=0x0005
-AccessType=ro
+AccessType=const
 DefaultValue=0x04
 
 ;Bdefault specifies the bus to be considered active after a node power-on, node hardware reset.
@@ -4305,7 +4325,7 @@ ParameterName=Error status bits
 ObjectType=0x07
 DataType=0x000A
 AccessType=ro
-DefaultValue=00000000000000000000
+DefaultValue=00 00 00 00 00 00 00 00 00 00
 
 [3000]
 ParameterName=OLAF app control
@@ -4709,6 +4729,7 @@ ParameterName=File data
 ObjectType=0x07
 DataType=0x000F
 AccessType=ro
+DefaultValue=0
 
 ;Gets the CRC32 of the file
 [3003sub3]
@@ -4751,6 +4772,7 @@ ParameterName=File data
 ObjectType=0x07
 DataType=0x000F
 AccessType=wo
+DefaultValue=0
 
 [3005]
 ParameterName=App manager
@@ -4825,7 +4847,7 @@ SubNumber=6
 ParameterName=Highest sub-index supported
 ObjectType=0x07
 DataType=0x0005
-AccessType=ro
+AccessType=const
 DefaultValue=0x05
 
 ;Get the status of updater

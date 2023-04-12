@@ -47,20 +47,20 @@ values to the native JavaScript ``Date`` object, as well as a very basic standar
 
    # main.py
 
-   from flask import Blueprint, render_template
    from olaf import rest_api, olaf_run
+   from olaf import olaf_setup, olaf_run, app, rest_api, render_olaf_template
 
-   example_bp = Blueprint('example_template', __name__, template_folder='templates')
-
-
-   @example_bp.route('/example')
+   @rest_api.app.route('/example')
    def example_template():
-       return render_template('example.html', title=os.uname()[1], name='Example')
-
+       return render_olaf_template('example.html', name='example')
 
    def main():
-       rest_api.add_blueprint(example_bp)
-       olaf_run('app.dcf')
+       path = os.path.dirname(os.path.abspath(__file__))
+       args = olaf_setup(f'{path}/app.dcf')  # path to eds or dcf file
+
+       rest_api.add_template(f'{path}/templates/example.html')  # path to Flask template
+
+       olaf_run()
 
 
    if __name__ == '__main__':

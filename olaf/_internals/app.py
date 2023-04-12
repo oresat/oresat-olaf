@@ -15,6 +15,7 @@ from .resources.fwrite import FwriteResource
 from .resources.ecss import ECSSResource
 from .resources.updater import UpdaterResource
 from .resources.logs import LogsResource
+from .resources.store_eds import StoreEdsResource
 
 
 class App:
@@ -97,10 +98,12 @@ class App:
             except Exception as e:
                 logger.error(f'{e.__class__.__name__}: {e}')
                 logger.warning(f'failed to read in {eds}, using OLAF\'s internal eds as backup')
-                self._load_node(node_id, self._BACKUP_EDS)
+                eds = self._BACKUP_EDS
+                self._load_node(node_id, eds)
         else:
             logger.warning('No eds or dcf was supplied, using OLAF\'s internal eds')
-            self._load_node(node_id, self._BACKUP_EDS)
+            eds = self._BACKUP_EDS
+            self._load_node(node_id, eds)
 
         self._name = self._node.object_dictionary.device_information.product_name
 
@@ -118,6 +121,7 @@ class App:
         self.add_resource(FwriteResource())
         self.add_resource(UpdaterResource())
         self.add_resource(LogsResource())
+        self.add_resource(StoreEdsResource(eds))
 
     def add_resource(self, resource: Resource):
         '''
