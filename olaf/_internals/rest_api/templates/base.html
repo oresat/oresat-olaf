@@ -3,12 +3,23 @@
 <head>
   <title>{{title}}</title>
   <style>
-    #header {
+    #headerGrid {
+      display: grid;
+      grid-template-columns: 25% 50% 25%;
+    }
+    #headerCenter {
       text-align: center;
     }
   </style>
-  <div id='header'>
-    <h2>{{name}}</h2>
+  <div id='headerGrid'>
+    <div id='headerLeft'>
+       <a href='/'>home</a>
+    </div>
+    <div id='headerCenter'>
+      <h2>{{name}}</h2>
+    </div>
+    <div id='headerRight'>
+    </div>
   </div>
 </head>
 <body>
