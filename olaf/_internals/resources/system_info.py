@@ -6,6 +6,7 @@ from enum import IntEnum, auto
 import psutil
 
 from ...common.resource import Resource
+from ...common.cpufreq import get_cpufreq, get_cpufreq_gov
 
 _B_TO_MB = 1024 * 1024
 
@@ -80,60 +81,54 @@ class SystemInfoResource(Resource):
 
         ret = None
 
-        if subindex == Subindex.UPTIME.value:
+        if subindex == Subindex.UPTIME:
             ret = int(time() - psutil.boot_time())
-        elif subindex == Subindex.CPU_GOV.value:
-            file_path = '/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor'
-            if os.path.exists(file_path):
-                with open(file_path, 'r') as f:
-                    ret = f.read().strip()
-        elif subindex == Subindex.CPU_FREQ.value:
-            # there was MHz vs GHz bug with psutil v5.9.0
-            ret = int(psutil.cpu_freq().current)
-            if ret < 10:  # value was in GHz, not MHz
-                ret = int(psutil.cpu_freq().current * 1000)
-        elif subindex == Subindex.RPROC_ITER.value:
+        elif subindex == Subindex.CPU_GOV:
+            ret = get_cpufreq_gov()
+        elif subindex == Subindex.CPU_FREQ:
+            ret = get_cpufreq()
+        elif subindex == Subindex.RPROC_ITER:
             ret = self.rproc_iter
-        elif subindex == Subindex.RPROC_NAME.value:
+        elif subindex == Subindex.RPROC_NAME:
             file_path = f'/sys/class/remoteproc/remoteproc{self.rprocs}/state'
             if os.path.exists(file_path):
                 with open(file_path, 'r') as f:
                     ret = f.read()
-        elif subindex == Subindex.RPROC_STATE.value:
+        elif subindex == Subindex.RPROC_STATE:
             file_path = f'/sys/class/remoteproc/remoteproc{self.rprocs}/state'
             if os.path.exists(file_path):
                 with open(file_path, 'r') as f:
                     ret = f.read()
-        elif subindex == Subindex.LOAD_AVG_1MIN.value:
+        elif subindex == Subindex.LOAD_AVG_1MIN:
             ret = int(psutil.getloadavg()[0] * 100)
-        elif subindex == Subindex.LOAD_AVG_5MIN.value:
+        elif subindex == Subindex.LOAD_AVG_5MIN:
             ret = int(psutil.getloadavg()[1] * 100)
-        elif subindex == Subindex.LOAD_AVG_15MIN.value:
+        elif subindex == Subindex.LOAD_AVG_15MIN:
             ret = int(psutil.getloadavg()[2] * 100)
-        elif subindex == Subindex.RAM_FREE.value:
+        elif subindex == Subindex.RAM_FREE:
             ret = psutil.virtual_memory().free // _B_TO_MB
-        elif subindex == Subindex.RAM_SHARED.value:
+        elif subindex == Subindex.RAM_SHARED:
             ret = psutil.virtual_memory().shared // _B_TO_MB
-        elif subindex == Subindex.RAM_BUFFERED.value:
+        elif subindex == Subindex.RAM_BUFFERED:
             ret = psutil.virtual_memory().buffers // _B_TO_MB
-        elif subindex == Subindex.RAM_PERCENT.value:
+        elif subindex == Subindex.RAM_PERCENT:
             ret = psutil.virtual_memory().percent
-        elif subindex == Subindex.SWAP_FREE.value:
+        elif subindex == Subindex.SWAP_FREE:
             ret = psutil.swap_memory().free // _B_TO_MB
-        elif subindex == Subindex.SWAP_PERCENT.value:
+        elif subindex == Subindex.SWAP_PERCENT:
             ret = psutil.swap_memory().percent
-        elif subindex == Subindex.PROCS.value:
+        elif subindex == Subindex.PROCS:
             ret = len(psutil.pids())
-        elif subindex == Subindex.ROOT_PART_FREE.value:
+        elif subindex == Subindex.ROOT_PART_FREE:
             ret = psutil.disk_usage('/').free // _B_TO_MB
-        elif subindex == Subindex.ROOT_PART_PERCENT.value:
+        elif subindex == Subindex.ROOT_PART_PERCENT:
             ret = psutil.disk_usage('/').percent
 
         return ret
 
     def on_write(self, index, subindex, value):
 
-        if index != self.index or subindex != Subindex.RPROC_ITER.value:
+        if index != self.index or subindex != Subindex.RPROC_ITER:
             return
 
         if value < self.rprocs:
