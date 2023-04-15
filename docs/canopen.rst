@@ -38,7 +38,7 @@ Indexes can be divide into 3 groups: Manidtory, Manufacture, and Optional.
 - Manidtory Objects (``0x1000``, ``0x1001``, ``0x1018``) are requeired index 
   for all nodes.
 - Manufacture Objects (``0x2000`` to ``0x5FFF``) are objects addded by
-  manufacture.
+  manufacturegtr.
 - Optional Objects (``0x1000`` to ``0x1FFF`` and ``0x6000`` to ``0x8000``) are
   objects added by user.
 
@@ -54,8 +54,8 @@ manipulate EDS and DCF files.
 EDS (Electronic Data Sheet)
 ***************************
 
-An EDS file a ``.conf`` like configuration file for describing the OD. It is
-used as the documentation and configuration of a device.
+An EDS file a ``.conf`` or ``.ini`` like configuration file for describing the
+OD. It is used as the documentation and configuration file of a device.
 
 DCF (Device Configure File)
 ***************************
@@ -124,8 +124,8 @@ So a board with NODE-ID 0x4 can use the following 4 ``COB-ID`` for it's TPDOs:
 SYNC
 ****
 
-A message that PDO can be configure to response to after every X occuraces.
-A SYNC message is always ``COB-ID`` of ``0x80``.
+A message that TPDO can be configure to response to after every X occuraces.
+A SYNC message always has ``COB-ID`` of ``0x80`` with no payload.
 
 .. _CANopen: https://en.wikipedia.org/wiki/CANopen
 .. _CAN: https://en.wikipedia.org/wiki/CAN

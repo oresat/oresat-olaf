@@ -65,7 +65,7 @@ class App:
 
     def setup(self, eds: str, bus: str, node_id: [int, str] = 0, master_node: bool = False):
         '''
-        Setup the app. Must be called after all `self.add_resource` calls.
+        Setup the app. Will be called by ``olaf_setup`` automatically.
 
         Parameters
         ----------

@@ -81,6 +81,11 @@ class MasterNode(Node):
         ------
         NetworkError
             Cannot send a SDO read message when the network is down.
+
+        Returns
+        -------
+        bytes
+            The raw value read.
         '''
 
         if self._network is None:
@@ -94,7 +99,7 @@ class MasterNode(Node):
 
         return node.sdo.upload(index, subindex)
 
-    def sdo_write(self, node_id: int, index: int, subindex: int, value: bytes) -> bytes:
+    def sdo_write(self, node_id: int, index: int, subindex: int, value: bytes):
         '''
         Write a value to a remote node's object dictionary using an SDO.
 
@@ -113,11 +118,6 @@ class MasterNode(Node):
         ------
         NetworkError
             Cannot send a SDO write message when the network is down.
-
-        Returns
-        -------
-        bytes
-            The raw value read.
         '''
 
         if self._network is None:

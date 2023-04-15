@@ -5,10 +5,10 @@ from argparse import ArgumentParser, Namespace
 
 from loguru import logger
 
-from ._internals.app import app
-from ._internals.node import Node
+from ._internals.app import app, App
+from ._internals.node import Node, NetworkError
 from ._internals.master_node import MasterNode
-from ._internals.rest_api import rest_api, render_olaf_template
+from ._internals.rest_api import rest_api, RestAPI, render_olaf_template
 from .common.resource import Resource
 from .common.ecss import scet_int_from_time, scet_int_to_time, utc_int_from_time, utc_int_to_time
 from .common.oresat_file import OreSatFile, new_oresat_file
@@ -21,7 +21,7 @@ __version__ = '1.0.0'
 
 def olaf_setup(eds_path: str = None, master_node: bool = False) -> Namespace:
     '''
-    Parse args and setup the app and rest api.
+    Parse runtime args and setup the app and REST API.
 
     Parameters
     ----------
@@ -40,13 +40,15 @@ def olaf_setup(eds_path: str = None, master_node: bool = False) -> Namespace:
     parser.add_argument('-b', '--bus', default='vcan0', help='CAN bus to use, defaults to vcan0')
     parser.add_argument('-n', '--node-id', type=str, default='0', metavar='ID',
                         help='set the node ID')
-    parser.add_argument('-v', '--verbose', action='store_true', help='verbose logging')
+    parser.add_argument('-v', '--verbose', action='store_true', help='enable verbose logging')
     parser.add_argument('-l', '--log', action='store_true', help='log to only journald')
-    parser.add_argument('-e', '--eds', metavar='FILE', help='EDS/DCF file to use')
+    parser.add_argument('-e', '--eds', metavar='FILE', help='EDS / DCF file to use')
     parser.add_argument('-m', '--mock-hw', nargs='*', metavar='HW', default=[],
                         help='list the hardware to mock or just "all" to mock all hardware')
-    parser.add_argument('-a', '--address', default='localhost', help='rest api address')
-    parser.add_argument('-p', '--port', type=int, default=8000, help='rest api port number')
+    parser.add_argument('-a', '--address', default='localhost',
+                        help='rest api address, defaults to localhost')
+    parser.add_argument('-p', '--port', type=int, default=8000,
+                        help='rest api port number, defaults to 8000')
     args = parser.parse_args()
 
     if args.verbose:
@@ -70,7 +72,7 @@ def olaf_setup(eds_path: str = None, master_node: bool = False) -> Namespace:
 
 
 def olaf_run():
-    '''Start the app and rest api.'''
+    '''Start the app and REST API.'''
 
     rest_api.start()
     app.run()

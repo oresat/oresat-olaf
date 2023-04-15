@@ -11,3 +11,4 @@ API
    oresat_file
    oresat_file_cache
    rest_api
+   gpio

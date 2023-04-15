@@ -1,7 +1,7 @@
 App
 ===
 
-.. autoclass:: olaf._internals.app.App
+.. autoclass:: olaf.App
    :class-doc-from: both
    :members:
    :member-order: bysource
