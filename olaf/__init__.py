@@ -14,6 +14,7 @@ from .common.ecss import scet_int_from_time, scet_int_to_time, utc_int_from_time
 from .common.oresat_file import OreSatFile, new_oresat_file
 from .common.oresat_file_cache import OreSatFileCache
 from .common.timer_loop import TimerLoop
+from .common.gpio import GPIO
 
 __version__ = '1.0.0'
 
