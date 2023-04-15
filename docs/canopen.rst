@@ -7,13 +7,13 @@ CANopen Basics
   OreSat device. For the full standards, see the `CAN in Automation (CiA)`_
   website.
 
-`CANopen`_ is a message protocal for `CAN`_ message by 
+`CANopen`_ is a message protocal for `CAN`_ messages on a `CAN`_ bus by 
 `CAN in Automation (CiA)`_.
 
 Nodes
 -----
 
-A node is a CANopen device. All nodes  can be a master node or regular node.
+A node is a CANopen device. All nodes can be a master node or regular node.
 
 All nodes will have an unique ``NODE-ID``, between ``0x01`` and ``0x7F``.
 
@@ -31,14 +31,14 @@ Valid indexes range from ``0x1000`` to ``0x8000`` and valid subindex range from
 Objects at an indexes can be Variables, Arrays, or Records (aka structs).  Only
 Variables can be object with a subindex. An Array or Record will have one or
 more Variables as subidexes. Subindex ``0x00`` of all Arrays and Records will
-be the number of subidexes in the Array or Record.
+be the highest index of the Array or Record.
 
 Indexes can be divide into 3 groups: Manidtory, Manufacture, and Optional.
 
 - Manidtory Objects (``0x1000``, ``0x1001``, ``0x1018``) are requeired index 
   for all nodes.
 - Manufacture Objects (``0x2000`` to ``0x5FFF``) are objects addded by
-  manufacturegtr.
+  manufacturer.
 - Optional Objects (``0x1000`` to ``0x1FFF`` and ``0x6000`` to ``0x8000``) are
   objects added by user.
 
@@ -46,10 +46,10 @@ Files
 -----
 
 Both EDS and DCF are used to document and configure a CANopen device as well
-as generate code the OD for software / firmware.
+as generate code for the OD for software / firmware.
 
-The ``eds-editor`` GUI from the `eds-utils`_ project can be used to edit, view, 
-manipulate EDS and DCF files.
+The ``eds-editor`` GUI from the `eds-utils`_ project can be used to edit,
+view, manipulate EDS and DCF files.
 
 EDS (Electronic Data Sheet)
 ***************************
@@ -67,7 +67,7 @@ A EDS is general file for a device and is used to generate the DCF. The DCF is
 used when the device is on an actual production CAN bus. 
 
 The main benefit of DCF is if there are multiple of the exact same device on 
-the CAN bus, they all will have unique DCF that were made from the same EDS 
+the CAN bus, they all will have an unique DCF that was made from the same EDS 
 file. 
 
 Messages
