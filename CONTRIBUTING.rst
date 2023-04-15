@@ -4,7 +4,7 @@ Contributing to OLAF
 Reporting bugs
 --------------
 
-Post your issue to `GitHub issues`_ with the ``bug`` tag.
+Post your issue to `GitHub Issues`_ with the ``bug`` tag.
 
 Include the following information in your post:
 
@@ -28,31 +28,31 @@ First time setup
 
 -   Clone the repository.
 
-    .. code-block:: text
+    .. code-block:: bash
 
         $ git clone https://github.com/oresat/oresat-olaf
         $ cd oresat-olaf
 
 -   Install the development dependencies.
 
-    .. code-block:: text
+    .. code-block:: bash
 
         $ pip install -r requirements.txt
 
--   Install `can-utils` for your system. This will give access to the `candump`
-    command which will display all message on the CAN bus.
+-   Install ``can-utils`` package for your system. This will give access to the
+    ``candump`` command which will display all message on the CAN bus.
 
 -   Make a virtual CAN bus. **Note** this will have to remade if the system is
     restarted.
 
-    .. code-block:: text
+    .. code-block:: bash
 
         $ sudo ip link add dev vcan0 type vcan
         $ sudo ip link set vcan0 up
 
 -   Building local Docker image (optional)
 
-    .. code-block:: text
+    .. code-block:: bash
 
         $ docker build -t oresat-olaf .
 
@@ -60,18 +60,25 @@ First time setup
 How to run OLAF
 ---------------
 
-Use `run.py` for quick testing. Use `^C` (hit Control and C keys) to stop OLAF. 
-Change the args after `run.py` as needed (`-h` flag will print help menu).
+Use ``run.py`` for quick testing. Use ``^C`` (hit Control and C keys) to stop
+OLAF. Change the args after ``run.py`` as needed (``-h`` flag will print help
+menu).
 
-To run wthout docker::
+To run wthout docker
+
+.. code-block:: bash
 
     $ ./run.py -v
 
-Or to run with docker (if the docker image was built)::
+Or to run with docker (if the docker image was built)
+
+.. code-block:: bash
 
     $ docker run --rm -it -w /olaf -v `pwd`/:/olaf --network host oresat-olaf ./run.py -v
 
-To see traffic on CAN bus, in another terminal use `candump`::
+To see traffic on CAN bus, in another terminal use `candump`
+
+.. code-block:: bash
 
     $ canump vcan0       
     vcan0  77C   [1]  7F
@@ -88,9 +95,9 @@ To see traffic on CAN bus, in another terminal use `candump`::
     ...
 
 
-The scripts in `/scripts` can be used to interact with OLAF, e.g. read/write
-values to/from Object Dictionary, file transfer, bash commands over CAN bus, 
-etc.
+The scripts in ``/olaf/scripts`` can be used to interact with OLAF, e.g. read
+/ write values to/from Object Dictionary, file transfer, bash commands over CAN
+bus, etc.
 
 
 Start coding
@@ -100,9 +107,9 @@ Start coding
     you're submitting a bug or documentation fix, branch off of the
     ``master`` branch and follow the naming scheme of "number-description"
     where number is the issue number and description is a one or two 
-    word description. Example branch name would be "15-more-unittests"
+    word description. Example branch name would be ``15-more-unittests``.
 
-    .. code-block:: text
+    .. code-block:: bash
 
         $ git pull
         $ git checkout -b your-branch-name
@@ -112,7 +119,7 @@ Start coding
 
 -   Push your commits to your branch on GitHub.
 
-    .. code-block:: text
+    .. code-block:: bash
 
         $ git push --set-upstream your-branch-name
 
@@ -125,7 +132,7 @@ Running unit tests
 
 Run the test with python's `unittest`_.
 
-.. code-block:: text
+.. code-block:: bash
 
     $ python -m unittest
 
@@ -137,7 +144,7 @@ Generating a report of lines that do not have test coverage can indicate
 where to start contributing. Run `unittest`_ using `coverage`_ and
 generate a report.
 
-.. code-block:: text
+.. code-block:: bash
 
     $ pip install coverage
     $ coverage run -m unittest
@@ -151,7 +158,7 @@ Building docs
 
 Build the docs using `Sphinx`_.
 
-.. code-block:: text
+.. code-block:: bash
 
     $ pip install -r requirements.txt
     $ cd docs
@@ -159,7 +166,7 @@ Build the docs using `Sphinx`_.
 
 Open ``build/html/index.html`` in your browser to view the docs.
 
-.. _GitHub issues: https://github.com/oresat/oresat-olaf/issues
+.. _GitHub Issues: https://github.com/oresat/oresat-olaf/issues
 .. _create a pull request: https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request
 .. _unittest: https://docs.python.org/3/library/unittest.html#module-unittest
 .. _coverage: https://coverage.readthedocs.io
