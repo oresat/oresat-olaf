@@ -94,12 +94,12 @@
         document.getElementById('variableObj').style.display = 'inline';
         document.getElementById('arrayRecordObj').style.display = 'none';
 
-        document.getElementById('varName').textContent = obj['name'];
-        document.getElementById('varDataType').textContent = obj['data_type'];
-        document.getElementById('varAccessType').textContent = obj['access_type'];
-        document.getElementById('varValue').textContent = obj['value'];
+        document.getElementById('varName').textContent = obj.name;
+        document.getElementById('varDataType').textContent = obj.data_type;
+        document.getElementById('varAccessType').textContent = obj.access_type;
+        document.getElementById('varValue').textContent = obj.value;
 
-        if (obj['access_type'] === 'ro' || obj['access_type'] === 'const') {
+        if (obj.access_type === 'ro' || obj.access_type === 'const') {
           document.getElementById('varNewValueInput').style.display = 'none';
         } else {
           document.getElementById('varNewValueInput').style.display = 'inline';
@@ -108,9 +108,9 @@
         document.getElementById('variableObj').style.display = 'none';
         document.getElementById('arrayRecordObj').style.display = 'inline';
 
-        document.getElementById('objType').textContent = obj['object_type'];
-        document.getElementById('objName').textContent = obj['name'];
-        document.getElementById('objSubindexes').textContent = obj['subindexes'];
+        document.getElementById('objType').textContent = obj.object_type;
+        document.getElementById('objName').textContent = obj.name;
+        document.getElementById('objSubindexes').textContent = Object.keys(obj.subindexes).length;
       }
     }
 

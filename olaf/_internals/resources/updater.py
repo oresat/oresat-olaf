@@ -37,15 +37,19 @@ class UpdaterResource(Resource):
         self.update_obj.value = False
         self.make_status_obj.value = False
 
+        self.node.add_sdo_read_callback(self.index, self.on_read)
+
     def on_end(self):
 
         self.timer_loop.stop()
 
     def _loop(self):
 
+        # check for update files in fwrite cache
         for i in self.node.fwrite_cache.files('update'):
             self._updater.add_update(self.node.fwrite_cache.dir + '/' + i)
 
+        # check for flag to start a update
         if self.update_obj.value:
             try:
                 self._updater.update()
@@ -53,6 +57,7 @@ class UpdaterResource(Resource):
                 logger.critical(exc)
             self.update_obj.value = False
 
+        # check for flag to make a status archive
         if self.make_status_obj.value:
             status_archive_file_path = self._updater.make_status_archive()
             self.node.fread_cache.add(status_archive_file_path, consume=True)
@@ -60,7 +65,7 @@ class UpdaterResource(Resource):
 
         return True
 
-    def on_read(self, index, subindex, od):
+    def on_read(self, index: int, subindex: int):
 
         ret = None
 

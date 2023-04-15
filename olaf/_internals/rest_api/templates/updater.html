@@ -37,17 +37,17 @@
 
     async function updaterInfo() {
       const statusObj = await readValue('0x3100', '0x01');
-      const newState = STATES[statusObj['value']];
+      const newState = STATES[statusObj.value];
       document.getElementById('status').textContent = newState;
 
       const updatesObj = await readValue('0x3100', '0x02');
-      document.getElementById('updatesAvailable').textContent = updatesObj['value'];
+      document.getElementById('updatesAvailable').textContent = updatesObj.value;
 
       if (newState === 'UPDATING') {
         document.getElementById('startUpdateButton').disabled = true;
         document.getElementById('makeStatusFileButton').disabled = true;
       } else {
-        if (updatesObj['value'] === 0) {
+        if (updatesObj.value === false) {
           document.getElementById('startUpdateButton').disabled = true;
           document.getElementById('makeStatusFileButton').disabled = false;
         } else {

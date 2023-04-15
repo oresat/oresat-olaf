@@ -227,8 +227,6 @@ def object_to_json(index: int, subindex: int = None) -> dict:
     else:
         try:
             obj = app.node.od[index][subindex]
-            if obj is None:
-                print('object does not exist')
             if obj.data_type == DataType.DOMAIN:
                 raw = app.node._node.sdo[index][subindex].raw
                 value = base64.encodebytes(raw).decode('utf-8')
@@ -252,10 +250,10 @@ def object_to_json(index: int, subindex: int = None) -> dict:
             data['value'] = value
     elif isinstance(obj, canopen.objectdictionary.Array):
         data['object_type'] = 'ARRAY'
-        data['subindexes'] = len(obj)
+        data['subindexes'] = {subindex: object_to_json(index, subindex) for subindex in obj}
     else:
         data['object_type'] = 'RECORD'
-        data['subindexes'] = len(obj)
+        data['subindexes'] = {subindex: object_to_json(index, subindex) for subindex in obj}
 
     return data
 

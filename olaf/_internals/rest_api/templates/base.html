@@ -40,7 +40,7 @@
      */
     async function readValue(index, subindex) {
       let url = `http://${window.location.host}/od/${index}`;
-      if (subindex !== null || subindex !== '') {
+      if (subindex !== null && subindex !== '') {
         url = `http://${window.location.host}/od/${index}/${subindex}`;
       }
 

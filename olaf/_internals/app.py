@@ -63,7 +63,7 @@ class App:
         self._node.object_dictionary.node_id = self._node_id
         self._node.object_dictionary.bitrate = 1_000_000  # oresat node will always have 1 Mbps
 
-    def setup(self, eds: str, bus: str, node_id: int | str = 0, master_node: bool = False):
+    def setup(self, eds: str, bus: str, node_id: [int, str] = 0, master_node: bool = False):
         '''
         Setup the app. Must be called after all `self.add_resource` calls.
 

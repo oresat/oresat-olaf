@@ -117,38 +117,40 @@
     </tr>
   </table>
   <script>
-    const indexNames = {
-      '0x01': 'osName',
-      '0x02': 'osDistro',
-      '0x03': 'osKernelVersion',
-      '0x04': 'hostname',
-      '0x05': 'uptime',
-      '0x06': 'cpuNum',
-      '0x07': 'cpuArch',
-      '0x08': 'cpuGov',
-      '0x09': 'cpuFreq',
-      '0x0A': 'remoteProcNum',
-      '0x0E': 'load1Min',
-      '0x0F': 'load5Min',
-      '0x10': 'load15Min',
-      '0x11': 'ramTotal',
-      '0x12': 'ramFree',
-      '0x13': 'ramShared',
-      '0x14': 'ramBuffered',
-      '0x15': 'ramPercent',
-      '0x16': 'swapTotal',
-      '0x17': 'swapFree',
-      '0x18': 'swapPercent',
-      '0x19': 'procs',
-      '0x1A': 'rootPartTotal',
-      '0x1B': 'rootPartFree',
-      '0x1C': 'rootPartPercent',
-    }
+    const subindexNames = {
+      0x01: 'osName',
+      0x02: 'osDistro',
+      0x03: 'osKernelVersion',
+      0x04: 'hostname',
+      0x05: 'uptime',
+      0x06: 'cpuNum',
+      0x07: 'cpuArch',
+      0x08: 'cpuGov',
+      0x09: 'cpuFreq',
+      0x0A: 'remoteProcNum',
+      0x0E: 'load1Min',
+      0x0F: 'load5Min',
+      0x10: 'load15Min',
+      0x11: 'ramTotal',
+      0x12: 'ramFree',
+      0x13: 'ramShared',
+      0x14: 'ramBuffered',
+      0x15: 'ramPercent',
+      0x16: 'swapTotal',
+      0x17: 'swapFree',
+      0x18: 'swapPercent',
+      0x19: 'procs',
+      0x1A: 'rootPartTotal',
+      0x1B: 'rootPartFree',
+      0x1C: 'rootPartPercent',
+    };
 
     async  function updateAll() {
-      for (const index in indexNames) {
-        const obj = await readValue('0x3001', index)
-        document.getElementById(indexNames[index]).textContent = obj['value'];
+      let tmp;
+      const obj = await readValue('0x3001', null);
+      for (const subindex in subindexNames) {
+        tmp = document.getElementById(subindexNames[subindex]);
+        tmp.textContent = obj.subindexes[subindex].value;
       }
     }
 

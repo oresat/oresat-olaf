@@ -10,11 +10,11 @@
       width: 50%;
       text-align: left;
     }
-    a, label {
+    label, .boldText {
       font-weight: bold;
     }
     #command {
-      width: 95%;
+      width: 94%;
     }
     textarea {
       resize: none;
@@ -23,7 +23,7 @@
   </style>
   <div id='page'>
     <div id='abc'>
-      <a>Status: </a><span id='status'></span>
+      <a class='boldText'>Status: </a><span id='status'></span>
       <br/>
       <br/>
       <label for='command'>Bash Command:</label>
@@ -32,7 +32,7 @@
       <button onclick='runCommand()'>Run</button>
       <br/>
       <br/>
-      <a>Reply:</a>
+      <a class='boldText'>Reply:</a>
       <br/>
       <textarea id='reply' rows=30 disabled></textarea>
     </div>
@@ -68,7 +68,7 @@
       // state has change to a new state with a reply, display reply
       if (status.textContent === 'EXECUTING' && reply_states.includes(newStatus)) {
         const replyObj = await readValue('0x1023', '0x03');
-        document.getElementById('reply').value = atob(replyObj['value']);
+        document.getElementById('reply').value = atob(replyObj.value);
       }
 
       status.textContent = newStatus;

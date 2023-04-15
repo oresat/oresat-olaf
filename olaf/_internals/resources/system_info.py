@@ -94,11 +94,15 @@ class SystemInfoResource(Resource):
             if os.path.exists(file_path):
                 with open(file_path, 'r') as f:
                     ret = f.read()
+            else:
+                return ''
         elif subindex == Subindex.RPROC_STATE:
             file_path = f'/sys/class/remoteproc/remoteproc{self.rprocs}/state'
             if os.path.exists(file_path):
                 with open(file_path, 'r') as f:
                     ret = f.read()
+            else:
+                return ''
         elif subindex == Subindex.LOAD_AVG_1MIN:
             ret = int(psutil.getloadavg()[0] * 100)
         elif subindex == Subindex.LOAD_AVG_5MIN:
