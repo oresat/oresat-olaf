@@ -12,6 +12,10 @@ from ..common.timer_loop import TimerLoop
 from ..common.oresat_file_cache import OreSatFileCache
 
 
+class NetworkError(Exception):
+    '''Error with the CANopen network / bus'''
+
+
 class Node:
     '''OreSat CANopen Node'''
 
@@ -137,7 +141,16 @@ class Node:
         ----------
         tpdo: int
             TPDO number to send
+
+
+        Raises
+        ------
+        NetworkError
+            Cannot send a TPDO message when the network is down.
         '''
+
+        if self._network is None:
+            raise NetworkError('network is down cannot send an TPDO message')
 
         # PDOs can't be sent if CAN bus is down and PDOs should not be sent if CAN bus not in
         # 'OPERATIONAL' state
@@ -366,7 +379,15 @@ class Node:
             field.
         manufacturer_code: bytes
             Optional manufacturer error code (up to 5 bytes).
+
+        Raises
+        ------
+        NetworkError
+            Cannot send a EMCY message when the network is down.
         '''
+
+        if self._network is None:
+            raise NetworkError('network is down cannot send an EMCY message')
 
         self._node.emcy.send(code, register, data)
 

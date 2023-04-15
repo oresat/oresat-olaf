@@ -1,7 +1,7 @@
 import canopen
 from loguru import logger
 
-from .node import Node
+from .node import Node, NetworkError
 
 
 class MasterNode(Node):
@@ -19,7 +19,11 @@ class MasterNode(Node):
 
         super().__init__(node, bus)
 
-        self.node_status = {i: None for i in (2, 0x80)}
+        self.node_status = {}
+        for i in range(0x01, 0x80):
+            if i == self._node.object_dictionary.node_id:
+                continue  # skip itself
+            self.node_status[i] = None
 
     def _restart_network(self):
         '''Restart the CANopen network'''
@@ -46,12 +50,41 @@ class MasterNode(Node):
         logger.error(f'Node 0x{node_id:02X} raised emergency: {value_str}')
 
     def send_sync(self):
-        '''Send a CANopen SYNC message.'''
+        '''
+        Send a CANopen SYNC message.
+
+        Raises
+        ------
+        NetworkError
+            Cannot send a SYNC message when the network is down.
+        '''
+
+        if self._network is None:
+            raise NetworkError('network is down cannot send an SYNC message')
 
         self._network.sync.transmit()
 
     def sdo_read(self, node_id: int, index: int, subindex: int) -> bytes:
-        '''Read a value from a remote node's object dictionary using an SDO.'''
+        '''
+        Read a value from a remote node's object dictionary using an SDO.
+
+        Parameters
+        ----------
+        node_id: int
+            The id of the node to read from.
+        index: int
+            The index to read from.
+        subindex: int
+            The subindex to read from.
+
+        Raises
+        ------
+        NetworkError
+            Cannot send a SDO read message when the network is down.
+        '''
+
+        if self._network is None:
+            raise NetworkError('network is down cannot send an SDO read message')
 
         if node_id in self._network:
             node = self._network[node_id]
@@ -62,7 +95,33 @@ class MasterNode(Node):
         return node.sdo.upload(index, subindex)
 
     def sdo_write(self, node_id: int, index: int, subindex: int, value: bytes) -> bytes:
-        '''Write a value to a remote node's object dictionary using an SDO.'''
+        '''
+        Write a value to a remote node's object dictionary using an SDO.
+
+        Parameters
+        ----------
+        node_id: int
+            The id of the node to write to.
+        index: int
+            The index to write to.
+        subindex: int
+            The subindex to write to.
+        value: bytes
+            The raw value to write.
+
+        Raises
+        ------
+        NetworkError
+            Cannot send a SDO write message when the network is down.
+
+        Returns
+        -------
+        bytes
+            The raw value read.
+        '''
+
+        if self._network is None:
+            raise NetworkError('network is down cannot send an SDO write message')
 
         if node_id in self._network:
             node = self._network[node_id]
