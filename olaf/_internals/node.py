@@ -31,6 +31,7 @@ class Node:
         self._event = Event()
         self._read_cbs = {}
         self._write_cbs = {}
+        self._syncs = 0
 
         if geteuid() == 0:  # running as root
             self.work_base_dir = '/var/lib/oresat'
@@ -116,6 +117,18 @@ class Node:
             except Exception:
                 pass
 
+    def _on_sync(self, cob_id: int, data: bytes, timestamp: float):
+        '''On SYNC message send TPDOs configured to be SYNC-based'''
+
+        self._syncs += 1
+        if self._syncs == 241:
+            self._syncs = 1
+
+        for i in range(len(self._node.tpdo)):
+            transmission_type = self.od[0x1800 + i][2].value
+            if self._syncs % transmission_type == 0:
+                self.send_tpdo(i)
+
     def send_tpdo(self, tpdo: int) -> bool:
         '''
         Send a TPDO. Will not be sent if not node is not in operational state.
@@ -129,10 +142,10 @@ class Node:
         # PDOs can't be sent if CAN bus is down and PDOs should not be sent if CAN bus not in
         # 'OPERATIONAL' state
         can_bus = psutil.net_if_stats().get(self._bus)
-        if not can_bus or (can_bus.isup and self._node.nmt.state != 'OPERATIONAL'):
-            return
+        if can_bus is None or (can_bus.isup and self._node.nmt.state != 'OPERATIONAL'):
+            return True
 
-        cob_id = self.od[0x1800 + tpdo][1].value
+        cob_id = self.od[0x1800 + tpdo][1].value & 0x3F_FF_FF_FF
         maps = self.od[0x1A00 + tpdo][0].value
 
         data = b''
@@ -180,6 +193,23 @@ class Node:
 
         return tpdo_timers
 
+    def _on_rpdo_update_od(self, map: canopen.pdo.base.Map):
+        '''Handle parsering an RPDO'''
+
+        for i in map.map_array:
+            if i == 0:
+                continue
+
+            value = map.map_array[i].raw
+            if value == 0:
+                break  # no more mapping
+
+            index, subindex, size = struct.unpack('>HBB', value.to_bytes(4, 'big'))
+            if isinstance(self.od[index], canopen.objectdictionary.Variable):
+                self._node.sdo[index].raw = map.map[i - 1].get_data()
+            else:
+                self._node.sdo[index][subindex].raw = map.map[i - 1].get_data()
+
     def _restart_bus(self):
         '''Reset the can bus to up'''
 
@@ -210,6 +240,14 @@ class Node:
             self._node.nmt.state = 'OPERATIONAL'
         except Exception as exc:
             logger.error(f'failed to (re)start CANopen network with {exc}')
+
+        self._network.subscribe(0x80, self._on_sync)
+
+        # setup RPDOs callbacks
+        self._node.rpdo.read()
+        for i in self._node.rpdo:
+            if self._node.rpdo[i].enabled:
+                self._node.rpdo[i].add_callback(self._on_rpdo_update_od)
 
     def _disable_network(self):
         '''Disable the CANopen network'''
