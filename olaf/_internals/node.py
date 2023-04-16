@@ -133,7 +133,7 @@ class Node:
             if self._syncs % transmission_type == 0:
                 self.send_tpdo(i)
 
-    def send_tpdo(self, tpdo: int) -> bool:
+    def send_tpdo(self, tpdo: int):
         '''
         Send a TPDO. Will not be sent if not node is not in operational state.
 
@@ -141,7 +141,6 @@ class Node:
         ----------
         tpdo: int
             TPDO number to send
-
 
         Raises
         ------
@@ -187,6 +186,14 @@ class Node:
         except Exception as exc:
             logger.error(f'TPDO{tpdo} failed with: {exc}')
 
+    def _tpdo_timer_loop(self, tpdo: int) -> bool:
+        '''Send TPDO for TPDO loop. Can handle network errors.'''
+
+        try:
+            self.send_tpdo(tpdo)
+        except NetworkError:
+            pass
+
         return True
 
     def _start_tpdo_timer_loops(self) -> list:
@@ -198,7 +205,7 @@ class Node:
             transmission_type = self.od[0x1800 + i][2].default
             event_time = self.od[0x1800 + i][5].default
             if transmission_type in [0xFE, 0xFF] and event_time > 0:
-                t = TimerLoop(name=f'TPDO{i + 1}', loop_func=self.send_tpdo,
+                t = TimerLoop(name=f'TPDO{i + 1}', loop_func=self._tpdo_timer_loop,
                               delay=self.od[0x1800 + i][5], start_delay=self.od[0x1800 + i][3],
                               args=(i,))
                 tpdo_timers.append(t)
