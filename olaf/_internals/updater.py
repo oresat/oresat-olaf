@@ -23,8 +23,8 @@ INSTRUCTIONS = {
     'DPKG_INSTALL': 'dpkg -i',
     'DPKG_REMOVE': 'dpkg -r',
     'DPKG_PURGE': 'dpkg -P',
-    'PIP_INSTALL': 'python -m pip install',
-    'PIP_UNINSTALL': 'python -m pip uninstall',
+    'PIP_INSTALL': 'python3 -m pip install',
+    'PIP_UNINSTALL': 'python3 -m pip uninstall',
 }
 '''All the valid instruction. Values are the commands.'''
 
