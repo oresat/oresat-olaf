@@ -23,7 +23,7 @@ class MasterNode(Node):
         for i in range(0x01, 0x80):
             if i == self._node.object_dictionary.node_id:
                 continue  # skip itself
-            self.node_status[i] = None
+            self.node_status[i] = 0xFF  # a flag, not a CANopen standard
 
     def _restart_network(self):
         '''Restart the CANopen network'''
@@ -81,6 +81,8 @@ class MasterNode(Node):
         ------
         NetworkError
             Cannot send a SDO read message when the network is down.
+        canopen.SdoError
+            Error with the SDO.
 
         Returns
         -------
@@ -118,6 +120,8 @@ class MasterNode(Node):
         ------
         NetworkError
             Cannot send a SDO write message when the network is down.
+        canopen.SdoError
+            Error with the SDO.
         '''
 
         if self._network is None:

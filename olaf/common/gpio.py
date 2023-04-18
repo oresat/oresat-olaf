@@ -27,7 +27,7 @@ class GPIO:
         '''
 
         self._number = number
-        self._is_on = False  # save on IO calls
+        self._is_high = False  # save on IO calls
         self._mock = mock
 
         if not self._mock:
@@ -36,9 +36,9 @@ class GPIO:
 
             try:
                 with open('/sys/class/gpio/export', 'w') as f:
-                    f.write(self._number)
+                    f.write(str(self._number))
                 with open('/sys/class/gpio/export', 'w') as f:
-                    f.write(self._number)
+                    f.write(str(self._number))
             except PermissionError:
                 pass  # will always fail, tho it actually works
 
@@ -46,37 +46,37 @@ class GPIO:
                 f.write('out')
 
             with open(f'/sys/class/gpio/gpio{self._number}/value', 'r') as f:
-                self._is_on = f.read() == '1'
+                self._is_high = f.read() == '1'
 
     def high(self):
         '''Set the GPIO high.'''
 
-        if self._is_on:
+        if self._is_high:
             return  # already on
 
         if not self._mock:
             with open(f'/sys/class/gpio/gpio{self._number}/value', 'w') as f:
                 f.write('1')
 
-        self._is_on = True
+        self._is_high = True
 
     def low(self):
         '''Set the GPIO low.'''
 
-        if not self._is_on:
+        if not self._is_high:
             return  # already off
 
         if not self._mock:
             with open(f'/sys/class/gpio/gpio{self._number}/value', 'w') as f:
                 f.write('0')
 
-        self._is_on = False
+        self._is_high = False
 
     @property
     def is_high(self) -> bool:
         '''bool: Check if the GPIO is set high.'''
 
-        return self._is_on
+        return self._is_high
 
     @property
     def number(self):

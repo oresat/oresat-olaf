@@ -427,7 +427,7 @@ class Node:
                 try:
                     ret = cb_func(index, subindex)
                 except Exception as e:
-                    logger.error(f'sdo read cb for {index} {subindex} raised: {e}')
+                    logger.error(f'sdo read cb for 0x{index:04X} 0x{subindex:02X} raised: {e}')
 
         return ret
 
@@ -455,7 +455,7 @@ class Node:
                 try:
                     cb_func(index, subindex, value)
                 except Exception as e:
-                    logger.error(f'sdo read cb for {index} {subindex} raised: {e}')
+                    logger.error(f'sdo write cb for 0x{index:04X} 0x{subindex:02X} raised: {e}')
 
     @property
     def name(self) -> str:
