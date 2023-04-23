@@ -1,4 +1,3 @@
-from pathlib import Path
 from enum import IntEnum, auto
 
 from loguru import logger
@@ -19,10 +18,10 @@ class Subindex(IntEnum):
 class UpdaterResource(Resource):
     '''Resource for interacting with the updater'''
 
-    def __init__(self):
+    def __init__(self, updater: Updater):
         super().__init__()
 
-        self._updater = Updater('/tmp/updater', f'{Path.home()}/.cache/oresat/updates')
+        self._updater = updater
         self.index = 0x3100
         self.timer_loop = TimerLoop('updater resource', self._loop, 500)
 

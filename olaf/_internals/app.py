@@ -1,12 +1,15 @@
+import os
 import signal
+import subprocess
 from os.path import abspath, dirname
 
 import canopen
 from loguru import logger
 
 from ..common.resource import Resource
-from .node import Node
+from .node import Node, NodeStop
 from .master_node import MasterNode
+from .updater import Updater
 from .resources.os_command import OSCommandResource
 from .resources.system_info import SystemInfoResource
 from .resources.file_caches import FileCachesResource
@@ -16,6 +19,7 @@ from .resources.ecss import ECSSResource
 from .resources.updater import UpdaterResource
 from .resources.logs import LogsResource
 from .resources.store_eds import StoreEdsResource
+from .resources.power_control import PowerControlResource
 
 
 class App:
@@ -35,6 +39,8 @@ class App:
         self._network = None
         self._node = None
         self._app_node = None
+        self._updater = None
+        self._factory_reset_cb = None
 
         # setup event
         for sig in ['SIGTERM', 'SIGHUP', 'SIGINT']:
@@ -113,6 +119,10 @@ class App:
         else:
             self._app_node = Node(self._node, bus)
 
+        # setup updater
+        self._updater = Updater(f'{self._app_node.work_base_dir}/updater',
+                                f'{self._app_node.cache_base_dir}/updates')
+
         # default resources
         self.add_resource(OSCommandResource())
         self.add_resource(ECSSResource())
@@ -120,9 +130,10 @@ class App:
         self.add_resource(FileCachesResource())
         self.add_resource(FreadResource())
         self.add_resource(FwriteResource())
-        self.add_resource(UpdaterResource())
+        self.add_resource(UpdaterResource(self._updater))
         self.add_resource(LogsResource())
         self.add_resource(StoreEdsResource(eds))
+        self.add_resource(PowerControlResource())
 
     def add_resource(self, resource: Resource):
         '''
@@ -144,14 +155,49 @@ class App:
 
         if self._app_node:
             try:
-                self._app_node.run()
+                reset = self._app_node.run()
             except Exception as e:
                 logger.critical(f'unexpected error was raised by app node: {e}')
+                reset = NodeStop.SOFT_RESET
 
         for resource in self._resources:
             resource.end()
 
         logger.info(f'{self._app_node.name} app has ended')
+
+        if reset == NodeStop.HARD_RESET:
+            logger.info('hard reseting the system')
+
+            if os.geteuid() == 0:  # running as root
+                subprocess.run('reboot', shell=True)
+            else:
+                logger.error('not running as root, cannot reboot the system')
+        elif reset == NodeStop.FACTORY_RESET:
+            logger.info('factory reseting the system')
+
+            # clear caches
+            self._app_node.fread_cache.clear()
+            self._app_node.fwrite_cache.clear()
+            self._updater.clear_cache()
+
+            # run custom factory reset function
+            try:
+                if self._factory_reset_cb:
+                    self._factory_reset_cb()
+            except Exception as e:
+                logger.error(f'custom factory reset function raised: {e}')
+
+            if os.geteuid() == 0:  # running as root
+                subprocess.run('reboot', shell=True)
+            else:
+                logger.error('not running as root, cannot reboot the system')
+        elif reset == NodeStop.POWER_OFF:
+            logger.info('powering off the system')
+
+            if os.geteuid() == 0:  # running as root
+                subprocess.run('poweroff', shell=True)
+            else:
+                logger.error('not running as root, cannot power off the system')
 
     def stop(self):
         '''End the run loop'''
@@ -162,6 +208,11 @@ class App:
     @property
     def node(self) -> Node:
         return self._app_node
+
+    def set_factory_reset_callback(self, cb_func):
+        '''Set a custom factory reset callback function.'''
+
+        self._factory_reset_cb = cb_func
 
 
 app = App()

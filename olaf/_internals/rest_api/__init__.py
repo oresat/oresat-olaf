@@ -291,3 +291,8 @@ def fread_template():
 @rest_api.app.route('/logs')
 def logs_template():
     return render_olaf_template('logs.html', name='Logs')
+
+
+@rest_api.app.route('/power-control')
+def power_control_template():
+    return render_olaf_template('power_control.html', name='Power Control')

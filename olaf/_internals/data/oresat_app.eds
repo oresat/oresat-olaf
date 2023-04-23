@@ -4328,48 +4328,36 @@ AccessType=ro
 DefaultValue=00 00 00 00 00 00 00 00 00 00
 
 [3000]
-ParameterName=OLAF app control
+ParameterName=Power control
 ObjectType=0x09
-SubNumber=5
+SubNumber=3
 
 [3000sub0]
 ParameterName=Highest sub-index supported
 ObjectType=0x07
 DataType=0x0005
 AccessType=const
-DefaultValue=0x04
+DefaultValue=0x02
 
-;Write true to restart the board
+;Write true to poweroff the system
 [3000sub1]
-ParameterName=Reboot Board
+ParameterName=Poweroff
 ObjectType=0x07
 DataType=0x0001
 AccessType=wo
 DefaultValue=0
 
-;Write true to poweroff the board
+;1 for a soft reset (restart daemon)
+;2 for hard reset (reboot the board)
+;3 to do a factory reset (clear all caches and reboot)
 [3000sub2]
-ParameterName=Poweroff Board
+ParameterName=Reset
 ObjectType=0x07
-DataType=0x0001
+DataType=0x0005
 AccessType=wo
 DefaultValue=0
-
-;Write true to have the OLAF app exit
-[3000sub3]
-ParameterName=Quit
-ObjectType=0x07
-DataType=0x0001
-AccessType=wo
-DefaultValue=0
-
-;Allow OLAF to control the board CPU frequency
-[3000sub4]
-ParameterName=CPU frequency
-ObjectType=0x07
-DataType=0x0001
-AccessType=rw
-DefaultValue=0
+LowLimit=0
+HighLimit=3
 
 [3001]
 ParameterName=System info

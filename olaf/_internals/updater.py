@@ -401,9 +401,15 @@ class Updater:
 
         return olu_tar
 
+    def clear_cache(self):
+        '''Clear the update cache.'''
+
+        self._cache.clear()
+
     @property
     def has_dpkg(self) -> bool:
         '''bool: system has dpkg or not'''
+
         return self._has_dpkg
 
     @property

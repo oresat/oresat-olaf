@@ -1,5 +1,6 @@
 import struct
 import subprocess
+from enum import IntEnum
 from os import geteuid
 from pathlib import Path
 from threading import Event
@@ -10,6 +11,18 @@ from loguru import logger
 
 from ..common.timer_loop import TimerLoop
 from ..common.oresat_file_cache import OreSatFileCache
+
+
+class NodeStop(IntEnum):
+
+    SOFT_RESET = 1
+    '''Just stop the app and exit. Systemd will restart the app.'''
+    HARD_RESET = 2
+    '''Reboot system after app has stopped'''
+    FACTORY_RESET = 3
+    '''Clear all file cachces and reboot system after app has stopped'''
+    POWER_OFF = 4
+    '''Just power off the system.'''
 
 
 class NetworkError(Exception):
@@ -36,6 +49,7 @@ class Node:
         self._read_cbs = {}
         self._write_cbs = {}
         self._syncs = 0
+        self._reset = NodeStop.SOFT_RESET
 
         if geteuid() == 0:  # running as root
             self.work_base_dir = '/var/lib/oresat'
@@ -231,7 +245,7 @@ class Node:
                 self._node.sdo[index][subindex].raw = map.map[i - 1].get_data()
 
     def _restart_bus(self):
-        '''Reset the can bus to up'''
+        '''Try to restart the CAN bus'''
 
         if self.first_bus_reset:
             logger.error(f'{self._bus} is down')
@@ -311,8 +325,8 @@ class Node:
 
         Returns
         -------
-        int
-            Errno value or 0 for on no error.
+        NodeStop
+            Reset / power off condition.
         '''
         tpdo_timers = []
 
@@ -331,11 +345,12 @@ class Node:
             t.stop()
 
         logger.info(f'{self.name} app has ended')
-        return 0
+        return self._reset
 
-    def stop(self):
+    def stop(self, reset: NodeStop = NodeStop.SOFT_RESET):
         '''End the run loop'''
 
+        self._reset = reset
         self._event.set()
 
     def add_sdo_read_callback(self, index: int, sdo_cb):
