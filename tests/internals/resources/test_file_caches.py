@@ -133,7 +133,7 @@ class TestFileCachesResource(unittest.TestCase):
         self.app.sdo_write(index, Subindex.CACHE_SELECTOR.value, 1)
         self.assertEqual(self.app.sdo_read(index, Subindex.FILE_SIZE.value), 0)
 
-        self.app.sdo_write(index, Subindex.CACHE_SELECTOR.value,  0)
+        self.app.sdo_write(index, Subindex.CACHE_SELECTOR.value, 0)
 
         # delete 1st file
         self.app.sdo_write(index, Subindex.DELETE_FILE.value, True)
