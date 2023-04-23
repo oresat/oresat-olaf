@@ -53,14 +53,21 @@ def olaf_setup(eds_path: str = None, master_node: bool = False) -> Namespace:
 
     if args.verbose:
         level = 'DEBUG'
+        backtrace = True
     else:
         level = 'INFO'
+        backtrace = False
 
     logger.remove()  # remove default logger
     if args.log:
-        logger.add(SysLogHandler(address='/dev/log'), level=level)
+        logger.add(SysLogHandler(address='/dev/log'), level=level, backtrace=backtrace)
     else:
-        logger.add(sys.stdout, level=level)
+        logger.add(sys.stdout, level=level, backtrace=backtrace)
+
+    olaf_boot_logs = '/tmp/olaf.log'
+    if os.path.isfile(olaf_boot_logs):
+        os.remove(olaf_boot_logs)
+    logger.add(olaf_boot_logs, level=level, backtrace=backtrace)
 
     if eds_path is None:
         eds_path = args.eds

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <style>
+    #page {
+      justify-content: center;
+      display: flex;
+    }
+    textarea {
+      resize: none;
+      width: 100%;
+    }
+  </style>
+  <div id='page'>
+    <br/>
+    <textarea id='logs' rows=40 disabled></textarea>
+  </div>
+  <script>
+    async function updateLogs() {
+      const logsObj = await readValue('0x3006', '0x02');
+      document.getElementById('logs').value = logsObj.value;
+    }
+
+    updateLogs();
+    const interval = setInterval(function() {
+      updateLogs()
+    }, 60000);
+  </script>
+{% endblock %}

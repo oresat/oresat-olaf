@@ -286,3 +286,8 @@ def fwrite_template():
 @rest_api.app.route('/fread')
 def fread_template():
     return render_olaf_template('fread.html', name='Fread')
+
+
+@rest_api.app.route('/logs')
+def logs_template():
+    return render_olaf_template('logs.html', name='Logs')
