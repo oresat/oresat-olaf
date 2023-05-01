@@ -1,11 +1,11 @@
-setuptools
 build
-wheel
+canopen
 flake8
 flask
-sphinx
-sphinx-rtd-theme
-canopen
-psutil
 loguru
 natsort
+psutil
+setuptools
+sphinx
+sphinx-rtd-theme
+wheel
