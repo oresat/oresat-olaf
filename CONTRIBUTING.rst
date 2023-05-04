@@ -50,12 +50,6 @@ First time setup
         $ sudo ip link add dev vcan0 type vcan
         $ sudo ip link set vcan0 up
 
--   Building local Docker image (optional)
-
-    .. code-block:: bash
-
-        $ docker build -t oresat-olaf .
-
 
 How to run OLAF
 ---------------
@@ -64,17 +58,9 @@ Use ``run.py`` for quick testing. Use ``^C`` (hit Control and C keys) to stop
 OLAF. Change the args after ``run.py`` as needed (``-h`` flag will print help
 menu).
 
-To run wthout docker
-
 .. code-block:: bash
 
     $ ./run.py -v
-
-Or to run with docker (if the docker image was built)
-
-.. code-block:: bash
-
-    $ docker run --rm -it -w /olaf -v `pwd`/:/olaf --network host oresat-olaf ./run.py -v
 
 To see traffic on CAN bus, in another terminal use `candump`
 
