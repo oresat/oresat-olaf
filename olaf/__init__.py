@@ -6,7 +6,7 @@ from argparse import ArgumentParser, Namespace
 from loguru import logger
 
 from ._internals.app import app, App
-from ._internals.node import Node, NetworkError
+from ._internals.node import Node, NodeStop, NetworkError
 from ._internals.master_node import MasterNode
 from ._internals.rest_api import rest_api, RestAPI, render_olaf_template
 from .common.resource import Resource
