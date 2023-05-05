@@ -1,3 +1,5 @@
+from time import time
+
 import canopen
 from loguru import logger
 
@@ -23,7 +25,7 @@ class MasterNode(Node):
         for i in range(0x01, 0x80):
             if i == self._node.object_dictionary.node_id:
                 continue  # skip itself
-            self.node_status[i] = 0xFF  # a flag, not a CANopen standard
+            self.node_status[i] = (0xFF, time())  # 0xFF is a flag, not a CANopen standard
 
     def _restart_network(self):
         '''Restart the CANopen network'''
