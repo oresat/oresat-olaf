@@ -1,6 +1,7 @@
 import os
 import base64
 import shutil
+import logging
 from enum import IntEnum
 from pathlib import Path
 from threading import Thread
@@ -57,8 +58,8 @@ class RestAPI:
 
     def __init__(self):
 
-        self.app = Flask(_TITLE, template_folder=_TEMPLATE_DIR,
-                         static_folder=f'{_PATH}/static')
+        self.app = Flask(_TITLE, template_folder=_TEMPLATE_DIR, static_folder=f'{_PATH}/static')
+        logging.getLogger('werkzeug').setLevel(logging.ERROR)
         self._thread = Thread(target=self._run)
         self._server = None
         self._ctx = None
