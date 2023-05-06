@@ -35,7 +35,7 @@ class FileCachesResource(Resource):
         self.node.add_sdo_read_callback(self.index, self.on_read)
         self.node.add_sdo_write_callback(self.index, self.on_write)
 
-    def on_read(self, index, subindex):
+    def on_read(self, index: int, subindex: int):
 
         ret = None
 
@@ -67,7 +67,7 @@ class FileCachesResource(Resource):
 
         return ret
 
-    def on_write(self, index, subindex, value):
+    def on_write(self, index: int, subindex: int, value):
 
         if index != self.index:
             return

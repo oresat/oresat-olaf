@@ -10,13 +10,16 @@ logger.disable('olaf')
 class MockNode(Node):
 
     def __init__(self):
-        self.node = canopen.LocalNode(0x10, 'olaf/_internals/data/oresat_app.eds')
-        super().__init__(self.node, None)
+        eds_path = 'olaf/_internals/data/oresat_app.eds'
+        od = canopen.objectdictionary.eds.import_eds(eds_path, 0x10)
+        super().__init__(od, None)
 
         self._fread_cache = OreSatFileCache('/tmp/fread')
         self._fread_cache.clear()
         self._fwrite_cache = OreSatFileCache('/tmp/fwrite')
         self._fwrite_cache.clear()
+
+        self._setup_node()
 
     def send_tpdo(self, tpdo: int) -> bool:
 
@@ -27,6 +30,7 @@ class MockApp:
 
     def __init__(self):
         super().__init__()
+
         self.node = MockNode()
 
     def add_resource(self, resource: Resource):
@@ -37,7 +41,7 @@ class MockApp:
     def sdo_read(self, index: [int, str], subindex: [None, int, str]):
         '''Call a internal SDO read for testing'''
 
-        co_node = self.node.node
+        co_node = self.node._node
         domain = canopen.objectdictionary.DOMAIN
 
         if subindex is None:
@@ -54,7 +58,7 @@ class MockApp:
     def sdo_write(self, index: [int, str], subindex: [None, int, str], value):
         '''Call a internal SDO write for testing'''
 
-        co_node = self.node.node
+        co_node = self.node._node
         domain = canopen.objectdictionary.DOMAIN
 
         if subindex is None:
@@ -75,3 +79,5 @@ class MockApp:
     def stop(self):
 
         self.resource.end()
+        self.node._destroy_node()
+        self.node.stop()

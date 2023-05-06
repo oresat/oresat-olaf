@@ -76,7 +76,7 @@ class OSCommandResource(Resource):
         self.reply = ''
         logger.exception(exc)
 
-    def on_read(self, index, subindex):
+    def on_read(self, index: int, subindex: int):
 
         ret = None
 
@@ -90,7 +90,7 @@ class OSCommandResource(Resource):
 
         return ret
 
-    def on_write(self, index, subindex, value):
+    def on_write(self, index: int, subindex: int, value):
 
         if index == self.index and subindex == self.sub_command:
             if self.state == OSCommandState.EXECUTING or self.failed:
