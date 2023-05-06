@@ -23,8 +23,8 @@ def main():
 
     try:
         system_info_record = node.sdo[SYSTEM_INFO_INDEX]
-    except Exception as exc:
-        print(exc)
+    except Exception as e:
+        print(e)
         return
 
     print('')

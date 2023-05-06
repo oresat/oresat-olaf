@@ -66,8 +66,8 @@ class FwriteResource(Resource):
                     f.write(value)
                 logger.info(f'receive new file: {basename(self.file_path)}')
                 self.node.fwrite_cache.add(self.file_path, consume=True)
-            except Exception as exc:
-                logger.error(exc)
+            except Exception as e:
+                logger.exception(e)
 
             self.file_path = ''
 

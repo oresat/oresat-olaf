@@ -25,9 +25,9 @@ class Resource:
 
         try:
             self.on_start()
-        except Exception as exc:
-            logger.critical(f'{self.__class__.__name__}\'s on_start raised an uncaught exception:'
-                            f'{exc}')
+        except Exception as e:
+            logger.exception(f'{self.__class__.__name__}\'s on_start raised an uncaught exception:'
+                             f'{e}')
 
     def end(self):
         '''
@@ -38,9 +38,9 @@ class Resource:
 
         try:
             self.on_end()
-        except Exception as exc:
-            logger.critical(f'{self.__class__.__name__}\'s on_end raised an uncaught exception:'
-                            f' {exc}')
+        except Exception as e:
+            logger.exception(f'{self.__class__.__name__}\'s on_end raised an uncaught exception:'
+                             f'{e}')
 
     def on_start(self) -> None:
         '''

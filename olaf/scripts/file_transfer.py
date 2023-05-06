@@ -74,8 +74,8 @@ def main():
         else:
             print('invalid mode')
             sys.exit(1)
-    except Exception as exc:
-        print(exc)
+    except Exception as e:
+        print(e)
 
     network.disconnect()
 

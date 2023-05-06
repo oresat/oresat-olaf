@@ -193,8 +193,8 @@ class Updater:
         logger.info('extracting files from update')
         try:
             self._extract_update_archive(update_archive_file_path)
-        except Exception as exc:
-            logger.error(exc)
+        except Exception as e:
+            logger.exception(e)
             self._clear_work_dir()
             self._state = UpdaterState.PRE_UPDATE_FAILED
             return
@@ -202,8 +202,8 @@ class Updater:
         logger.info('reading instructions file')
         try:
             commands = self._read_instructions()
-        except Exception as exc:
-            logger.error(exc)
+        except Exception as e:
+            logger.exception(e)
             self._clear_work_dir()
             self._state = UpdaterState.PRE_UPDATE_FAILED
             return
@@ -214,8 +214,8 @@ class Updater:
             # If anything fails/errors the board's software could break.
             # All errors are log at critical level.
             self._run_instructions(commands)
-        except Exception as exc:
-            logger.critical(exc)
+        except Exception as e:
+            logger.exception(e)
             self._clear_work_dir()
             self._cache.clear()
             self._state = UpdaterState.UPDATE_FAILED

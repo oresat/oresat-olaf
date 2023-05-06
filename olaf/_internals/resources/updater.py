@@ -52,8 +52,8 @@ class UpdaterResource(Resource):
         if self.update_obj.value:
             try:
                 self._updater.update()
-            except UpdaterError as exc:
-                logger.critical(exc)
+            except UpdaterError as e:
+                logger.exception(e)
             self.update_obj.value = False
 
         # check for flag to make a status archive

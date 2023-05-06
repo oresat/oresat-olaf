@@ -62,8 +62,8 @@ class FileCachesResource(Resource):
                 file_name = self.file_caches[self.selector].files(self.filter)[self.iter].name
                 file_path = f'{dir_name}/{file_name}'
                 ret = getsize(file_path)
-        except Exception as exc:
-            logger.error(exc)
+        except Exception as e:
+            logger.error(e)
 
         return ret
 
@@ -89,5 +89,5 @@ class FileCachesResource(Resource):
                 file_name = self.file_caches[self.selector].files(self.filter)[self.iter].name
                 self.file_caches[self.selector].remove(file_name)
                 logger.info(f'deleted {file_name}')
-        except Exception as exc:
-            logger.error(exc)
+        except Exception as e:
+            logger.exception(e)

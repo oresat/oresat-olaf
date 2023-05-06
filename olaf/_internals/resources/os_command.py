@@ -74,6 +74,7 @@ class OSCommandResource(Resource):
         self.command = ''
         self.state = OSCommandState.ERROR_NO_REPLY
         self.reply = ''
+        logger.exception(exc)
 
     def on_read(self, index, subindex):
 

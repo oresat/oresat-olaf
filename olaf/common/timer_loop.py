@@ -70,14 +70,14 @@ class TimerLoop:
         while ret is True and not self._event.is_set():
             try:
                 ret = self._loop_func(*self._args)
-            except Exception as exc:
+            except Exception as e:
                 self._event.set()
-                logger.error(f'{self._name} timer loop loop_func raise: {exc}')
+                logger.exception(f'{self._name} timer loop loop_func raise: {e}')
                 if self._exc_func:
                     try:
-                        self._exc_func(exc)
-                    except Exception:
-                        logger.error(f'{self._name} timer loop exc_func raise: {exc}')
+                        self._exc_func(e)
+                    except Exception as e:
+                        logger.exception(f'{self._name} timer loop exc_func raise: {e}')
 
             if isinstance(self._delay, Variable):
                 self._event.wait(self._delay.value / 1000)

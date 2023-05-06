@@ -49,8 +49,8 @@ class FreadResource(Resource):
             try:
                 with open(self.file_path, 'rb') as f:
                     ret = zlib.crc32(f.read())
-            except FileNotFoundError as exc:
-                logger.error(exc)
+            except FileNotFoundError as e:
+                logger.exception(e)
         elif subindex == Subindex.FILE_DATA:
             if not self.file_path:
                 logger.error('fread file path was not set before trying to read file data')
@@ -59,8 +59,8 @@ class FreadResource(Resource):
             try:
                 with open(self.file_path, 'rb') as f:
                     ret = f.read()
-            except FileNotFoundError as exc:
-                logger.error(exc)
+            except FileNotFoundError as e:
+                logger.exception(e)
 
         return ret
 

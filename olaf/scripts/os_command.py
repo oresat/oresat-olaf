@@ -27,8 +27,8 @@ def main():
 
     try:
         node.sdo[OS_COMMAND_INDEX][1].raw = args.command.encode('utf-8')
-    except Exception as exc:
-        print(exc)
+    except Exception as e:
+        print(e)
         return
 
     while node.sdo[OS_COMMAND_INDEX][2].phys == 0xFF:

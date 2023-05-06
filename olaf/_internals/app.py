@@ -105,7 +105,7 @@ class App:
             try:
                 self._load_od(node_id, eds)
             except Exception as e:
-                logger.error(f'{e.__class__.__name__}: {e}')
+                logger.exception(f'{e.__class__.__name__}: {e}')
                 logger.warning(f'failed to read in {eds}, using OLAF\'s internal eds as backup')
                 eds = self._BACKUP_EDS
                 self._load_od(node_id, eds)
@@ -159,7 +159,7 @@ class App:
             try:
                 reset = self._node.run()
             except Exception as e:
-                logger.critical(f'unexpected error was raised by app node: {e}')
+                logger.exception(f'unexpected error was raised by app node: {e}')
                 reset = NodeStop.SOFT_RESET
 
         for resource in self._resources:
@@ -187,7 +187,7 @@ class App:
                 if self._factory_reset_cb:
                     self._factory_reset_cb()
             except Exception as e:
-                logger.error(f'custom factory reset function raised: {e}')
+                logger.exception(f'custom factory reset function raised: {e}')
 
             if os.geteuid() == 0:  # running as root
                 subprocess.run('reboot', shell=True)

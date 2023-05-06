@@ -161,8 +161,8 @@ class Node:
 
         try:
             i = self._network.send_message(cob_id, data)
-        except Exception as exc:
-            logger.error(f'TPDO{tpdo} failed with: {exc}')
+        except Exception as e:
+            logger.exception(f'TPDO{tpdo} failed with: {e}')
 
     def _tpdo_timer_loop(self, tpdo: int) -> bool:
         '''Send TPDO for TPDO loop. Can handle network errors.'''
@@ -274,8 +274,8 @@ class Node:
         try:
             self._node.nmt.start_heartbeat(self.od[0x1017].default)
             self._node.nmt.state = 'OPERATIONAL'
-        except Exception as exc:
-            logger.error(f'failed to (re)start CANopen network with {exc}')
+        except Exception as e:
+            logger.exception(f'failed to (re)start CANopen network with {e}')
 
         self._network.subscribe(0x80, self._on_sync)
 
@@ -294,6 +294,7 @@ class Node:
             self._destroy_node()
         except Exception:
             self._network = None  # make sure the canopen network is down
+            self._node = None
 
     def _monitor_can(self):
         '''Monitor the CAN bus and CAN network'''
@@ -339,7 +340,7 @@ class Node:
         try:
             self._monitor_can()
         except Exception as e:
-            logger.critical(e)
+            logger.exception(e)
 
         # stop the node and TPDO timers
         self._destroy_node()
@@ -443,7 +444,7 @@ class Node:
                 try:
                     ret = cb_func(index, subindex)
                 except Exception as e:
-                    logger.error(f'sdo read cb for 0x{index:04X} 0x{subindex:02X} raised: {e}')
+                    logger.exception(f'sdo read cb for 0x{index:04X} 0x{subindex:02X} raised: {e}')
 
         return ret
 
@@ -471,7 +472,8 @@ class Node:
                 try:
                     cb_func(index, subindex, value)
                 except Exception as e:
-                    logger.error(f'sdo write cb for 0x{index:04X} 0x{subindex:02X} raised: {e}')
+                    logger.exception(f'sdo write cb for 0x{index:04X} 0x{subindex:02X} raised: '
+                                     f'{e}')
 
     @property
     def name(self) -> str:
