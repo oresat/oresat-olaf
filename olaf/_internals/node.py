@@ -251,15 +251,16 @@ class Node:
 
         if self.first_bus_reset:
             logger.error(f'{self._bus} is down')
-            if geteuid() == 0:  # running as root
-                logger.info(f'trying to restart CAN bus {self._bus}')
-            self.first_bus_reset = False
 
         if geteuid() == 0:  # running as root
+            if self.first_bus_reset:
+                logger.info(f'trying to restart CAN bus {self._bus}')
             cmd = f'ip link set {self._bus} down;ip link set {self._bus} up'
             out = subprocess.run(cmd, shell=True)
             if out.returncode != 0:
                 logger.error(out)
+
+        self.first_bus_reset = False
 
     def _restart_network(self):
         '''Restart the CANopen network'''
