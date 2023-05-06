@@ -34,11 +34,10 @@ class App:
 
     def __init__(self):
 
+        self._od = None
         self._bus = None
         self._resources = []
-        self._network = None
         self._node = None
-        self._app_node = None
         self._updater = None
         self._factory_reset_cb = None
 
@@ -56,18 +55,21 @@ class App:
         logger.debug(f'signal {signal.Signals(signo).name} was caught')
         self.stop()
 
-    def _load_node(self, node_id: int, eds: str):
+    def _load_od(self, node_id: int, eds: str):
 
-        dcf_node_id = canopen.import_od(eds).node_id
+        self._od = canopen.objectdictionary.eds.import_eds(eds, node_id)
+
+        dcf_node_id = self._od.node_id
         if node_id != 0:
             self._node_id = node_id
         elif dcf_node_id:
             self._node_id = dcf_node_id
         else:
             self._node_id = 0x7C
-        self._node = canopen.LocalNode(self._node_id, eds)
-        self._node.object_dictionary.node_id = self._node_id
-        self._node.object_dictionary.bitrate = 1_000_000  # oresat node will always have 1 Mbps
+
+        # make sure these are set
+        self._od.node_id = self._node_id
+        self._od.bitrate = 1_000_000  # oresat node will always have 1 Mbps
 
     def setup(self, eds: str, bus: str, node_id: [int, str] = 0, master_node: bool = False):
         '''
@@ -101,27 +103,27 @@ class App:
 
         if eds is not None:
             try:
-                self._load_node(node_id, eds)
+                self._load_od(node_id, eds)
             except Exception as e:
                 logger.error(f'{e.__class__.__name__}: {e}')
                 logger.warning(f'failed to read in {eds}, using OLAF\'s internal eds as backup')
                 eds = self._BACKUP_EDS
-                self._load_node(node_id, eds)
+                self._load_od(node_id, eds)
         else:
             logger.warning('No eds or dcf was supplied, using OLAF\'s internal eds')
             eds = self._BACKUP_EDS
-            self._load_node(node_id, eds)
+            self._load_od(node_id, eds)
 
-        self._name = self._node.object_dictionary.device_information.product_name
+        self._name = self._od.device_information.product_name
 
         if master_node:
-            self._app_node = MasterNode(self._node, bus)
+            self._node = MasterNode(self._od, bus)
         else:
-            self._app_node = Node(self._node, bus)
+            self._node = Node(self._od, bus)
 
         # setup updater
-        self._updater = Updater(f'{self._app_node.work_base_dir}/updater',
-                                f'{self._app_node.cache_base_dir}/updates')
+        self._updater = Updater(f'{self._node.work_base_dir}/updater',
+                                f'{self._node.cache_base_dir}/updates')
 
         # default resources
         self.add_resource(OSCommandResource())
@@ -148,14 +150,14 @@ class App:
         self._resources.append(resource)
 
     def run(self):
-        logger.info(f'{self._app_node.name} app is starting')
+        logger.info(f'{self._node.name} app is starting')
 
         for resource in self._resources:
-            resource.start(self._app_node)
+            resource.start(self._node)
 
-        if self._app_node:
+        if self._node:
             try:
-                reset = self._app_node.run()
+                reset = self._node.run()
             except Exception as e:
                 logger.critical(f'unexpected error was raised by app node: {e}')
                 reset = NodeStop.SOFT_RESET
@@ -163,7 +165,7 @@ class App:
         for resource in self._resources:
             resource.end()
 
-        logger.info(f'{self._app_node.name} app has ended')
+        logger.info(f'{self._node.name} app has ended')
 
         if reset == NodeStop.HARD_RESET:
             logger.info('hard reseting the system')
@@ -176,8 +178,8 @@ class App:
             logger.info('factory reseting the system')
 
             # clear caches
-            self._app_node.fread_cache.clear()
-            self._app_node.fwrite_cache.clear()
+            self._node.fread_cache.clear()
+            self._node.fwrite_cache.clear()
             self._updater.clear_cache()
 
             # run custom factory reset function
@@ -202,12 +204,12 @@ class App:
     def stop(self):
         '''End the run loop'''
 
-        if self._app_node:
-            self._app_node.stop()
+        if self._node:
+            self._node.stop()
 
     @property
-    def node(self) -> Node:
-        return self._app_node
+    def node(self) -> Node or MasterNode:
+        return self._node
 
     def set_factory_reset_callback(self, cb_func):
         '''Set a custom factory reset callback function.'''

@@ -32,24 +32,26 @@ class NetworkError(Exception):
 class Node:
     '''OreSat CANopen Node'''
 
-    def __init__(self, node: canopen.LocalNode, bus: str):
+    def __init__(self, od: canopen.ObjectDictionary, bus: str):
         '''
         Parameters
         ----------
-        node: canopen.LocalNode
-            The canopen node obj this class wraps around.
+        od: canopen.ObjectDictionary
+            The CANopen ObjectDictionary
         bus: str
             Which CAN bus to use.
         '''
 
-        self._node = node
+        self._od = od
         self._bus = bus
+        self._node = None
         self._network = None
         self._event = Event()
         self._read_cbs = {}
         self._write_cbs = {}
         self._syncs = 0
         self._reset = NodeStop.SOFT_RESET
+        self._tpdo_timers = []
 
         if geteuid() == 0:  # running as root
             self.work_base_dir = '/var/lib/oresat'
@@ -84,51 +86,13 @@ class Node:
             else:
                 self.od[i].value = self.od[i].default
 
-        if self._node.object_dictionary.node_id is None:
-            self._node.object_dictionary.node_id = 0x7C
-
-        node_id = self._node.object_dictionary.node_id
-
-        default_rpdos = [
-            0x200 + node_id,
-            0x300 + node_id,
-            0x400 + node_id,
-            0x500 + node_id
-        ]
-        default_tpdos = [
-            0x180 + node_id,
-            0x280 + node_id,
-            0x380 + node_id,
-            0x480 + node_id
-        ]
-
-        # fix COB-IDs for invaild PDOs
-        #
-        # all oresat node RPDO COB-ID follow values of 0x[2345]00 + $NODEID
-        # all oresat node TPDO COB-ID follow values of 0x[1234]80 + $NODEID
-        # this fixes the values for all 16 RPDOs/TPDOs
-        for i in range(len(self._node.rpdo)):
-            cob_id = self.od[0x1400 + i][1].default & 0xFFF
-            if cob_id in default_rpdos:
-                cob_id = 0x200 + 0x100 * (i % 4) + node_id + i // 4
-            else:
-                cob_id = self.od[0x1400 + i][1].default
-            self.od[0x1400 + i][1].value = cob_id
-        for i in range(len(self._node.tpdo)):
-            cob_id = self.od[0x1800 + i][1].default & 0xFFF
-            if cob_id in default_tpdos:
-                cob_id = 0x180 + 0x100 * (i % 4) + node_id + i // 4
-            else:
-                cob_id = self.od[0x1800 + i][1].default
-            self.od[0x1800 + i][1].value = cob_id
-
-        self._node.add_read_callback(self._on_sdo_read)
-        self._node.add_write_callback(self._on_sdo_write)
-
     def __del__(self):
 
-        self.stop()
+        # stop the monitor thread if it is running
+        if not self._event.is_set():
+            self.stop()
 
+        # stop the CANopen network
         if self._network:
             try:
                 self._network.disconnect()
@@ -210,23 +174,6 @@ class Node:
 
         return True
 
-    def _start_tpdo_timer_loops(self) -> list:
-        '''Start TPDO timer loops'''
-
-        tpdo_timers = []
-
-        for i in range(len(self._node.tpdo)):
-            transmission_type = self.od[0x1800 + i][2].default
-            event_time = self.od[0x1800 + i][5].default
-            if transmission_type in [0xFE, 0xFF] and event_time > 0:
-                t = TimerLoop(name=f'TPDO{i + 1}', loop_func=self._tpdo_timer_loop,
-                              delay=self.od[0x1800 + i][5], start_delay=self.od[0x1800 + i][3],
-                              args=(i,))
-                tpdo_timers.append(t)
-                t.start()
-
-        return tpdo_timers
-
     def _on_rpdo_update_od(self, map: canopen.pdo.base.Map):
         '''Handle parsering an RPDO'''
 
@@ -244,18 +191,73 @@ class Node:
             else:
                 self._node.sdo[index][subindex].raw = map.map[i - 1].get_data()
 
+    def _setup_node(self):
+        '''Create the CANopen and TPDO timer loops'''
+
+        if self._od.node_id is None:
+            self._od.node_id = 0x7C
+
+        self._node = canopen.LocalNode(self._od.node_id, self._od)
+
+        node_id = self._od.node_id
+        default_rpdos = [0x200 + node_id, 0x300 + node_id, 0x400 + node_id, 0x500 + node_id]
+        default_tpdos = [0x180 + node_id, 0x280 + node_id, 0x380 + node_id, 0x480 + node_id]
+
+        # fix COB-IDs for invaild PDOs
+        #
+        # all oresat node RPDO COB-ID follow values of 0x[2345]00 + $NODEID
+        # all oresat node TPDO COB-ID follow values of 0x[1234]80 + $NODEID
+        # this fixes the values for all 16 RPDOs/TPDOs
+        for i in range(len(self._node.rpdo)):
+            cob_id = self.od[0x1400 + i][1].default & 0xFFF
+            if cob_id in default_rpdos:
+                cob_id = 0x200 + 0x100 * (i % 4) + node_id + i // 4
+            else:
+                cob_id = self.od[0x1400 + i][1].default
+            self.od[0x1400 + i][1].value = cob_id
+        for i in range(len(self._node.tpdo)):
+            cob_id = self.od[0x1800 + i][1].default & 0xFFF
+            if cob_id in default_tpdos:
+                cob_id = 0x180 + 0x100 * (i % 4) + node_id + i // 4
+            else:
+                cob_id = self.od[0x1800 + i][1].default
+            self.od[0x1800 + i][1].value = cob_id
+
+        self._node.add_read_callback(self._on_sdo_read)
+        self._node.add_write_callback(self._on_sdo_write)
+
+        for i in range(len(self._node.tpdo)):
+            transmission_type = self.od[0x1800 + i][2].default
+            event_time = self.od[0x1800 + i][5].default
+            if transmission_type in [0xFE, 0xFF] and event_time > 0:
+                t = TimerLoop(name=f'TPDO{i + 1}', loop_func=self._tpdo_timer_loop,
+                              delay=self.od[0x1800 + i][5], start_delay=self.od[0x1800 + i][3],
+                              args=(i,))
+                self._tpdo_timers.append(t)
+                t.start()
+
+    def _destroy_node(self):
+        '''Destroy the CANopen and TPDO timer loops'''
+
+        for t in self._tpdo_timers:
+            t.stop()
+
+        self._tpdo_timers = []  # remove all
+
+        self._node = None
+
     def _restart_bus(self):
         '''Try to restart the CAN bus'''
 
         if self.first_bus_reset:
             logger.error(f'{self._bus} is down')
+            if geteuid() == 0:  # running as root
+                logger.info(f'trying to restart CAN bus {self._bus}')
             self.first_bus_reset = False
 
         if geteuid() == 0:  # running as root
-            if self.first_bus_reset:
-                logger.info(f'trying to restart CAN bus {self._bus}')
-
-            out = subprocess.run(f'ip link set {self._bus} up', shell=True)
+            cmd = f'ip link set {self._bus} down;ip link set {self._bus} up'
+            out = subprocess.run(cmd, shell=True)
             if out.returncode != 0:
                 logger.error(out)
 
@@ -266,10 +268,10 @@ class Node:
 
         self._network = canopen.Network()
         self._network.connect(bustype='socketcan', channel=self._bus)
+        self._setup_node()
         self._network.add_node(self._node)
 
         try:
-            self._node.nmt.state = 'PRE-OPERATIONAL'
             self._node.nmt.start_heartbeat(self.od[0x1017].default)
             self._node.nmt.state = 'OPERATIONAL'
         except Exception as exc:
@@ -289,6 +291,7 @@ class Node:
         try:
             if self._network:
                 self._network.disconnect()
+            self._destroy_node()
         except Exception:
             self._network = None  # make sure the canopen network is down
 
@@ -328,29 +331,27 @@ class Node:
         NodeStop
             Reset / power off condition.
         '''
-        tpdo_timers = []
 
         logger.info(f'{self.name} app is starting')
         if geteuid() != 0:  # running as root
             logger.warning('not running as root, cannot restart CAN bus if it goes down')
-
-        tpdo_timers = self._start_tpdo_timer_loops()
 
         try:
             self._monitor_can()
         except Exception as e:
             logger.critical(e)
 
-        for t in tpdo_timers:
-            t.stop()
+        # stop the node and TPDO timers
+        self._destroy_node()
 
         logger.info(f'{self.name} app has ended')
         return self._reset
 
-    def stop(self, reset: NodeStop = NodeStop.SOFT_RESET):
+    def stop(self, reset: NodeStop = None):
         '''End the run loop'''
 
-        self._reset = reset
+        if reset is not None:
+            self._reset = reset
         self._event.set()
 
     def add_sdo_read_callback(self, index: int, sdo_cb):
@@ -483,7 +484,7 @@ class Node:
     def od(self) -> canopen.ObjectDictionary:
         '''canopen.ObjectDictionary: Access to the object dictionary.'''
 
-        return self._node.object_dictionary
+        return self._od
 
     @property
     def fread_cache(self) -> OreSatFileCache:

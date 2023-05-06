@@ -9,17 +9,17 @@ from .node import Node, NetworkError
 class MasterNode(Node):
     '''OreSat CANopen Master Node'''
 
-    def __init__(self, node: canopen.LocalNode, bus: str):
+    def __init__(self, od: canopen.ObjectDictionary, bus: str):
         '''
         Parameters
         ----------
-        node: canopen.LocalNode
-            The canopen node obj this class wraps around.
+        od: canopen.ObjectDictionary
+            The CANopen ObjectDictionary
         bus: str
             Which CAN bus to use.
         '''
 
-        super().__init__(node, bus)
+        super().__init__(od, bus)
 
         self.node_status = {}
         for i in range(0x01, 0x80):
