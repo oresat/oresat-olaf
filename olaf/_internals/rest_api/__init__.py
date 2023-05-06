@@ -150,7 +150,10 @@ def favicon():
 @rest_api.app.route('/od/<index>/', methods=['GET', 'PUT'])
 def od_index(index: str):
 
-    index = int(index, 16) if index.startswith('0x') else int(index)
+    try:
+        index = int(index, 16) if index.startswith('0x') else int(index)
+    except ValueError:
+        return jsonify({'error': f'invalid index {index}'})
 
     try:
         obj = app.node.od[index]
@@ -174,8 +177,11 @@ def od_index(index: str):
 @rest_api.app.route('/od/<index>/<subindex>/', methods=['GET', 'PUT'])
 def od_subindex(index: str, subindex: str):
 
-    index = int(index, 16) if index.startswith('0x') else int(index)
-    subindex = int(subindex, 16) if subindex.startswith('0x') else int(subindex)
+    try:
+        index = int(index, 16) if index.startswith('0x') else int(index)
+        subindex = int(subindex, 16) if subindex.startswith('0x') else int(subindex)
+    except ValueError:
+        return jsonify({'error': f'invalid index {index} or subindex {subindex}'})
 
     try:
         obj = app.node.od[index][subindex]
