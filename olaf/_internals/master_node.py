@@ -23,7 +23,7 @@ class MasterNode(Node):
 
         self.node_status = {}
         for i in range(0x01, 0x80):
-            if i == self._node.object_dictionary.node_id:
+            if i == self._od.node_id:
                 continue  # skip itself
             self.node_status[i] = (0xFF, time())  # 0xFF is a flag, not a CANopen standard
 
@@ -32,7 +32,7 @@ class MasterNode(Node):
         super()._restart_network()
 
         for i in range(0x01, 0x80):
-            if i == self._node.object_dictionary.node_id:
+            if i == self._od.node_id:
                 continue  # skip itself
             self._network.subscribe(0x80 + i, self._on_emergency)
             self._network.subscribe(0x700 + i, self._on_heartbeat)
