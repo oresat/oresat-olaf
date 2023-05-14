@@ -16,7 +16,7 @@ from .common.oresat_file_cache import OreSatFileCache
 from .common.timer_loop import TimerLoop
 from .common.gpio import GPIO
 
-__version__ = '2.1.0'
+__version__ = '2.1.1'
 
 
 def olaf_setup(eds_path: str = None, master_node: bool = False) -> Namespace:
