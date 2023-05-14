@@ -255,7 +255,8 @@ class Node:
         if geteuid() == 0:  # running as root
             if self.first_bus_reset:
                 logger.info(f'trying to restart CAN bus {self._bus}')
-            cmd = (f'ip link set {self._bus} down;ip link set can1 type can bitrate 1000000;'
+            cmd = (f'ip link set {self._bus} down;'
+                   f'ip link set {self._bus} type can bitrate 1000000;'
                    f'ip link set {self._bus} up')
             out = subprocess.run(cmd, shell=True)
             if out.returncode != 0:
