@@ -489,8 +489,7 @@ class Node:
     def name(self) -> str:
         '''str: The nodes name.'''
 
-        if self._node:
-            return self._node.object_dictionary.device_information.product_name
+        return self._od.device_information.product_name
 
     @property
     def od(self) -> canopen.ObjectDictionary:
