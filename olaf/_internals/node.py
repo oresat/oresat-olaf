@@ -431,7 +431,7 @@ class Node:
         subindex: int
             The subindex the SDO is reading to.
         od: canopen.objectdictionary.Variable
-            The variable object being read tp. Badly named.
+            The variable object being read to. Badly named.
 
         Returns
         -------
@@ -448,6 +448,10 @@ class Node:
                     ret = cb_func(index, subindex)
                 except Exception as e:
                     logger.exception(f'sdo read cb for 0x{index:04X} 0x{subindex:02X} raised: {e}')
+
+        # get value from OD
+        if ret is None:
+            ret = od.value
 
         return ret
 
@@ -468,6 +472,9 @@ class Node:
         data: bytes
             The raw data being written.
         '''
+
+        # set value in OD before callback
+        od.value = od.decode_raw(data)
 
         if index in self._write_cbs:
             value = od.decode_raw(data)
