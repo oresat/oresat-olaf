@@ -31,19 +31,20 @@ class DaemonsResource(Resource):
 
         if subindex == 2:
             ret = 0
-            for i in self.node.daemons:
+            for i in self.node.daemons.values():
                 if i.status == DaemonState.ACTIVE:
                     ret += 1
         elif subindex == 3:
             ret = 0
-            for i in self.node.daemons:
+            for i in self.node.daemons.values():
                 if i.status == DaemonState.ACTIVE:
                     ret += 1
         elif subindex == 5:
             if self._select_daemon_obj.value < self._total_daemons_obj.value:
-                ret = self.node.daemons[self._select_daemon_obj.value].name
-        elif subindex == 5:
+                ret = list(self.node.daemons.keys())[self._select_daemon_obj.value]
+        elif subindex == 6:
             if self._select_daemon_obj.value < self._total_daemons_obj.value:
-                ret = self.node.daemons[self._select_daemon_obj.value].status.value
+                daemon = list(self.node.daemons.values())[self._select_daemon_obj.value]
+                ret = daemon.status.value
 
         return ret

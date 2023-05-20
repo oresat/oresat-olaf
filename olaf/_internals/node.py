@@ -53,9 +53,7 @@ class Node:
         self._syncs = 0
         self._reset = NodeStop.SOFT_RESET
         self._tpdo_timers = []
-        self._daemons = []
-
-        self.add_daemon('lightdm.service')
+        self._daemons = {}
 
         if geteuid() == 0:  # running as root
             self.work_base_dir = '/var/lib/oresat'
@@ -365,7 +363,7 @@ class Node:
     def add_daemon(self, name: str):
         '''Add a daemon for the node to monitor and/or control'''
 
-        self._daemons.append(Daemon(name))
+        self._daemons[name] = Daemon(name)
 
     def add_sdo_read_callback(self, index: int, sdo_cb):
         '''
@@ -525,7 +523,7 @@ class Node:
         return not self._event.is_set()
 
     @property
-    def daemons(self) -> list:
-        '''list: The list of external daemons that are monitored and/or controllable'''
+    def daemons(self) -> dict:
+        '''dict: The dictionary of external daemons that are monitored and/or controllable'''
 
         return self._daemons
