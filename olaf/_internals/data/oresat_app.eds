@@ -4763,7 +4763,7 @@ AccessType=wo
 DefaultValue=0
 
 [3005]
-ParameterName=App manager
+ParameterName=Daemon manager
 ObjectType=0x09
 SubNumber=7
 
@@ -4775,7 +4775,7 @@ AccessType=const
 DefaultValue=0x06
 
 [3005sub1]
-ParameterName=Total apps
+ParameterName=Total daemons
 ObjectType=0x07
 DataType=0x0005
 AccessType=ro
@@ -4783,7 +4783,7 @@ DefaultValue=0
 PDOMapping=1
 
 [3005sub2]
-ParameterName=Active apps
+ParameterName=Active daemons
 ObjectType=0x07
 DataType=0x0005
 AccessType=ro
@@ -4791,7 +4791,7 @@ DefaultValue=0
 PDOMapping=1
 
 [3005sub3]
-ParameterName=Failed apps
+ParameterName=Failed daemons
 ObjectType=0x07
 DataType=0x0005
 AccessType=ro
@@ -4799,14 +4799,14 @@ DefaultValue=0
 PDOMapping=1
 
 [3005sub4]
-ParameterName=Select app
+ParameterName=Select daemon
 ObjectType=0x07
 DataType=0x0005
 AccessType=rw
 DefaultValue=0
 
 [3005sub5]
-ParameterName=App name
+ParameterName=Daemon name
 ObjectType=0x07
 DataType=0x0009
 AccessType=ro
@@ -4815,11 +4815,11 @@ AccessType=ro
 ParameterName=Daemon state
 ObjectType=0x07
 DataType=0x0005
-AccessType=rw
+AccessType=ro
 DefaultValue=0
 
 [3006]
-ParameterName=New Record
+ParameterName=Logs
 ObjectType=0x09
 SubNumber=3
 
