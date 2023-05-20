@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <style>
+    table {
+      font-family: arial, sans-serif;
+      border-collapse: collapse;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    thead {
+      font-weight: bold;
+    }
+    td, th {
+      border: 1px solid #dddddd;
+      text-align: left;
+      padding: 8px;
+    }
+  </style>
+  <div id='daemonTableDiv'>
+    <table id='daemonTable'>
+      <thead>
+        <tr>
+          <td>Index</td>
+          <td>Name</td>
+          <td>Status</td>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
+  <script>
+    const INDEX = '0x3005'
+    const DAEMON_STATES = [
+      'ACTIVE',
+      'RELOADING',
+      'INACTIVE',
+      'FAILED',
+      'ACTIVATING',
+      'DEACTIVATING'
+    ];
+
+    /** build the table */
+    async function buildTable() {
+      const totalDaemonsObj = await readValue(INDEX, '0x1');
+      let tbodyRef = document.getElementById('daemonTable').getElementsByTagName('tbody')[0];
+      for (let i = 0; i < totalDaemonsObj.value; i++) {
+        await writeValue(INDEX, '0x4', i);
+        let daemonNameObj = await readValue(INDEX, '0x5');
+        let daemonStateObj = await readValue(INDEX, '0x6');
+        let newRow = tbodyRef.insertRow();
+
+        let newCell = newRow.insertCell();
+        let newText = document.createTextNode(i);
+        newCell.appendChild(newText);
+
+        let newCell2 = newRow.insertCell();
+        let span = document.createElement('span');
+        span.id = `daemon${i}Name`;
+        span.innerText = daemonNameObj.value;
+        newCell2.appendChild(span);
+
+        let newCell3 = newRow.insertCell();
+        let span2 = document.createElement('span');
+        span2.id = `daemon${i}State`;
+        span2.innerText = DAEMON_STATES[daemonStateObj.value];
+        newCell3.appendChild(span2);
+      }
+    }
+
+    /** Update data in the table */
+    async function updateStatus() {
+      const totalDaemonsObj = await readValue(INDEX, '0x1');
+      console.log(totalDaemonsObj);
+      for (let i = 0; i < totalDaemonsObj.value; i++) {
+        console.log('hi' + i);
+        await writeValue(INDEX, '0x4', i);
+        let daemonStateObj = await readValue(INDEX, '0x6');
+        let span = document.getElementById(`daemon${i}State`);
+        span.innerText = DAEMON_STATES[daemonStateObj.value];
+      }
+    }
+
+    buildTable();
+    const interval = setInterval(function() {
+      updateStatus();
+    }, 10000);
+  </script>
+{% endblock %}

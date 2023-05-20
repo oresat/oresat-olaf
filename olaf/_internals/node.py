@@ -9,6 +9,7 @@ import canopen
 import psutil
 from loguru import logger
 
+from ..common.daemon import Daemon
 from ..common.timer_loop import TimerLoop
 from ..common.oresat_file_cache import OreSatFileCache
 
@@ -52,6 +53,9 @@ class Node:
         self._syncs = 0
         self._reset = NodeStop.SOFT_RESET
         self._tpdo_timers = []
+        self._daemons = []
+
+        self.add_daemon('lightdm.service')
 
         if geteuid() == 0:  # running as root
             self.work_base_dir = '/var/lib/oresat'
@@ -358,6 +362,11 @@ class Node:
             self._reset = reset
         self._event.set()
 
+    def add_daemon(self, name: str):
+        '''Add a daemon for the node to monitor and/or control'''
+
+        self._daemons.append(Daemon(name))
+
     def add_sdo_read_callback(self, index: int, sdo_cb):
         '''
         Add an SDO read callback
@@ -511,6 +520,12 @@ class Node:
 
     @property
     def is_running(self) -> bool:
-        '''bool: is the node loop running'''
+        '''bool: Is the node loop running'''
 
         return not self._event.is_set()
+
+    @property
+    def daemons(self) -> list:
+        '''list: The list of external daemons that are monitored and/or controllable'''
+
+        return self._daemons

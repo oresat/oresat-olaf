@@ -5,6 +5,7 @@ flask
 loguru
 natsort
 psutil
+pydbus
 setuptools
 sphinx
 sphinx-rtd-theme

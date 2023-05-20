@@ -303,3 +303,8 @@ def logs_template():
 @rest_api.app.route('/power-control')
 def power_control_template():
     return render_olaf_template('power_control.html', name='Power Control')
+
+
+@rest_api.app.route('/daemons')
+def daemons_template():
+    return render_olaf_template('daemons.html', name='External Daemons')

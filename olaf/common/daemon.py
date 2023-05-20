@@ -53,3 +53,9 @@ class Daemon:
         '''DaemonState: The state of the daemon.'''
 
         return DaemonState[self._unit.ActiveState.upper()]
+
+    @property
+    def name(self) -> str:
+        '''str: The name of daemon'''
+
+        return self._name

@@ -20,6 +20,7 @@ from .resources.updater import UpdaterResource
 from .resources.logs import LogsResource
 from .resources.store_eds import StoreEdsResource
 from .resources.power_control import PowerControlResource
+from .resources.daemons import DaemonsResource
 
 
 class App:
@@ -136,6 +137,7 @@ class App:
         self.add_resource(LogsResource())
         self.add_resource(StoreEdsResource(eds))
         self.add_resource(PowerControlResource())
+        self.add_resource(DaemonsResource())
 
     def add_resource(self, resource: Resource):
         '''
