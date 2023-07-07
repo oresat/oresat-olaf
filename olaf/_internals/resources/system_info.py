@@ -116,17 +116,17 @@ class SystemInfoResource(Resource):
         elif subindex == Subindex.RAM_BUFFERED:
             ret = psutil.virtual_memory().buffers // _B_TO_MB
         elif subindex == Subindex.RAM_PERCENT:
-            ret = psutil.virtual_memory().percent
+            ret = int(psutil.virtual_memory().percent)
         elif subindex == Subindex.SWAP_FREE:
             ret = psutil.swap_memory().free // _B_TO_MB
         elif subindex == Subindex.SWAP_PERCENT:
-            ret = psutil.swap_memory().percent
+            ret = int(psutil.swap_memory().percent)
         elif subindex == Subindex.PROCS:
             ret = len(psutil.pids())
         elif subindex == Subindex.ROOT_PART_FREE:
             ret = psutil.disk_usage('/').free // _B_TO_MB
         elif subindex == Subindex.ROOT_PART_PERCENT:
-            ret = psutil.disk_usage('/').percent
+            ret = int(psutil.disk_usage('/').percent)
 
         return ret
 
