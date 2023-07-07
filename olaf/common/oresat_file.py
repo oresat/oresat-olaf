@@ -5,15 +5,15 @@ from os.path import basename
 from time import time
 
 
-def new_oresat_file(keyword: str, board: str = '', date: float = -1.0, ext: str = '') -> str:
+def new_oresat_file(keyword: str, card: str = '', date: float = -1.0, ext: str = '') -> str:
     '''Convience function for making valid oresat file_names
 
     Parameters
     ----------
     keyword: str
         The keyword for the new file_name
-    board: str
-        The board name for the file_name. If not set, the hostname will be
+    card: str
+        The card name for the file_name. If not set, the hostname will be
         used.
     date: Union(None, float)
         Unix timestamp the file was made. Set to a :py:func:`time.time` value or set to a negative
@@ -27,8 +27,11 @@ def new_oresat_file(keyword: str, board: str = '', date: float = -1.0, ext: str 
         The new oresat file name.
     '''
 
-    if not board:
-        board = uname()[1]
+    if not card:
+        card = uname()[1]
+
+    if card.startswith('oresat-'):
+        card = card[7:]  # remove 'oresat-'
 
     if date < 0:
         date_str = str(int(time()))
@@ -39,7 +42,7 @@ def new_oresat_file(keyword: str, board: str = '', date: float = -1.0, ext: str 
     if len(ext) > 0 and ext[0] != '.':
         ext = '.' + ext
 
-    name = board + '_' + keyword + '_' + date_str + ext
+    name = card + '_' + keyword + '_' + date_str + ext
 
     return name.lower()
 
@@ -66,11 +69,11 @@ class OreSatFile:
         if len(split) != 3:
             raise ValueError('invalid OreSat file name')
 
-        self._board = split[0]
+        self._card = split[0]
         self._keyword = split[1]
         temp = split[2]
 
-        if not self._board or not self._keyword or not temp:
+        if not self._card or not self._keyword or not temp:
             raise ValueError('invalid OreSat file name')
 
         if '.' in temp:
@@ -103,10 +106,10 @@ class OreSatFile:
         return self._name
 
     @property
-    def board(self) -> str:
-        '''str: The board the file is for or the board the file was made on. Read only.'''
+    def card(self) -> str:
+        '''str: The card the file is for or the card the file was made on. Read only.'''
 
-        return self._board
+        return self._card
 
     @property
     def keyword(self) -> str:
