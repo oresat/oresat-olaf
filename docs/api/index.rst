@@ -13,3 +13,4 @@ API
    rest_api
    gpio
    daemon
+   adc

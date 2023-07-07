@@ -15,6 +15,7 @@ from .common.oresat_file import OreSatFile, new_oresat_file
 from .common.oresat_file_cache import OreSatFileCache
 from .common.timer_loop import TimerLoop
 from .common.gpio import GPIO
+from .common.adc import Adc
 from .common.daemon import Daemon, DaemonState
 
 __version__ = '2.1.2'
