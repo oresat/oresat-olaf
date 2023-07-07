@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block content %}
   <style>
@@ -7,14 +7,14 @@
       display: flex;
     }
   </style>
-  <button onclick='poweroff()'>Poweroff</button>
-  <button onclick='softReset()'>Soft Reset</button>
-  <button onclick='hardReset()'>Hard Reset</button>
-  <button onclick='factoryReset()'>Factory Reset</button>
+  <button onclick="poweroff()">Poweroff</button>
+  <button onclick="softReset()">Soft Reset</button>
+  <button onclick="hardReset()">Hard Reset</button>
+  <button onclick="factoryReset()">Factory Reset</button>
   <script>
-    function poweroff() { writeValue('0x3000', '0x01', true); }
-    function softReset() { writeValue('0x3000', '0x02', 1); }
-    function hardReset() { writeValue('0x3000', '0x02', 2); }
-    function factoryReset() { writeValue('0x3000', '0x02', 3); }
+    function poweroff() { writeValue("0x3000", "0x01", true); }
+    function softReset() { writeValue("0x3000", "0x02", 1); }
+    function hardReset() { writeValue("0x3000", "0x02", 2); }
+    function factoryReset() { writeValue("0x3000", "0x02", 3); }
   </script>
 {% endblock %}

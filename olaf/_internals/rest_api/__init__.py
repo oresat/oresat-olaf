@@ -45,7 +45,7 @@ INT_TYPES = [
     DataType.UNSIGNED8,
     DataType.UNSIGNED16,
     DataType.UNSIGNED32,
-    DataType.UNSIGNED64
+    DataType.UNSIGNED64,
 ]
 
 
@@ -122,6 +122,24 @@ def render_olaf_template(template: str, name: str):
     return render_template(template, title=_TITLE, name=name)
 
 
+def make_error_json(error: str) -> str:
+    '''
+    Make the stand error json message for the REST API
+
+    Parameters
+    ----------
+    error: str
+        The error message
+
+    Returns
+    -------
+    str
+        The JSON error message
+    '''
+
+    return jsonify({'error': error})
+
+
 rest_api = RestAPI()
 '''The global instance of the REST API.'''
 
@@ -147,31 +165,52 @@ def favicon():
     return send_from_directory(f'{path}/static', 'favicon.ico')
 
 
+def _json_value_to_value(data_type: DataType, json_value):
+    '''Convert JSON value to real OD value to bytes for SDO callback'''
+
+    if data_type == DataType.BOOLEAN and not isinstance(json_value, bool):
+        value = True if json_value.lower() == 'true' else False
+    elif data_type in INT_TYPES and not isinstance(json_value, int):
+        value = int(json_value, 16) if json_value.startswith('0x') else int(json_value)
+    elif data_type in [DataType.REAL32, DataType.REAL64]:
+        value = float(json_value)
+    elif data_type == DataType.DOMAIN:
+        value = base64.decodebytes(json_value.encode('utf-8'))
+    else:  # str
+        value = json_value
+
+    return value
+
+
 @rest_api.app.route('/od/<index>/', methods=['GET', 'PUT'])
 def od_index(index: str):
 
     try:
         index = int(index, 16) if index.startswith('0x') else int(index)
     except ValueError:
-        return jsonify({'error': f'invalid index {index}'})
+        return make_error_json(f'invalid index {index}')
 
     try:
-        obj = app.node.od[index]
+        obj = app.od[index]
     except Exception:
         msg = f'no object at index {index:02X}'
-        logger.error(f'RestApiError: {msg}')
-        return jsonify({'error': msg})
+        logger.error(f'REST API error: {msg}')
+        return make_error_json(msg)
 
     if request.method == 'PUT':
-        raw = request.json['value']
-        data_type = obj.data_type
+        try:
+            json_value = request.json['value']
 
-        if data_type == DataType.DOMAIN:
-            app.node._node.sdo[index].raw = base64.decodebytes(raw.encode('utf-8'))
-        else:
-            app.node._node.sdo[index].phys = raw_to_value(data_type, raw)
+            # convert value from JSON to bytes for SDO callback
+            value = _json_value_to_value(obj.data_type, json_value)
+            raw = obj.encode_raw(value)
 
-    return jsonify(object_to_json(index))
+            app.node._on_sdo_write(index, 0, obj, raw)
+        except Exception as e:
+            logger.error(f'REST API error: {e}')
+            return make_error_json(str(e))
+
+    return jsonify(_object_to_dict(index))
 
 
 @rest_api.app.route('/od/<index>/<subindex>/', methods=['GET', 'PUT'])
@@ -181,67 +220,67 @@ def od_subindex(index: str, subindex: str):
         index = int(index, 16) if index.startswith('0x') else int(index)
         subindex = int(subindex, 16) if subindex.startswith('0x') else int(subindex)
     except ValueError:
-        return jsonify({'error': f'invalid index {index} or subindex {subindex}'})
+        return make_error_json(f'invalid index {index} or subindex {subindex}')
 
     try:
-        obj = app.node.od[index][subindex]
+        obj = app.od[index][subindex]
     except Exception:
         msg = f'no object at index {index:04X} subindex {subindex:02X}'
-        logger.error(f'RestApiError: {msg}')
-        return jsonify({'error': msg})
+        logger.error(f'REST API error: {msg}')
+        return make_error_json(msg)
 
     if request.method == 'PUT':
-        raw = request.json['value']
-        data_type = obj.data_type
+        try:
+            json_value = request.json['value']
 
-        if data_type == DataType.DOMAIN:
-            app.node._node.sdo[index][subindex].raw = base64.decodebytes(raw.encode('utf-8'))
-        else:
-            app.node._node.sdo[index][subindex].phys = raw_to_value(data_type, raw)
+            # convert value from JSON to bytes for SDO callback
+            value = _json_value_to_value(obj.data_type, json_value)
+            raw = obj.encode_raw(value)
 
-    return jsonify(object_to_json(index, subindex))
+            app.node._on_sdo_write(index, subindex, obj, raw)
+        except Exception as e:
+            logger.error(f'REST API error: {e}')
+            return make_error_json(str(e))
 
-
-def raw_to_value(data_type: DataType, raw):
-    value = None
-
-    if data_type == DataType.BOOLEAN and not isinstance(raw, bool):
-        value = True if raw.lower() == 'true' else False
-    elif data_type in INT_TYPES and not isinstance(raw, int):
-        value = int(raw, 16) if raw.startswith('0x') else int(raw)
-    elif data_type in [DataType.REAL32, DataType.REAL64]:
-        value = float(raw)
-    else:
-        value = raw
-
-    return value
+    return jsonify(_object_to_dict(index, subindex))
 
 
-def object_to_json(index: int, subindex: int = None) -> dict:
+def _object_to_dict(index: int, subindex: int = None) -> dict:
+    '''
+    Convert a OD object to a dictionary.
+
+    Parameters
+    ----------
+    index: int
+        The index of the object to convert.
+    subindex: int
+        Optional subindex of the object to convert.
+
+    Returns
+    -------
+    dict
+        The object as a dictionary.
+    '''
 
     if subindex is None:
         try:
             obj = app.node.od[index]
-            if isinstance(obj, canopen.objectdictionary.Variable):
-                if obj.data_type == DataType.DOMAIN:
-                    raw = app.node._node.sdo[index].raw
-                    value = base64.encodebytes(raw).decode('utf-8')
-                else:
-                    value = app.node._node.sdo[index].phys
-        except Exception as e:
-            logger.debug(e)
-            return {'error': f'0x{index:04X} is not a valid index'}
+        except Exception:
+            msg = f'0x{index:04X} is not a valid index'
+            logger.debug('REST API error: ' + msg)
+            return make_error_json(msg)
     else:
         try:
             obj = app.node.od[index][subindex]
-            if obj.data_type == DataType.DOMAIN:
-                raw = app.node._node.sdo[index][subindex].raw
-                value = base64.encodebytes(raw).decode('utf-8')
-            else:
-                value = app.node._node.sdo[index][subindex].phys
-        except Exception as e:
-            logger.debug(e)
-            return {'error': f'0x{subindex:02X} not a valid subindex for index 0x{index:04X}'}
+        except Exception:
+            msg = f'0x{subindex:02X} not a valid subindex for index 0x{index:04X}'
+            logger.debug('REST API error: ' + msg)
+            return make_error_json(msg)
+
+    if isinstance(obj, canopen.objectdictionary.Variable):
+        value = app.node._on_sdo_read(index, subindex, obj)
+        if obj.data_type == DataType.DOMAIN:  # encode DOMAINs for JSON
+            value = base64.encodebytes(value).decode('utf-8')
 
     data = {
         'name': obj.name,
@@ -257,10 +296,10 @@ def object_to_json(index: int, subindex: int = None) -> dict:
             data['value'] = value
     elif isinstance(obj, canopen.objectdictionary.Array):
         data['object_type'] = 'ARRAY'
-        data['subindexes'] = {subindex: object_to_json(index, subindex) for subindex in obj}
+        data['subindexes'] = {subindex: _object_to_dict(index, subindex) for subindex in obj}
     else:
         data['object_type'] = 'RECORD'
-        data['subindexes'] = {subindex: object_to_json(index, subindex) for subindex in obj}
+        data['subindexes'] = {subindex: _object_to_dict(index, subindex) for subindex in obj}
 
     return data
 

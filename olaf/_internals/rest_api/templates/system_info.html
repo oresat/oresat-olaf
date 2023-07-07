@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block content %}
   <style>
@@ -17,137 +17,137 @@
   <table>
     <tr>
       <td>OS Name</td>
-      <td><span id='osName'></span></td>
+      <td><span id="osName"></span></td>
     </tr>
     <tr>
       <td>OS Distro</td>
-      <td><span id='osDistro'></span></td>
+      <td><span id="osDistro"></span></td>
     </tr>
     <tr>
       <td>OS Kernel Version</td>
-      <td><span id='osKernelVersion'></span></td>
+      <td><span id="osKernelVersion"></span></td>
     </tr>
     <tr>
       <td>Hostname</td>
-      <td><span id='hostname'></span></td>
+      <td><span id="hostname"></span></td>
     </tr>
     <tr>
       <td>Uptime</td>
-      <td><span id='uptime'></span> s</td>
+      <td><span id="uptime"></span> s</td>
     </tr>
     <tr>
       <td>Number of CPUs</td>
-      <td><span id='cpuNum'></span></td>
+      <td><span id="cpuNum"></span></td>
     </tr>
     <tr>
       <td>CPU Architecture</td>
-      <td><span id='cpuArch'></span></td>
+      <td><span id="cpuArch"></span></td>
     </tr>
     <tr>
       <td>CPU Governor</td>
-      <td><span id='cpuGov'></span></td>
+      <td><span id="cpuGov"></span></td>
     </tr>
     <tr>
       <td>CPU Frequency</td>
-      <td><span id='cpuFreq'></span> MHz</td>
+      <td><span id="cpuFreq"></span> MHz</td>
     </tr>
     <tr>
       <td>Number of Remote Processors</td>
-      <td><span id='remoteProcNum'></span></td>
+      <td><span id="remoteProcNum"></span></td>
     </tr>
     <tr>
       <td>Load 1 minute</td>
-      <td><span id='load1Min'></span></td>
+      <td><span id="load1Min"></span></td>
     </tr>
     <tr>
       <td>Load 5 minute</td>
-      <td><span id='load5Min'></span></td>
+      <td><span id="load5Min"></span></td>
     </tr>
     <tr>
       <td>Load 15 minute</td>
-      <td><span id='load15Min'></span></td>
+      <td><span id="load15Min"></span></td>
     </tr>
     <tr>
       <td>RAM Total</td>
-      <td><span id='ramTotal'></span> MB</td>
+      <td><span id="ramTotal"></span> MB</td>
     </tr>
     <tr>
       <td>RAM Free</td>
-      <td><span id='ramFree'></span> MB</td>
+      <td><span id="ramFree"></span> MB</td>
     </tr>
     <tr>
       <td>RAM Shared</td>
-      <td><span id='ramShared'></span> MB</td>
+      <td><span id="ramShared"></span> MB</td>
     </tr>
     <tr>
       <td>RAM Buffered</td>
-      <td><span id='ramBuffered'></span> MB</td>
+      <td><span id="ramBuffered"></span> MB</td>
     </tr>
     <tr>
       <td>RAM Percent</td>
-      <td><span id='ramPercent'></span> %</td>
+      <td><span id="ramPercent"></span> %</td>
     </tr>
     <tr>
       <td>Swap Total</td>
-      <td><span id='swapTotal'></span> MB</td>
+      <td><span id="swapTotal"></span> MB</td>
     </tr>
     <tr>
       <td>Swap Free</td>
-      <td><span id='swapFree'></span> MB</td>
+      <td><span id="swapFree"></span> MB</td>
     </tr>
     <tr>
       <td>Swap Percent</td>
-      <td><span id='swapPercent'></span> %</td>
+      <td><span id="swapPercent"></span> %</td>
     </tr>
     <tr>
       <td>Number of Current Processes</td>
-      <td><span id='procs'></span></td>
+      <td><span id="procs"></span></td>
     </tr>
     <tr>
       <td>Root Partition Total</td>
-      <td><span id='rootPartTotal'></span> MB</td>
+      <td><span id="rootPartTotal"></span> MB</td>
     </tr>
     <tr>
       <td>Root Partition Free</td>
-      <td><span id='rootPartFree'></span> MB</td>
+      <td><span id="rootPartFree"></span> MB</td>
     </tr>
     <tr>
       <td>Root Partition Percent</td>
-      <td><span id='rootPartPercent'></span> %</td>
+      <td><span id="rootPartPercent"></span> %</td>
     </tr>
   </table>
   <script>
     const subindexNames = {
-      0x01: 'osName',
-      0x02: 'osDistro',
-      0x03: 'osKernelVersion',
-      0x04: 'hostname',
-      0x05: 'uptime',
-      0x06: 'cpuNum',
-      0x07: 'cpuArch',
-      0x08: 'cpuGov',
-      0x09: 'cpuFreq',
-      0x0A: 'remoteProcNum',
-      0x0E: 'load1Min',
-      0x0F: 'load5Min',
-      0x10: 'load15Min',
-      0x11: 'ramTotal',
-      0x12: 'ramFree',
-      0x13: 'ramShared',
-      0x14: 'ramBuffered',
-      0x15: 'ramPercent',
-      0x16: 'swapTotal',
-      0x17: 'swapFree',
-      0x18: 'swapPercent',
-      0x19: 'procs',
-      0x1A: 'rootPartTotal',
-      0x1B: 'rootPartFree',
-      0x1C: 'rootPartPercent',
+      0x01: "osName",
+      0x02: "osDistro",
+      0x03: "osKernelVersion",
+      0x04: "hostname",
+      0x05: "uptime",
+      0x06: "cpuNum",
+      0x07: "cpuArch",
+      0x08: "cpuGov",
+      0x09: "cpuFreq",
+      0x0A: "remoteProcNum",
+      0x0E: "load1Min",
+      0x0F: "load5Min",
+      0x10: "load15Min",
+      0x11: "ramTotal",
+      0x12: "ramFree",
+      0x13: "ramShared",
+      0x14: "ramBuffered",
+      0x15: "ramPercent",
+      0x16: "swapTotal",
+      0x17: "swapFree",
+      0x18: "swapPercent",
+      0x19: "procs",
+      0x1A: "rootPartTotal",
+      0x1B: "rootPartFree",
+      0x1C: "rootPartPercent",
     };
 
     async  function updateAll() {
       let tmp;
-      const obj = await readValue('0x3001', null);
+      const obj = await readValue("0x3001", null);
       for (const subindex in subindexNames) {
         tmp = document.getElementById(subindexNames[subindex]);
         tmp.textContent = obj.subindexes[subindex].value;

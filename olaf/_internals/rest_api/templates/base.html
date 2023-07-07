@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang='en'>
+<html lang="en">
 <head>
   <title>{{title}}</title>
   <style>
@@ -11,14 +11,14 @@
       text-align: center;
     }
   </style>
-  <div id='headerGrid'>
-    <div id='headerLeft'>
-       <a href='/'>home</a>
+  <div id="headerGrid">
+    <div id="headerLeft">
+       <a href="/">home</a>
     </div>
-    <div id='headerCenter'>
+    <div id="headerCenter">
       <h2>{{name}}</h2>
     </div>
-    <div id='headerRight'>
+    <div id="headerRight">
     </div>
   </div>
 </head>
@@ -40,13 +40,18 @@
      */
     async function readValue(index, subindex) {
       let url = `http://${window.location.host}/od/${index}`;
-      if (subindex !== null && subindex !== '') {
+      if (subindex !== null && subindex !== "") {
         url = `http://${window.location.host}/od/${index}/${subindex}`;
       }
 
       return await fetch(url)
         .then(response => response.json())
-        .then(data => { return data; });
+        .then(data => {
+          if (data.error !== undefined) {
+            console.log(data);
+          }
+          return data;
+        });
     }
 
     /**
@@ -61,23 +66,28 @@
      */
     async function writeValue(index, subindex, value) {
       let options = {
-        'method': 'PUT',
+        "method": "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        'body': JSON.stringify({
-          'value': value,
+        "body": JSON.stringify({
+          "value": value,
         }),
       };
       
       let url = `http://${window.location.host}/od/${index}`;
-      if (subindex !== null && subindex !== '') {
+      if (subindex !== null && subindex !== "") {
         url = `http://${window.location.host}/od/${index}/${subindex}`;
       }
 
       return await fetch(url, options)
         .then(response => response.json())
-        .then(data => { return data; });
+        .then(data => {
+          if (data.error !== undefined) {
+            console.log(data);
+          }
+          return data;
+        });
     }
 
     /**
@@ -90,7 +100,7 @@
     function scetToDate(scet) {
       // convert to binary
       let base2 = scet.toString(2);
-      const leadingZeros = '0'.repeat(64 - base2.length);
+      const leadingZeros = "0".repeat(64 - base2.length);
       base2 = leadingZeros + base2;
 
       const coarseStr = base2.substring(32);
@@ -105,7 +115,7 @@
       return new Date(time);
     }
   </script>
-  <div id='content'>
+  <div id="content">
     {% block content %}{% endblock %}
   </div>
 </body>

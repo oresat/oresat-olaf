@@ -218,6 +218,10 @@ class App:
 
         self._factory_reset_cb = cb_func
 
+    @property
+    def od(self) -> canopen.ObjectDictionary:
+        return self._od
+
 
 app = App()
 '''The global instance of the OLAF app.'''

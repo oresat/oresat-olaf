@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block content %}
   <style>
@@ -17,8 +17,8 @@
       padding: 8px;
     }
   </style>
-  <div id='daemonTableDiv'>
-    <table id='daemonTable'>
+  <div id="daemonTableDiv">
+    <table id="daemonTable">
       <thead>
         <tr>
           <td>Index</td>
@@ -31,24 +31,24 @@
     </table>
   </div>
   <script>
-    const INDEX = '0x3005'
+    const INDEX = "0x3005"
     const DAEMON_STATES = [
-      'ACTIVE',
-      'RELOADING',
-      'INACTIVE',
-      'FAILED',
-      'ACTIVATING',
-      'DEACTIVATING'
+      "ACTIVE",
+      "RELOADING",
+      "INACTIVE",
+      "FAILED",
+      "ACTIVATING",
+      "DEACTIVATING"
     ];
 
     /** build the table */
     async function buildTable() {
-      const totalDaemonsObj = await readValue(INDEX, '0x1');
-      let tbodyRef = document.getElementById('daemonTable').getElementsByTagName('tbody')[0];
+      const totalDaemonsObj = await readValue(INDEX, "0x1");
+      let tbodyRef = document.getElementById("daemonTable").getElementsByTagName("tbody")[0];
       for (let i = 0; i < totalDaemonsObj.value; i++) {
-        await writeValue(INDEX, '0x4', i);
-        let daemonNameObj = await readValue(INDEX, '0x5');
-        let daemonStateObj = await readValue(INDEX, '0x6');
+        await writeValue(INDEX, "0x4", i);
+        let daemonNameObj = await readValue(INDEX, "0x5");
+        let daemonStateObj = await readValue(INDEX, "0x6");
         let newRow = tbodyRef.insertRow();
 
         let newCell = newRow.insertCell();
@@ -56,13 +56,13 @@
         newCell.appendChild(newText);
 
         let newCell2 = newRow.insertCell();
-        let span = document.createElement('span');
+        let span = document.createElement("span");
         span.id = `daemon${i}Name`;
         span.innerText = daemonNameObj.value;
         newCell2.appendChild(span);
 
         let newCell3 = newRow.insertCell();
-        let span2 = document.createElement('span');
+        let span2 = document.createElement("span");
         span2.id = `daemon${i}State`;
         span2.innerText = DAEMON_STATES[daemonStateObj.value];
         newCell3.appendChild(span2);
@@ -71,12 +71,12 @@
 
     /** Update data in the table */
     async function updateStatus() {
-      const totalDaemonsObj = await readValue(INDEX, '0x1');
+      const totalDaemonsObj = await readValue(INDEX, "0x1");
       console.log(totalDaemonsObj);
       for (let i = 0; i < totalDaemonsObj.value; i++) {
-        console.log('hi' + i);
-        await writeValue(INDEX, '0x4', i);
-        let daemonStateObj = await readValue(INDEX, '0x6');
+        console.log("hi" + i);
+        await writeValue(INDEX, "0x4", i);
+        let daemonStateObj = await readValue(INDEX, "0x6");
         let span = document.getElementById(`daemon${i}State`);
         span.innerText = DAEMON_STATES[daemonStateObj.value];
       }

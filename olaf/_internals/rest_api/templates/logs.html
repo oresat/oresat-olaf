@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block content %}
   <style>
@@ -11,14 +11,14 @@
       width: 100%;
     }
   </style>
-  <div id='page'>
+  <div id="page">
     <br/>
-    <textarea id='logs' rows=40 disabled></textarea>
+    <textarea id="logs" rows=40 disabled></textarea>
   </div>
   <script>
     async function updateLogs() {
-      const logsObj = await readValue('0x3006', '0x02');
-      document.getElementById('logs').value = logsObj.value;
+      const logsObj = await readValue("0x3006", "0x02");
+      document.getElementById("logs").value = logsObj.value;
     }
 
     updateLogs();

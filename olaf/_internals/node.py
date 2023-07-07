@@ -72,6 +72,7 @@ class Node:
         logger.debug(f'fwrite cache path {self._fwrite_cache.dir}')
 
         # python canopen does not set the value to default for some reason
+        # since this is in the constructor, there is no need for od lock
         for i in self.od:
             if not isinstance(self.od[i], canopen.objectdictionary.Variable):
                 for j in self.od[i]:
@@ -464,7 +465,8 @@ class Node:
 
     def _on_sdo_write(self, index: int, subindex: int, od: canopen.objectdictionary.Variable,
                       data: bytes):
-        '''SDO write callback function. Gives access to the data being received on a SDO write.
+        '''
+        SDO write callback function. Gives access to the data being received on a SDO write.
 
         *Note:* data is still written to object dictionary before call.
 

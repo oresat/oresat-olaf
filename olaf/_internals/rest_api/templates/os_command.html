@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block content %}
   <style>
@@ -21,54 +21,54 @@
       width: 100%;
     }
   </style>
-  <div id='page'>
-    <div id='abc'>
-      <a class='boldText'>Status: </a><span id='status'></span>
+  <div id="page">
+    <div id="abc">
+      <a class="boldText">Status: </a><span id="status"></span>
       <br/>
       <br/>
-      <label for='command'>Bash Command:</label>
+      <label for="command">Bash Command:</label>
       <br/>
-      <input type='text' id='command' name='command'/>
-      <button onclick='runCommand()'>Run</button>
+      <input type="text" id="command" name="command"/>
+      <button onclick="runCommand()">Run</button>
       <br/>
       <br/>
-      <a class='boldText'>Reply:</a>
+      <a class="boldText">Reply:</a>
       <br/>
-      <textarea id='reply' rows=30 disabled></textarea>
+      <textarea id="reply" rows=30 disabled></textarea>
     </div>
   </div>
   <script>
     const states = {
-        0: 'NO_ERROR_NO_REPLY',
-        1: 'NO_ERROR_REPLY',
-        2: 'ERROR_NO_REPLY',
-        3: 'ERROR_REPLY',
-        255: 'EXECUTING',
+        0: "NO_ERROR_NO_REPLY",
+        1: "NO_ERROR_REPLY",
+        2: "ERROR_NO_REPLY",
+        3: "ERROR_REPLY",
+        255: "EXECUTING",
     };
 
     async function runCommand() {
       // clear last reply
-      document.getElementById('reply').value = '';
+      document.getElementById("reply").value = "";
 
       // reset field incase of very quick commands
-      document.getElementById('status').textContent = 'EXECUTING';
+      document.getElementById("status").textContent = "EXECUTING";
 
-      const value = document.getElementById('command').value;
+      const value = document.getElementById("command").value;
 
-      writeValue('0x1023', '0x01', btoa(value));
+      writeValue("0x1023", "0x01", btoa(value));
     }
 
     async function updateStatus() {
-      const reply_states = ['NO_ERROR_REPLY', 'ERROR_REPLY'];
+      const reply_states = ["NO_ERROR_REPLY", "ERROR_REPLY"];
 
-      const statusObj = await readValue('0x1023', '0x02');
-      const status = document.getElementById('status');
-      const newStatus = states[statusObj['value']];
+      const statusObj = await readValue("0x1023", "0x02");
+      const status = document.getElementById("status");
+      const newStatus = states[statusObj["value"]];
 
       // state has change to a new state with a reply, display reply
-      if (status.textContent === 'EXECUTING' && reply_states.includes(newStatus)) {
-        const replyObj = await readValue('0x1023', '0x03');
-        document.getElementById('reply').value = atob(replyObj.value);
+      if (status.textContent === "EXECUTING" && reply_states.includes(newStatus)) {
+        const replyObj = await readValue("0x1023", "0x03");
+        document.getElementById("reply").value = atob(replyObj.value);
       }
 
       status.textContent = newStatus;
