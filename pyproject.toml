@@ -1,2 +1,48 @@
 [build-system]
 requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "oresat-olaf"
+description = "Application framework for all OreSat Linux boards"
+readme = "README.rst"
+requires-python = ">=3.7"
+license = {text = "GPL-3.0"}
+classifiers = [
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Embedded Systems",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+]
+dependencies = [
+    "canopen",
+    "flask",
+    "loguru",
+    "natsort",
+    "psutil",
+    "pydbus",
+]
+dynamic = ["version"]
+
+[project.scripts]
+olaf-sdo-transfer = "olaf.scripts.sdo_transfer:main"
+olaf-file-transfer = "olaf.scripts.file_transfer:main"
+olaf-os-command = "olaf.scripts.os_command:main"
+olaf-system-info = "olaf.scripts.system_info:main"
+olaf-new-eds = "olaf.scripts.new_eds:main"
+olaf-sync = "olaf.scripts.sync:main"
+
+[tool.setuptools.dynamic]
+version = {attr = "olaf.__version__"}
+
+[tool.setuptools.packages.find]
+exclude = ["docs*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.eds", "*.html"]
