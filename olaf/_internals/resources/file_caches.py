@@ -42,28 +42,29 @@ class FileCachesResource(Resource):
         if index != self.index:
             return ret
 
-        try:
-            if subindex == Subindex.FREAD_LEN:
-                ret = len(self.node.fread_cache)
-            elif subindex == Subindex.FWRITE_LEN:
-                ret = len(self.node.fwrite_cache)
-            elif subindex == Subindex.CACHE_SELECTOR:
-                ret = self.selector
-            elif subindex == Subindex.FILTER:
-                ret = self.filter
-            elif subindex == Subindex.CACHE_LENGTH:
-                ret = len(self.file_caches[self.selector].files(self.filter))
-            elif subindex == Subindex.ITER:
-                ret = self.iter
-            elif subindex == Subindex.FILE_NAME:
-                ret = self.file_caches[self.selector].files(self.filter)[self.iter].name
-            elif subindex == Subindex.FILE_SIZE:
-                dir_name = self.file_caches[self.selector].dir
-                file_name = self.file_caches[self.selector].files(self.filter)[self.iter].name
-                file_path = f'{dir_name}/{file_name}'
+        if subindex == Subindex.FREAD_LEN:
+            ret = len(self.node.fread_cache)
+        elif subindex == Subindex.FWRITE_LEN:
+            ret = len(self.node.fwrite_cache)
+        elif subindex == Subindex.CACHE_SELECTOR:
+            ret = self.selector
+        elif subindex == Subindex.FILTER:
+            ret = self.filter
+        elif subindex == Subindex.CACHE_LENGTH:
+            ret = len(self.file_caches[self.selector].files(self.filter))
+        elif subindex == Subindex.ITER:
+            ret = self.iter
+        elif subindex == Subindex.FILE_NAME:
+            files = self.file_caches[self.selector].files(self.filter)
+            ret = files[self.iter].name if self.iter < len(files) else ''
+        elif subindex == Subindex.FILE_SIZE:
+            dir_name = self.file_caches[self.selector].dir
+            files = self.file_caches[self.selector].files(self.filter)
+            if self.iter < len(files):
+                file_path = f'{dir_name}/{files[self.iter].name}'
                 ret = getsize(file_path)
-        except Exception as e:
-            logger.warning(f'{e} on subindex 0x{subindex:02X}')
+            else:
+                ret = 0
 
         return ret
 

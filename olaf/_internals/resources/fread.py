@@ -50,11 +50,11 @@ class FreadResource(Resource):
                 with open(self.file_path, 'rb') as f:
                     ret = zlib.crc32(f.read())
             else:
-                logger.warning(f'cannot get CRC32, file {self.file_path} does not exist')
+                logger.debug(f'cannot get CRC32, file "{self.file_path}" does not exist')
                 ret = 0
         elif subindex == Subindex.FILE_DATA:
             if not self.file_path:
-                logger.warning('fread file path was not set before trying to read file data')
+                logger.debug('fread file path was not set before trying to read file data')
                 return b''
 
             try:
