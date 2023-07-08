@@ -23,7 +23,7 @@ Society).
    api/index
    updater/index
    scripts
-
+   oresat_file
 
 
 Indices and tables
