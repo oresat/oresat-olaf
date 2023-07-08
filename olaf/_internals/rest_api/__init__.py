@@ -151,7 +151,7 @@ def root():
     for p in rest_api.app.url_map.iter_rules():
         route = str(p)
         if not route.startswith('/static/') and not route.startswith('/od/') \
-                and route not in ['/', '/favicon.ico']:
+                and route not in ['/', '/favicon.ico', '/od-all']:
             routes.append(str(p))
 
     routes = natsorted(routes)
