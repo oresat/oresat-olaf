@@ -72,7 +72,7 @@ class App:
         self._od.node_id = self._node_id
         self._od.bitrate = 1_000_000  # oresat node will always have 1 Mbps
 
-    def setup(self, eds: str, bus: str, node_id: [int, str] = 0, master_node: bool = False):
+    def setup(self, eds: str, bus: str, node_id: int or str = 0, master_node: bool = False):
         '''
         Setup the app. Will be called by ``olaf_setup`` automatically.
 

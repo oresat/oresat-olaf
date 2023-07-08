@@ -14,9 +14,13 @@ from .common.ecss import scet_int_from_time, scet_int_to_time, utc_int_from_time
 from .common.oresat_file import OreSatFile, new_oresat_file
 from .common.oresat_file_cache import OreSatFileCache
 from .common.timer_loop import TimerLoop
-from .common.gpio import GPIO
+from .common.gpio import Gpio, GpioError, GPIO_LOW, GPIO_HIGH, GPIO_IN, GPIO_OUT
+from .common.gpio import Gpio as GPIO  # for backwards compatibility
+from .common.gpio import GpioError as GPIOError  # for backwards compatibility
 from .common.adc import Adc
 from .common.daemon import Daemon, DaemonState
+from .common.cpufreq import get_cpufreq, get_cpufreq_gov, set_cpufreq, set_cpufreq_gov, A8_CPUFREQS
+
 
 __version__ = '2.1.2'
 

@@ -1,7 +1,7 @@
 from os import geteuid
 
 A8_CPUFREQS = [300, 600, 720, 800, 1000]
-'''CPU frequencies for the Cortex A8 in MHz'''
+'''list: CPU frequencies for the Cortex A8 in MHz'''
 
 
 def get_cpufreq() -> int:
@@ -21,20 +21,18 @@ def get_cpufreq() -> int:
 
 def set_cpufreq(value: int):
     '''
-    Set the current CPU frequency.
-
-    Note: The values for Cortex A8 are 300, 600, 720, 800, and 1000.
+    Set the current CPU frequency. Must be running as root to use this function.
 
     Parameters
     ----------
     value: int
-        The cpufreq in MHz to change to.
+        The cpufreq in MHz to change to. Must be a value from :py:data:`A8_CPUFREQS`.
     '''
 
     if geteuid() != 0:  # not running as root
         raise PermissionError('cannot set cpufreq, not running at root')
     if value not in A8_CPUFREQS:
-        raise ValueError(f'cannot set cpufreq to {value}, valid values are {A8_CPUFREQS}')
+        raise ValueError(f'invalid cpufreq of {value} MHz')
 
     with open('/sys/devices/system/cpu/cpufreq/policy0/scaling_setspeed', 'w') as f:
         f.write(str(value * 1000))
@@ -42,14 +40,29 @@ def set_cpufreq(value: int):
 
 def get_cpufreq_gov() -> str:
     '''
-    Get the current cpu governor.
+    Get the current cpu governor; ether ``'performace'`` or ``'powesave'``.
 
     Returns
     -------
     str
-        The current CPU  governor.
+        The current CPU governor.
     '''
 
     with open('/sys/devices/system/cpu/cpufreq/policy0/scaling_governor', 'r') as f:
-        value = f.read().strip()
-    return value
+        gov = f.read().strip()
+
+    return gov
+
+
+def set_cpufreq_gov(cpufreq_gov: str):
+    '''
+    Set the current cpu governor.
+
+    Parameters
+    -------
+    cpufreq_gov: CpuGovenor
+        The CPU governor to change to. Must be ``'performace'`` or ``'powesave'``
+    '''
+
+    with open('/sys/devices/system/cpu/cpufreq/policy0/scaling_governor', 'w') as f:
+        f.write(cpufreq_gov.value)
