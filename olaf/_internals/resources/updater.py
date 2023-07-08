@@ -72,8 +72,8 @@ class UpdaterResource(Resource):
             if subindex == Subindex.STATUS:
                 ret = self._updater.status.value
             elif subindex == Subindex.UPDATES_CACHED:
-                ret = self._updater.updates_cached
+                ret = len(self._updater.updates_cached)
             elif subindex == Subindex.LIST_AVAILABLE:
-                ret = ' '.join(self._cache.files())
+                ret = ' '.join(self._updater.updates_cached)
 
         return ret

@@ -1,6 +1,6 @@
 import zlib
 from os import remove, listdir
-from os.path import basename
+from os.path import basename, isfile
 from pathlib import Path
 from enum import IntEnum, auto
 
@@ -46,14 +46,15 @@ class FreadResource(Resource):
         if subindex == Subindex.FILE_NAME:
             ret = basename(self.file_path)
         elif subindex == Subindex.CRC32:
-            try:
+            if isfile(self.file_path):
                 with open(self.file_path, 'rb') as f:
                     ret = zlib.crc32(f.read())
-            except FileNotFoundError as e:
-                logger.exception(e)
+            else:
+                logger.warning(f'cannot get CRC32, file {self.file_path} does not exist')
+                ret = 0
         elif subindex == Subindex.FILE_DATA:
             if not self.file_path:
-                logger.error('fread file path was not set before trying to read file data')
+                logger.warning('fread file path was not set before trying to read file data')
                 return b''
 
             try:

@@ -279,7 +279,8 @@ def _object_to_dict(index: int, subindex: int = None) -> dict:
 
     if isinstance(obj, canopen.objectdictionary.Variable):
         value = app.node._on_sdo_read(index, subindex, obj)
-        if obj.data_type == DataType.DOMAIN:  # encode DOMAINs for JSON
+        if obj.data_type in [DataType.DOMAIN, DataType.OCTET_STRING] and value is not None:
+            # encode bytes data types for JSON
             value = base64.encodebytes(value).decode('utf-8')
 
     data = {
@@ -301,6 +302,16 @@ def _object_to_dict(index: int, subindex: int = None) -> dict:
         data['object_type'] = 'RECORD'
         data['subindexes'] = {subindex: _object_to_dict(index, subindex) for subindex in obj}
 
+    return data
+
+
+@rest_api.app.route('/od-all', methods=['GET'])
+def get_all_object():
+    data = {}
+    for index in app.od:
+        if index < 0x1000:
+            continue
+        data[index] = _object_to_dict(index)
     return data
 
 

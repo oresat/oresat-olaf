@@ -20,11 +20,10 @@
       display: none;
     }
   </style>
-  <label for="objIndex">Index:</label>
-  <input type="text" id="objIndex" name="objIndex" placeholder="0x1000"/>
-  <label for="objSubindex">Subindex:</label>
-  <input type="text" id="objSubindex" name="objSubindex" placeholder="0x00"/>
-  <button onclick="getObjectInfo()">Get Info</button>
+  <label for="indexSelect">Index:</label>
+  <select id="indexSelect"></select>
+  <label for="subindexSelect">Subindex:</label>
+  <select id="subindexSelect"></select>
   <br/>
   <br/>
   <div id="variableObj">
@@ -75,8 +74,8 @@
   </div>
   <script>
     async function updateData() {
-      const index = document.getElementById("objIndex").value;
-      const subindex = document.getElementById("objSubindex").value;
+      const index = document.getElementById("indexSelect").value;
+      const subindex = document.getElementById("subindexSelect").value;
 
       if (index === "") {
         alert("error: requires at least the index field to be set")
@@ -85,11 +84,11 @@
 
       const obj = await readValue(index, subindex);
 
-      if (obj["error"] !== undefined) {
+      if (obj.error !== undefined) {
         document.getElementById("variableObj").style.display = "none";
         document.getElementById("arrayRecordObj").style.display = "none";
 
-        alert(error: obj["error"]);
+        alert(`error: ${obj.error}`);
       } else if (obj["object_type"] === "VARIABLE") {
         document.getElementById("variableObj").style.display = "inline";
         document.getElementById("arrayRecordObj").style.display = "none";
@@ -98,6 +97,7 @@
         document.getElementById("varDataType").textContent = obj.data_type;
         document.getElementById("varAccessType").textContent = obj.access_type;
         document.getElementById("varValue").textContent = obj.value;
+        document.getElementById("objNewValue").value = obj.value;
 
         if (obj.access_type === "ro" || obj.access_type === "const") {
           document.getElementById("varNewValueInput").style.display = "none";
@@ -114,21 +114,89 @@
       }
     }
 
-    function getObjectInfo() {
-      updateData();
-    }
-
-    function setObjectValue() {
-      const index = document.getElementById("objIndex").value;
-      const subindex = document.getElementById("objSubindex").value;
-      const value = document.getElementById("varNewValueInput").value;
+    async function setObjectValue() {
+      const indexSelect = document.getElementById("indexSelect");
+      const subindexSelect = document.getElementById("subindexSelect");
+      const value = document.getElementById("objNewValue").value;
+      const index = parseInt(indexSelect.value, 16);
+      let subindex = "";
+      if (subindexSelect.value !== "") {
+        subindex = parseInt(subindexSelect.value, 16);
+      }
+      console.log(index, subindex, value);
 
       if (index === "") {
         alert("error: requires at least the index field to be set")
         return;
       }
 
-      writeValue(index, subindex, value);
+      await writeValue(index, subindex, value);
+      updateData();
     }
+
+    function updateSubindexSelect() {
+
+      const indexSelect = document.getElementById("indexSelect");
+      const subindexSelect = document.getElementById("subindexSelect");
+      const index = parseInt(indexSelect.value, 16);
+      const obj = objects[index];
+
+      // clear select options
+      subindexSelect.options.length = 0
+
+      let opt = document.createElement("option");
+      opt.value = "";
+      opt.innerHTML = "None";
+      subindexSelect.appendChild(opt);
+
+      if (obj.subindexes === undefined) {
+        document.getElementById("subindexSelect").disabled = true;
+      } else {
+        document.getElementById("subindexSelect").disabled = false;
+        for (const subindex in objects[index].subindexes) {
+          let subindexHex = "0x" + parseInt(subindex).toString(16).toUpperCase();
+          let opt = document.createElement("option");
+          opt.value = subindexHex;
+          opt.innerHTML = `${subindexHex} - ${objects[index].subindexes[subindex].name}`;
+          subindexSelect.appendChild(opt);
+        }
+      }
+      updateData();
+    }
+
+    let objects;
+
+    async function readAllObjects() {
+      objects = await fetch(`http://${window.location.host}/od-all`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.error !== undefined) {
+            console.log(data);
+          }
+          return data;
+        });
+    }
+
+    async function updateIndexSelect() {
+
+      await readAllObjects();
+
+      const indexSelect = document.getElementById("indexSelect");
+      indexSelect.onchange = updateSubindexSelect
+      for (const index in objects) {
+        let indexHex = "0x" + parseInt(index).toString(16).toUpperCase();
+        let opt = document.createElement("option");
+        opt.value = indexHex;
+        opt.innerHTML = `${indexHex} - ${objects[index].name}`;
+        indexSelect.appendChild(opt);
+      }
+
+      const subindexSelect = document.getElementById("subindexSelect");
+      subindexSelect.onchange = updateData
+
+      updateSubindexSelect();
+    }
+
+    updateIndexSelect();
   </script>
 {% endblock %}

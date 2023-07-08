@@ -63,7 +63,7 @@ class FileCachesResource(Resource):
                 file_path = f'{dir_name}/{file_name}'
                 ret = getsize(file_path)
         except Exception as e:
-            logger.error(e)
+            logger.warning(f'{e} on subindex 0x{subindex:02X}')
 
         return ret
 

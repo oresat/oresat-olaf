@@ -419,10 +419,10 @@ class Updater:
         return self._state
 
     @property
-    def updates_cached(self) -> int:
-        '''int: The number of update archives in cache.'''
+    def updates_cached(self) -> list:
+        '''list: The list of update archives in cache.'''
 
-        return len(self._cache.files())
+        return self._cache.files()
 
     @property
     def list_updates(self) -> str:
