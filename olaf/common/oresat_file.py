@@ -15,7 +15,7 @@ def new_oresat_file(keyword: str, card: str = '', date: float = -1.0, ext: str =
     card: str
         The card name for the file_name. If not set, the hostname will be
         used.
-    date: Union(None, float)
+    date: float
         Unix timestamp the file was made. Set to a :py:func:`time.time` value or set to a negative
         number to use current time.
     ext: str
@@ -34,9 +34,9 @@ def new_oresat_file(keyword: str, card: str = '', date: float = -1.0, ext: str =
         card = card[7:]  # remove 'oresat-'
 
     if date < 0:
-        date_str = str(int(time()))
+        date_str = str(int(time() * 1000))
     else:
-        date_str = str(int(date))
+        date_str = str(int(date * 1000))
 
     # make sure the extension starts with a '.'
     if len(ext) > 0 and ext[0] != '.':
@@ -77,10 +77,10 @@ class OreSatFile:
             raise ValueError('invalid OreSat file name')
 
         if '.' in temp:
-            self._date = float(temp.split('.')[0])
+            self._date = float(temp.split('.')[0]) / 1000
             self._extension = temp[temp.find('.'):]
         else:
-            self._date = float(temp)
+            self._date = float(temp) / 1000
             self._extension = ''
 
     def __repr__(self):
@@ -120,7 +120,7 @@ class OreSatFile:
 
     @property
     def date(self) -> float:
-        '''float: The Unix time the file was made. Read only.'''
+        '''float: The Unix time the file was made in milliseconds. Read only.'''
 
         return self._date
 
