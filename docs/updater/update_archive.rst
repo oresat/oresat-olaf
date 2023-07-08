@@ -16,11 +16,11 @@ Tar Name
 ---------
 
 The file name will follow filename standards for OreSat Linux Files with the 
-keyword set to "update". 
+keyword set to ``"update"``. 
 
 **Example, a update to the GPS board**::
 
-   gps_update_1612392143.tar.xz
+   gps_update_1612392143000.tar.xz
 
 The date field in the filename will be used to determine the next file to used
 as the oldest file is always run first.
@@ -28,9 +28,9 @@ as the oldest file is always run first.
 Tar Contents
 -------------
 
-The update archive will **always** include a instructions.txt file. It can also
-include deb files (debian package files), bash script, and/or files to be used
-by bash scripts as needed.
+The update archive will **always** include a `instructions.txt` file. It can also
+include Debian packages (``.deb`` files), Python packages (``.whl`` files), Bash
+scripts (``.sh`` files), and other files to be used by Bash scripts as needed.
 
 **Example contents of a update archive**::
 
@@ -47,18 +47,18 @@ by bash scripts as needed.
 instructions.txt
 ----------------
 
-instruction.txt contatins a JSON string with with a list of instruction
+`instructions.txt` contatins a JSON string with with a list of instruction
 dictionaries with `type` and `items` fields. The instructions will be run in
 order.
 
 **Type values**:
 
-* BASH_SCIPT - run a bash script
-* DPKG_INSTALL - install debian package(s) using dpkg
-* DPKG_REMOVE - remove debian package(s) using dpkg
-* DPKG_PURGE - purge debian package(s) using dpkg
-* PIP_INSTALL - install python package(s) using pip
-* PIP_UNINSTALL - uninstall python package(s) using pip
+* ``BASH_SCIPT`` - run a Bash script
+* ``DPKG_INSTALL`` - install Debian package(s) using dpkg
+* ``DPKG_REMOVE`` - remove Debian package(s) using dpkg
+* ``DPKG_PURGE`` - purge Debian package(s) using dpkg
+* ``PIP_INSTALL`` - install Python package(s) using pip
+* ``PIP_UNINSTALL`` - uninstall Python package(s) using pip
 
 **Example instructions.txt**::
 

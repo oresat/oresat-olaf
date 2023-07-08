@@ -14,3 +14,4 @@ API
    gpio
    daemon
    adc
+   cpufreq
