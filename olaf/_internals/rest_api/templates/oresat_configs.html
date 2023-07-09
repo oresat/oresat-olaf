@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <style>
+    #page {
+      justify-content: center;
+      display: flex;
+    }
+  </style>
+  <label for="flightMode">Flight mode</label>
+  <input type="checkbox" id="flightMode" onclick="toggleFlightMode()"></input>
+  <script>
+    function toggleFlightMode() {
+      const value = document.getElementById("flightMode").checked;
+      const obj = writeValue("0x3007", "0x02", value);
+      document.getElementById("flightMode").checked = obj.value;
+    }
+
+    async function getFlightMode() {
+      const obj = await readValue("0x3007", "0x2");
+      console.log(obj);
+      document.getElementById("flightMode").checked = obj.value;
+    }
+
+    getFlightMode();
+  </script>
+{% endblock %}
