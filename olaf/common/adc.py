@@ -14,13 +14,16 @@ class Adc:
     ADC_BITS = 12
     ADC_MAX_VALUE = (2 ** ADC_BITS) - 1
 
-    def __init__(self, pin: int):
+    def __init__(self, pin: int, mock: bool = False):
         '''
         Parameters
         ----------
         int: int
             THe pin number between 0 and 7 for the adc pin on the Octavo A8.
         '''
+
+        self._mock = mock
+        self._mock_value = self.ADC_MAX_VALUE // 2
 
         if pin < 0 or pin > 7:
             raise AdcError(f'Invalid pin number {pin}, must be between 0 and 7')
@@ -31,6 +34,9 @@ class Adc:
     @property
     def raw(self) -> int:
         '''int: the raw value from the ADC'''
+
+        if self._mock:
+            return self._mock_value
 
         if not os.path.isfile(self._adc_path):
             raise AdcError(f'could not find ADC file {self._adc_path}')

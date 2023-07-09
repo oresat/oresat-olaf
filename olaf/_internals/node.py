@@ -307,7 +307,6 @@ class Node:
 
         first_bus_down = True  # flag to only log error message on first error
         self.first_bus_reset = True  # flag to only log error message on first error
-        logger.info(f'{self.name} app is running')
         while not self._event.is_set():
             bus = psutil.net_if_stats().get(self._bus)
             if not bus:  # bus does not exist
@@ -339,7 +338,7 @@ class Node:
             Reset / power off condition.
         '''
 
-        logger.info(f'{self.name} app is starting')
+        logger.info(f'{self.name} node is starting')
         if geteuid() != 0:  # running as root
             logger.warning('not running as root, cannot restart CAN bus if it goes down')
 
@@ -351,7 +350,7 @@ class Node:
         # stop the node and TPDO timers
         self._destroy_node()
 
-        logger.info(f'{self.name} app has ended')
+        logger.info(f'{self.name} node has ended')
         return self._reset
 
     def stop(self, reset: NodeStop = None):
