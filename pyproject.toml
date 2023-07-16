@@ -21,8 +21,10 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Application Frameworks",
 ]
 dependencies = [
+    "PyGObject",
     "canopen",
     "flask",
+    "gi",
     "loguru",
     "natsort",
     "psutil",

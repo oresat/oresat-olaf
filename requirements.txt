@@ -1,7 +1,9 @@
+PyGObject
 build
 canopen
 flake8
 flask
+gi
 loguru
 natsort
 psutil
