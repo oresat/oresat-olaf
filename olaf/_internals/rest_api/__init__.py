@@ -359,6 +359,7 @@ def power_control_template():
 def daemons_template():
     return render_olaf_template('daemons.html', name='External Daemons')
 
+
 @rest_api.app.route('/oresat-configs')
 def oresat_configs_template():
     return render_olaf_template('oresat_configs.html', name='OreSat Configs')

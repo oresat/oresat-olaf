@@ -40,7 +40,7 @@ class TestUpdater(unittest.TestCase):
 
         # properties defaults
         self.assertEqual(updater.status, UpdaterState.UPDATE_SUCCESSFUL)
-        self.assertEqual(updater.updates_cached, 0)
+        self.assertEqual(updater.updates_cached, [])
         self.assertEqual(updater.list_updates, '[]')
         self.assertEqual(updater.update_archive, '')
         self.assertEqual(updater.total_instructions, 0)
@@ -50,22 +50,22 @@ class TestUpdater(unittest.TestCase):
 
     def test_add_update_archive(self):
         updater = Updater(self._work_dir, self._cache_dir)
-        updates_cached = updater.updates_cached
+        updates_cached = len(updater.updates_cached)
 
         self.assertFalse(updater.add_update_archive('invalid-file-path'))
-        self.assertEqual(updater.updates_cached, updates_cached)
+        self.assertEqual(len(updater.updates_cached), updates_cached)
 
         self.assertTrue(updater.add_update_archive(PATH + '/test_update_1611940000.tar.xz'))
-        self.assertEqual(updater.updates_cached, updates_cached + 1)
+        self.assertEqual(len(updater.updates_cached), updates_cached + 1)
 
         self.assertTrue(updater.add_update_archive(PATH + '/test_update_1611941111.tar.xz'))
-        self.assertEqual(updater.updates_cached, updates_cached + 2)
+        self.assertEqual(len(updater.updates_cached), updates_cached + 2)
 
         # add the same file (should override)
         self.assertTrue(updater.add_update_archive(PATH + '/test_update_1611942222.tar.xz'))
         self.assertTrue(updater.add_update_archive(PATH + '/test_update_1611942222.tar.xz'))
         self.assertTrue(updater.add_update_archive(PATH + '/test_update_1611942222.tar.xz'))
-        self.assertEqual(updater.updates_cached, updates_cached + 3)
+        self.assertEqual(len(updater.updates_cached), updates_cached + 3)
 
     @unittest.skipUnless(isfile('/usr/bin/dpkg'), 'requires dpkg')
     def test_make_status_file(self):
