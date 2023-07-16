@@ -24,7 +24,6 @@ dependencies = [
     "PyGObject",
     "canopen",
     "flask",
-    "gi",
     "loguru",
     "natsort",
     "psutil",

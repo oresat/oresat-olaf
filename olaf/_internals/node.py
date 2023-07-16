@@ -72,7 +72,6 @@ class Node:
         logger.debug(f'fwrite cache path {self._fwrite_cache.dir}')
 
         # python canopen does not set the value to default for some reason
-        # since this is in the constructor, there is no need for od lock
         for i in self.od:
             if not isinstance(self.od[i], canopen.objectdictionary.Variable):
                 for j in self.od[i]:
