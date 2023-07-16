@@ -74,11 +74,10 @@ class Gpio:
         try:
             with open('/sys/class/gpio/export', 'w') as f:
                 f.write(str(self._number))
+            with open('/sys/class/gpio/export', 'w') as f:
+                f.write(str(self._number))
         except PermissionError:
             pass  # will always fail the first time
-
-        with open('/sys/class/gpio/export', 'w') as f:
-            f.write(str(self._number))
 
     def unexport(self):
         '''Unexport the pin'''
