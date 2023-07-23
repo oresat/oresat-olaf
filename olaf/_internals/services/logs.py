@@ -3,22 +3,18 @@ from os import listdir
 
 from loguru import logger
 
-from ...common.resource import Resource
+from ...common.service import Service
 from ...common.oresat_file import new_oresat_file
-from ...common.timer_loop import TimerLoop
 
 
-class LogsResource(Resource):
-    '''Resource for getting logs'''
+class LogsService(Service):
+    '''Service for getting logs'''
 
     def __init__(self):
         super().__init__()
 
         self.index = 0x3006
         self.logs_dir_path = '/var/log/journal/'
-
-        self.timer_loop = TimerLoop('logs resource', self._loop, 500)
-        self.failed = True
 
     def on_start(self):
 
@@ -27,13 +23,7 @@ class LogsResource(Resource):
 
         self.node.add_sdo_read_callback(self.index, self.on_read)
 
-        self.timer_loop.start()
-
-    def on_end(self):
-
-        self.timer_loop.stop()
-
-    def _loop(self):
+    def on_loop(self):
 
         if self.make_logs_obj.value:
             logger.info('Making a copy of logs')
@@ -47,7 +37,7 @@ class LogsResource(Resource):
             self.node.fread_cache.add(tar_file_path, consume=True)
             self.make_logs_obj.value = False
 
-        return True
+        self.sleep(0.5)
 
     def on_read(self, index: int, subindex: int):
 

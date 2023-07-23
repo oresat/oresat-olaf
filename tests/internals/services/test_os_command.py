@@ -1,7 +1,7 @@
 import unittest
 from time import sleep
 
-from olaf._internals.resources.os_command import OSCommandState, OSCommandResource
+from olaf._internals.services.os_command import OSCommandState, OSCommandService
 
 from . import MockApp
 
@@ -11,9 +11,9 @@ class TestOSCommand(unittest.TestCase):
     def setUp(self):
 
         self.app = MockApp()
-        self.app.add_resource(OSCommandResource())
+        self.app.add_service(OSCommandService())
         self.app.start()
-        self.index = self.app.resource.index
+        self.index = self.app.service.index
 
     def tearDown(self):
 

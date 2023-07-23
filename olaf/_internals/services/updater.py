@@ -2,8 +2,7 @@ from enum import IntEnum, auto
 
 from loguru import logger
 
-from ...common.resource import Resource
-from ...common.timer_loop import TimerLoop
+from ...common.service import Service
 from ..updater import Updater, UpdaterError
 
 
@@ -15,22 +14,20 @@ class Subindex(IntEnum):
     MAKE_STATUS_FILE = auto()
 
 
-class UpdaterResource(Resource):
-    '''Resource for interacting with the updater'''
+class UpdaterService(Service):
+    '''Service for interacting with the updater'''
 
     def __init__(self, updater: Updater):
         super().__init__()
 
         self._updater = updater
         self.index = 0x3100
-        self.timer_loop = TimerLoop('updater resource', self._loop, 500)
 
     def on_start(self):
 
         record = self.node.od[self.index]
         self.update_obj = record[Subindex.UPDATE.value]
         self.make_status_obj = record[Subindex.MAKE_STATUS_FILE.value]
-        self.timer_loop.start()
 
         # make sure defaults are set correctly (override the values from eds/dcf)
         self.update_obj.value = False
@@ -38,11 +35,7 @@ class UpdaterResource(Resource):
 
         self.node.add_sdo_read_callback(self.index, self.on_read)
 
-    def on_end(self):
-
-        self.timer_loop.stop()
-
-    def _loop(self):
+    def on_loop(self):
 
         # check for update files in fwrite cache
         for i in self.node.fwrite_cache.files('update'):
@@ -62,7 +55,7 @@ class UpdaterResource(Resource):
             self.node.fread_cache.add(status_archive_file_path, consume=True)
             self.make_status_obj.value = False
 
-        return True
+        self.sleep(0.5)
 
     def on_read(self, index: int, subindex: int):
 

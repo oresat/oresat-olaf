@@ -4,15 +4,16 @@ API
 .. toctree::
    :maxdepth: 2
 
+   adc
    app
-   node
-   resource
+   cpufreq
+   daemon
    ecss
+   gpio
+   node
    oresat_file
    oresat_file_cache
-   rest_api
-   gpio
-   daemon
-   adc
-   cpufreq
    pru
+   resource
+   rest_api
+   service

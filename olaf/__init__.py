@@ -10,6 +10,7 @@ from ._internals.node import Node, NodeStop, NetworkError
 from ._internals.master_node import MasterNode
 from ._internals.rest_api import rest_api, RestAPI, render_olaf_template
 from .common.resource import Resource
+from .common.service import Service
 from .common.ecss import scet_int_from_time, scet_int_to_time, utc_int_from_time, utc_int_to_time
 from .common.oresat_file import OreSatFile, new_oresat_file
 from .common.oresat_file_cache import OreSatFileCache

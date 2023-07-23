@@ -3,8 +3,7 @@ from enum import IntEnum
 
 from loguru import logger
 
-from ...common.resource import Resource
-from ...common.timer_loop import TimerLoop
+from ...common.service import Service
 
 
 class OSCommandState(IntEnum):
@@ -15,8 +14,8 @@ class OSCommandState(IntEnum):
     EXECUTING = 0xFF
 
 
-class OSCommandResource(Resource):
-    '''Resource for running OS (bash) commands over CAN bus as defined by CiA 301 specs'''
+class OSCommandService(Service):
+    '''Service for running OS (bash) commands over CAN bus as defined by CiA 301 specs'''
 
     def __init__(self):
         super().__init__()
@@ -32,20 +31,12 @@ class OSCommandResource(Resource):
         self.reply_max_len = 10000
         self.failed = False
 
-        self.timer_loop = TimerLoop('os command resource', self._loop, 500,
-                                    exc_func=self._loop_error)
-
     def on_start(self):
 
         self.node.add_sdo_read_callback(self.index, self.on_read)
         self.node.add_sdo_write_callback(self.index, self.on_write)
-        self.timer_loop.start()
 
-    def on_end(self):
-
-        self.timer_loop.stop()
-
-    def _loop(self):
+    def on_loop(self):
 
         if self.state == OSCommandState.EXECUTING:
             logger.info('Running OS command: ' + self.command)
@@ -66,9 +57,9 @@ class OSCommandResource(Resource):
 
             logger.info('OS command has completed')
 
-        return True
+        self.sleep(0.5)
 
-    def _loop_error(self, exc: Exception):
+    def on_loop_error(self, exc: Exception):
 
         self.failed = True
         self.command = ''

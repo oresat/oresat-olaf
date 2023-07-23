@@ -7,20 +7,21 @@ import canopen
 from loguru import logger
 
 from ..common.resource import Resource
+from ..common.service import Service
 from .node import Node, NodeStop
 from .master_node import MasterNode
 from .updater import Updater
-from .resources.os_command import OSCommandResource
 from .resources.system_info import SystemInfoResource
 from .resources.file_caches import FileCachesResource
 from .resources.fread import FreadResource
 from .resources.fwrite import FwriteResource
 from .resources.ecss import ECSSResource
-from .resources.updater import UpdaterResource
-from .resources.logs import LogsResource
 from .resources.store_eds import StoreEdsResource
 from .resources.power_control import PowerControlResource
 from .resources.daemons import DaemonsResource
+from .services.os_command import OSCommandService
+from .services.updater import UpdaterService
+from .services.logs import LogsService
 
 
 class App:
@@ -38,6 +39,7 @@ class App:
         self._od = None
         self._bus = None
         self._resources = []
+        self._services = []
         self._node = None
         self._updater = None
         self._factory_reset_cb = None
@@ -126,15 +128,17 @@ class App:
         self._updater = Updater(f'{self._node.work_base_dir}/updater',
                                 f'{self._node.cache_base_dir}/updates')
 
-        # default resources
-        self.add_resource(OSCommandResource())
+        # default core services
+        self.add_service(UpdaterService(self._updater))
+        self.add_service(LogsService())
+        self.add_service(OSCommandService())
+
+        # default core resources
         self.add_resource(ECSSResource())
         self.add_resource(SystemInfoResource())
         self.add_resource(FileCachesResource())
         self.add_resource(FreadResource())
         self.add_resource(FwriteResource())
-        self.add_resource(UpdaterResource(self._updater))
-        self.add_resource(LogsResource())
         self.add_resource(StoreEdsResource(eds))
         self.add_resource(PowerControlResource())
         self.add_resource(DaemonsResource())
@@ -151,8 +155,23 @@ class App:
 
         self._resources.append(resource)
 
+    def add_service(self, service: Service):
+        '''
+        Add a resource for the app
+
+        Parameters
+        ----------
+        service: Service
+            The service to add.
+        '''
+
+        self._services.append(service)
+
     def run(self):
         logger.info(f'{self._node.name} app is starting')
+
+        for service in self._services:
+            service.start(self._node)
 
         for resource in self._resources:
             resource.start(self._node)
@@ -163,6 +182,9 @@ class App:
             except Exception as e:
                 logger.exception(f'unexpected error was raised by app node: {e}')
                 reset = NodeStop.SOFT_RESET
+
+        for service in self._services:
+            service.stop()
 
         for resource in self._resources:
             resource.end()
