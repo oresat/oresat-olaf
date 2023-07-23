@@ -15,3 +15,4 @@ API
    daemon
    adc
    cpufreq
+   pru

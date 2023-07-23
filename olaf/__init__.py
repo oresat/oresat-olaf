@@ -20,6 +20,7 @@ from .common.gpio import GpioError as GPIOError  # for backwards compatibility
 from .common.adc import Adc
 from .common.daemon import Daemon, DaemonState
 from .common.cpufreq import get_cpufreq, get_cpufreq_gov, set_cpufreq, set_cpufreq_gov, A8_CPUFREQS
+from .common.pru import Pru, PruState, PruError
 
 
 __version__ = '2.1.2'
