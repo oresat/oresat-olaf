@@ -1,3 +1,4 @@
+import json
 import zlib
 from os import remove, listdir
 from os.path import basename, isfile
@@ -14,6 +15,8 @@ class Subindex(IntEnum):
     FILE_DATA = auto()
     CRC32 = auto()
     DELETE_FILE = auto()
+    TOTAL_FILES = auto()
+    FILE_NAMES = auto()
 
 
 class FreadResource(Resource):
@@ -45,13 +48,6 @@ class FreadResource(Resource):
 
         if subindex == Subindex.FILE_NAME:
             ret = basename(self.file_path)
-        elif subindex == Subindex.CRC32:
-            if isfile(self.file_path):
-                with open(self.file_path, 'rb') as f:
-                    ret = zlib.crc32(f.read())
-            else:
-                logger.debug(f'cannot get CRC32, file "{self.file_path}" does not exist')
-                ret = 0
         elif subindex == Subindex.FILE_DATA:
             if not self.file_path:
                 logger.debug('fread file path was not set before trying to read file data')
@@ -62,6 +58,17 @@ class FreadResource(Resource):
                     ret = f.read()
             except FileNotFoundError as e:
                 logger.exception(e)
+        elif subindex == Subindex.CRC32:
+            if isfile(self.file_path):
+                with open(self.file_path, 'rb') as f:
+                    ret = zlib.crc32(f.read())
+            else:
+                logger.debug(f'cannot get CRC32, file "{self.file_path}" does not exist')
+                ret = 0
+        elif subindex == Subindex.TOTAL_FILES:
+            ret = len(self.node.fread_cache)
+        elif subindex == Subindex.FILE_NAMES:
+            ret = json.dumps([i.name for i in self.node.fread_cache.files()])
 
         return ret
 

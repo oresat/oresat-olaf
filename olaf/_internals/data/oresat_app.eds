@@ -4696,16 +4696,16 @@ DefaultValue=0
 [3003]
 ParameterName=Fread
 ObjectType=0x09
-SubNumber=5
+SubNumber=7
 
 [3003sub0]
 ParameterName=Highest sub-index supported
 ObjectType=0x07
 DataType=0x0005
 AccessType=const
-DefaultValue=0x04
+DefaultValue=0x06
 
-;Name of the file to read. Uses Index 3002 to find file names.
+;Name of the file to be read. Must be set before index 2.
 [3003sub1]
 ParameterName=File name
 ObjectType=0x07
@@ -4720,7 +4720,7 @@ DataType=0x000F
 AccessType=ro
 DefaultValue=0
 
-;Gets the CRC32 of the file
+;Gets the CRC32 of the file selected in subindex 1
 [3003sub3]
 ParameterName=CRC32
 ObjectType=0x07
@@ -4736,17 +4736,32 @@ DataType=0x0001
 AccessType=wo
 DefaultValue=0
 
+;Number of files in the cache
+[3003sub5]
+ParameterName=Total files
+ObjectType=0x07
+DataType=0x0006
+AccessType=ro
+DefaultValue=0
+
+;File names in cache as a JSON list
+[3003sub6]
+ParameterName=File names
+ObjectType=0x07
+DataType=0x0009
+AccessType=ro
+
 [3004]
 ParameterName=Fwrite
 ObjectType=0x09
-SubNumber=3
+SubNumber=7
 
 [3004sub0]
 ParameterName=Highest sub-index supported
 ObjectType=0x07
 DataType=0x0005
 AccessType=const
-DefaultValue=0x02
+DefaultValue=0x06
 
 ;Name of the file to be written. Must be set before index 2.
 [3004sub1]
@@ -4762,6 +4777,35 @@ ObjectType=0x07
 DataType=0x000F
 AccessType=wo
 DefaultValue=0
+
+;Gets the CRC32 of the file selected in subindex 1
+[3004sub3]
+ParameterName=CRC32
+ObjectType=0x07
+DataType=0x0007
+AccessType=ro
+DefaultValue=0
+
+[3004sub4]
+ParameterName=Delete file
+ObjectType=0x07
+DataType=0x0001
+AccessType=wo
+DefaultValue=0
+
+[3004sub5]
+ParameterName=Total files
+ObjectType=0x07
+DataType=0x0006
+AccessType=ro
+DefaultValue=0
+
+;File names in cache as a JSON list
+[3004sub6]
+ParameterName=File names
+ObjectType=0x07
+DataType=0x0009
+AccessType=ro
 
 [3005]
 ParameterName=Daemon manager
@@ -4868,7 +4912,7 @@ ParameterName=OreSat
 ObjectType=0x07
 DataType=0x0005
 AccessType=rw
-DefaultValue=0
+DefaultValue=1
 
 ;Toggle flight mode flight. Default on.
 [3007sub2]

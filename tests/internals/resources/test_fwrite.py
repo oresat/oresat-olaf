@@ -1,3 +1,4 @@
+import json
 import random
 import string
 import unittest
@@ -40,28 +41,37 @@ class TestFwriteResource(unittest.TestCase):
         self.assertEqual(self.app.sdo_read(index, Subindex.FILE_NAME.value), file_name)
         self.app.sdo_write(index, Subindex.FILE_DATA.value, file_data.encode())
         self.assertEqual(len(self.app.node.fwrite_cache), 1)
+        self.assertEqual(self.app.sdo_read(index, Subindex.TOTAL_FILES.value), 1)
+        file_names = json.loads(self.app.sdo_read(index, Subindex.FILE_NAMES.value))
+        self.assertListEqual(file_names, [file_name])
 
         # test sdo trasfer of a file to over write
         self.app.sdo_write(index, Subindex.FILE_NAME.value, basename(file_name))
         self.assertEqual(self.app.sdo_read(index, Subindex.FILE_NAME.value), file_name)
         self.app.sdo_write(index, Subindex.FILE_DATA.value, file_data.encode())
         self.assertEqual(len(self.app.node.fwrite_cache), 1)
+        self.assertEqual(self.app.sdo_read(index, Subindex.TOTAL_FILES.value), 1)
+        file_names = json.loads(self.app.sdo_read(index, Subindex.FILE_NAMES.value))
+        self.assertListEqual(file_names, [file_name])
 
         # remove test file
         remove(file_path)
 
         # add another file to the cache
-        file_name = new_oresat_file('test2')
-        file_path = '/tmp/' + file_name
-        file_data = ''.join(random.choice(string.ascii_letters) for i in range(100))
-        with open(file_path, 'w') as f:
-            f.write(file_data)
+        file_name2 = new_oresat_file('test2')
+        file_path2 = '/tmp/' + file_name2
+        file_data2 = ''.join(random.choice(string.ascii_letters) for i in range(100))
+        with open(file_path2, 'w') as f:
+            f.write(file_data2)
 
         # test sdo trasfer of a file
-        self.app.sdo_write(index, Subindex.FILE_NAME.value, basename(file_name))
-        self.assertEqual(self.app.sdo_read(index, Subindex.FILE_NAME.value), file_name)
-        self.app.sdo_write(index, Subindex.FILE_DATA.value, file_data.encode())
+        self.app.sdo_write(index, Subindex.FILE_NAME.value, basename(file_name2))
+        self.assertEqual(self.app.sdo_read(index, Subindex.FILE_NAME.value), file_name2)
+        self.app.sdo_write(index, Subindex.FILE_DATA.value, file_data2.encode())
         self.assertEqual(len(self.app.node.fwrite_cache), 2)
+        self.assertEqual(self.app.sdo_read(index, Subindex.TOTAL_FILES.value), 2)
+        file_names = json.loads(self.app.sdo_read(index, Subindex.FILE_NAMES.value))
+        self.assertListEqual(file_names, [file_name, file_name2])
 
         # remove test file
-        remove(file_path)
+        remove(file_path2)
