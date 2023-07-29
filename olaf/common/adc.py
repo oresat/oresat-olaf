@@ -42,7 +42,7 @@ class Adc:
             raise AdcError(f'could not find ADC file {self._adc_path}')
 
         with open(self._adc_path, 'r') as f:
-            value = int(f.read)
+            value = int(f.read())
 
         return value
 

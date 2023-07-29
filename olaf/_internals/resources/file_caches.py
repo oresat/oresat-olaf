@@ -43,15 +43,18 @@ class FileCachesResource(Resource):
             return ret
 
         if subindex == Subindex.FREAD_LEN:
-            ret = len(self.node.fread_cache)
+            cache_len = len(self.node.fread_cache)
+            ret = cache_len if cache_len < 255 else 255
         elif subindex == Subindex.FWRITE_LEN:
-            ret = len(self.node.fwrite_cache)
+            cache_len = len(self.node.fwrite_cache)
+            ret = cache_len if cache_len < 255 else 255
         elif subindex == Subindex.CACHE_SELECTOR:
             ret = self.selector
         elif subindex == Subindex.FILTER:
             ret = self.filter
         elif subindex == Subindex.CACHE_LENGTH:
-            ret = len(self.file_caches[self.selector].files(self.filter))
+            cache_len = len(self.file_caches[self.selector].files(self.filter))
+            ret = cache_len if cache_len < 255 else 255
         elif subindex == Subindex.ITER:
             ret = self.iter
         elif subindex == Subindex.FILE_NAME:

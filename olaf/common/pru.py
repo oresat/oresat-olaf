@@ -1,4 +1,4 @@
-from os.path import exists, isdir, isfile, basename
+from os.path import isdir, isfile, basename
 from enum import Enum, auto
 
 
@@ -59,12 +59,6 @@ class Pru:
             return  # already running
 
         self.exists(raise_exception=True)
-
-        if not exists(f'/lib/firmware/{self._fw_path}'):
-            raise PruError(f'firmware file /lib/firmware/{self._fw_path} does not exist')
-
-        with open(self._pru_fw_path, 'w') as f:
-            f.write(self._fw_path)
 
         with open(self._pru_state_path, 'w') as f:
             f.write('start')
