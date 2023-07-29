@@ -57,6 +57,8 @@ def olaf_setup(eds_path: str = None, master_node: bool = False) -> Namespace:
                         help='rest api address, defaults to localhost')
     parser.add_argument('-p', '--port', type=int, default=8000,
                         help='rest api port number, defaults to 8000')
+    parser.add_argument('-d', '--disable-flight-mode', action='store_true',
+                        help='disable flight mode on start, defaults to flight mode enabled')
     args = parser.parse_args()
 
     if args.verbose:
@@ -80,6 +82,10 @@ def olaf_setup(eds_path: str = None, master_node: bool = False) -> Namespace:
 
     app.setup(eds_path, args.bus, args.node_id, master_node=master_node)
     rest_api.setup(address=args.address, port=args.port)
+
+    if args.disable_flight_mode and 0x3007 in app.od and 0x2 in app.od[0x3007]:
+        logger.info('disabling flight mode')
+        app.od[0x3007][0x2].value = not args.disable_flight_mode
 
     return args
 
