@@ -18,22 +18,24 @@ class Adc:
         '''
         Parameters
         ----------
-        int: int
-            THe pin number between 0 and 7 for the adc pin on the Octavo A8.
+        pin: int
+            The pin number between 0 and 7 for the adc pin on the Octavo A8.
+        mock: bool
+            Mock the ADC.
         '''
 
         self._mock = mock
         self._mock_value = self.ADC_MAX_VALUE // 2
 
-        if pin < 0 or pin > 7:
-            raise AdcError(f'Invalid pin number {pin}, must be between 0 and 7')
+        if not isinstance(pin, int) or pin < 0 or pin > 7:
+            raise AdcError(f'invalid pin number {pin}, must be between 0 and 7')
 
         self.pin = pin
         self._adc_path = f'/sys/bus/iio/devices/iio:device0/in_voltage{pin}_raw'
 
     @property
     def raw(self) -> int:
-        '''int: the raw value from the ADC'''
+        '''int: The raw value from the ADC'''
 
         if self._mock:
             return self._mock_value

@@ -1,3 +1,5 @@
+'''Functions to get/set the CPU frequency and its governor on the Octavo A8.'''
+
 from os import geteuid
 
 A8_CPUFREQS = [300, 600, 720, 800, 1000]

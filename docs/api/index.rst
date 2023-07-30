@@ -17,3 +17,4 @@ API
    resource
    rest_api
    service
+   timer_loop

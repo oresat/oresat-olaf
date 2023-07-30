@@ -1,3 +1,5 @@
+'''A quick timer-based class that calls a function in a loop'''
+
 from threading import Thread, Event
 
 from canopen.objectdictionary import Variable

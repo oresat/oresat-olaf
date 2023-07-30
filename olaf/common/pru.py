@@ -1,3 +1,5 @@
+'''Quick class to control an Octavo A8's PRU'''
+
 from os.path import isdir, isfile, basename
 from enum import Enum, auto
 
@@ -19,7 +21,7 @@ class Pru:
     '''
     Handles interterations with a PRU on Octavo A8.
 
-    A PRU is Programible Real-time Units). It's a microcontroller that shares pins and other
+    A PRU is Programible Real-time Unit. It's a microcontroller that shares pins and other
     resources with the core processor.
     '''
 
@@ -47,7 +49,8 @@ class Pru:
         self._pru_fw_path = self._pru_dir_path + '/firmware'
 
     def start(self):
-        '''Starts the PRU.
+        '''
+        Starts the PRU.
 
         Raises
         ------
@@ -64,7 +67,8 @@ class Pru:
             f.write('start')
 
     def stop(self):
-        '''Stops the PRU.
+        '''
+        Stops the PRU.
 
         Raises
         ------
@@ -134,6 +138,9 @@ class Pru:
 
     @firmware.setter
     def firmware(self, fw_path: str):
+
+        if self._state != PruState.OFFLINE:
+            raise PruError(f'PRU{self._pru_num} must be in OFFLINE state to set firmware')
 
         if not (isfile(fw_path) or isfile('/lib/firmware/' + fw_path)):
             raise PruError(f'firmware image {fw_path} not found')

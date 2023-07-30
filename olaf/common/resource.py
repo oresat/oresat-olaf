@@ -1,4 +1,4 @@
-'''The OreSat Linux base app resource'''
+'''The OreSat Linux base app resource. It is a nice way to organize OD callbacks.'''
 
 from loguru import logger
 
@@ -6,7 +6,8 @@ from .._internals.node import Node
 
 
 class Resource:
-    '''OreSat Linux app resource.
+    '''
+    OreSat Linux app resource. Used to setup OD callbacks in a common, isolated environment.
 
     All the ``on_*`` members can be overridden as needed.
     '''

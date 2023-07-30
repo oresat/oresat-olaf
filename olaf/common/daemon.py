@@ -1,3 +1,5 @@
+'''A quick wrapper class to control systemd daemons using D-Bus.'''
+
 from enum import Enum
 
 from pydbus import SystemBus
@@ -46,7 +48,7 @@ class Daemon:
     def restart(self):
         '''Restart the daemon.'''
 
-        self._unit.Restar(self._name, 'fail')
+        self._unit.Restart(self._name, 'fail')
 
     @property
     def status(self) -> DaemonState:

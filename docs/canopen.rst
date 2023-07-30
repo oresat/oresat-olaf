@@ -76,6 +76,31 @@ Messages
 ``COB-ID`` refers to 1 byte id part of a CAN message. CANopen nodes use the 
 ``COB-ID`` to id all messages.
 
+The ``candump`` utility from the `can-utils`_ project can be used to monitor
+the raw CAN message over a CAN bus. The first column is the CAN bus being
+monitored, the second column is the ``COB-ID`` in hex, and the third column
+is the size of CAN message (0 to 8), and the rest is the CAN message as an
+octet string (hex values seperated by spaces).
+
+.. code:: bash
+
+  $ candump vcan0
+    vcan0  710   [1]  05
+    vcan0  080   [0]
+    vcan0  710   [1]  05
+    vcan0  610   [8]  40 18 10 00 00 00 00 00
+
+The `CANopen Monitor`_ project can be used to monitor the decoded CANopen
+messages over a CAN bus. It is a TUI that displays the decode values, so you do
+not have to convert the raw hex values from ``candump`` to their "real" values.
+Also, ``candump`` is great at quickly testing a node or two, but can easily
+become impossible to read once several node start sending data across the CAN
+bus or when a large block data transfer is in progress, so `CANopen Monitor`_
+becomes more resonable for viewing CANopen messages on the CAN bus.
+
+A `CANable`_ can be used to connect to a CAN bus with a laptop. These are not
+needed if using a vcan (virtual CAN) bus for developement.
+
 Heartbeat
 *********
 
@@ -84,6 +109,15 @@ All node send out a 1 byte heartbeat message with a ``COB-ID`` of
 
 The master node can use the heartbeat byte message to confirm what boards are
 on and in a good state.
+
+Example heartbeat messages from node 0x10
+
+.. code:: bash
+
+  $ candump vcan0
+    vcan0  710   [1]  05
+    vcan0  710   [1]  05
+    vcan0  710   [1]  05
 
 SDO (Service Data Object)
 *************************
@@ -97,6 +131,14 @@ SDO request messages use a ``COB-ID`` of ``0x580 + NODE-ID`` of the node the
 master node is reading from or writing to. SDO response messages use a 
 ``COB-ID`` of ``0x600 + NODE-ID`` of the node the master node is reading from
 or writing to.
+
+Example SDO transaction from node 0x10 from index 0x1018 subindex 0x0.
+
+.. code:: bash
+
+  $ candump vcan0
+    vcan0  610   [8]  40 18 10 00 00 00 00 00
+    vcan0  590   [8]  4F 18 10 00 04 00 00 00
 
 PDO (Product Data Object)
 *************************
@@ -121,13 +163,31 @@ So a board with NODE-ID 0x4 can use the following 4 ``COB-ID`` for it's TPDOs:
 ``0x184``, ``0x284``, ``0x384``, ``0x484`` and 4 ``COB-ID`` for it's RPDOs:
 ``0x204``, ``0x304``, ``0x404``, ``0x504``.
 
+Example TPDOs from node 0x10
+
+.. code:: bash
+
+  $ candump vcan0
+    vcan0  190   [6]  2D 17 1B 00 00 00
+    vcan0  290   [2]  00 00
+
 SYNC
 ****
 
 A message that TPDO can be configure to response to after every X occuraces.
 A SYNC message always has ``COB-ID`` of ``0x80`` with no payload.
 
+Example SYNC message
+
+.. code:: bash
+
+  $ candump vcan0
+    vcan0  080   [0]
+
 .. _CANopen: https://en.wikipedia.org/wiki/CANopen
 .. _CAN: https://en.wikipedia.org/wiki/CAN
 .. _CAN in Automation (CiA): https://can-cia.org/
 .. _eds-utils: https://github.com/oresat/eds-utils
+.. _CANopen Monitor: https://github.com/oresat/CANopen-monitor
+.. _can-utils: https://github.com/linux-can/can-utils
+.. _CANable: https://canable.io/

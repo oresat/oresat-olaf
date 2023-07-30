@@ -1,6 +1,4 @@
-'''
-Quick GPIO legacy sysfs wrapper that supports mocking.
-'''
+'''Quick GPIO legacy sysfs wrapper that supports mocking.'''
 
 import os
 

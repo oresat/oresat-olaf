@@ -1,4 +1,4 @@
-'''The OLAF base service class'''
+'''The OLAF base Service class. A Resource with a dedicated thread.'''
 
 from threading import Thread, Event
 
@@ -8,7 +8,8 @@ from .._internals.node import Node
 
 
 class Service:
-    '''OLAF service.
+    '''
+    OLAF service, basically a :py:class:`Resource` with a dedicated thread.
 
     All the ``on_*`` members can be overridden as needed.
     '''

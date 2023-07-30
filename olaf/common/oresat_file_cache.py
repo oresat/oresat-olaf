@@ -1,3 +1,5 @@
+'''File cache class for OreSat files.'''
+
 import shutil
 from os import listdir, remove
 from os.path import basename, abspath, isfile
