@@ -21,13 +21,11 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Application Frameworks",
 ]
 dependencies = [
-    "PyGObject",
     "canopen",
     "flask",
     "loguru",
     "natsort",
     "psutil",
-    "pydbus",
 ]
 dynamic = ["version"]
 

@@ -1,4 +1,3 @@
-PyGObject
 build
 canopen
 flake8
@@ -6,7 +5,6 @@ flask
 loguru
 natsort
 psutil
-pydbus
 setuptools
 sphinx
 sphinx-rtd-theme

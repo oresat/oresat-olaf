@@ -1,8 +1,11 @@
-'''A quick wrapper class to control systemd daemons using D-Bus.'''
+'''
+A class to control systemd daemons.
 
+While it could use D-Bus, the amount of dependencies needed to work is not worth it.
+'''
+
+import subprocess
 from enum import Enum
-
-from pydbus import SystemBus
 
 
 class DaemonState(Enum):
@@ -17,11 +20,7 @@ class DaemonState(Enum):
 
 
 class Daemon:
-    '''Very small wrapper ontop of pydbus to abstract away D-Bus to control systemd daemons.'''
-
-    # only need on instance of these for all instances of Daemon
-    _bus = SystemBus()
-    _systemd = _bus.get('.systemd1')
+    '''Quick class to control a systemd daemon.'''
 
     def __init__(self, name: str):
         '''
@@ -32,29 +31,31 @@ class Daemon:
         '''
 
         self._name = name
-        unit_path = self._systemd.GetUnit(self._name)
-        self._unit = self._bus.get('.systemd1', unit_path)
 
     def start(self):
         '''Start the daemon.'''
 
-        self._unit.Start(self._name, 'fail')
+        subprocess.run(f'systemctl start {self._name}', shell=True)
 
     def stop(self):
         '''Stop the daemon.'''
 
-        self._unit.Stop(self._name, 'fail')
+        subprocess.run(f'systemctl stop {self._name}', shell=True)
 
     def restart(self):
         '''Restart the daemon.'''
 
-        self._unit.Restart(self._name, 'fail')
+        subprocess.run(f'systemctl restart {self._name}', shell=True)
 
     @property
     def status(self) -> DaemonState:
         '''DaemonState: The state of the daemon.'''
 
-        return DaemonState[self._unit.ActiveState.upper()]
+        out = subprocess.run(f'systemctl status {self._name}', capture_output=True, shell=True)
+        reply = out.stdout.decode()
+        line = reply.split('\n')[2].strip()
+        state = line.split(' ')[1]
+        return DaemonState[state.upper()]
 
     @property
     def name(self) -> str:
