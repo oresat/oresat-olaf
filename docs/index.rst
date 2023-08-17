@@ -21,6 +21,7 @@ Society).
    canopen
    canopen_on_oresat
    api/index
+   rest_api
    updater/index
    scripts
 
