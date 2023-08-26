@@ -45,6 +45,6 @@ class LogsService(Service):
             return
 
         with open('/tmp/olaf.log', 'r') as f:
-            ret = ''.join(reversed(f.readlines()[:250]))
+            ret = ''.join(reversed(f.readlines()[500:]))
 
         return ret
