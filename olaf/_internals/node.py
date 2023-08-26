@@ -120,7 +120,7 @@ class Node:
         Parameters
         ----------
         tpdo: int
-            TPDO number to send
+            TPDO number to send, should be between 1 and 16.
 
         Raises
         ------
@@ -131,10 +131,16 @@ class Node:
         if self._network is None:
             raise NetworkError('network is down cannot send an TPDO message')
 
+        if tpdo < 1:
+            raise ValueError('TPDO number must be greather than 1')
+
+        tpdo -= 1  # number to offset
+
         # PDOs can't be sent if CAN bus is down and PDOs should not be sent if CAN bus not in
         # 'OPERATIONAL' state
         can_bus = psutil.net_if_stats().get(self._bus)
-        if can_bus is None or (can_bus.isup and self._node.nmt.state != 'OPERATIONAL'):
+        if can_bus is None or self._node is None \
+                or (can_bus.isup and self._node.nmt.state != 'OPERATIONAL'):
             return True
 
         cob_id = self.od[0x1800 + tpdo][1].value & 0x3F_FF_FF_FF
@@ -234,7 +240,7 @@ class Node:
             if transmission_type in [0xFE, 0xFF] and event_time > 0:
                 t = TimerLoop(name=f'TPDO{i + 1}', loop_func=self._tpdo_timer_loop,
                               delay=self.od[0x1800 + i][5], start_delay=self.od[0x1800 + i][3],
-                              args=(i,))
+                              args=(i + 1,))
                 self._tpdo_timers.append(t)
                 t.start()
 
