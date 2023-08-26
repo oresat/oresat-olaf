@@ -183,6 +183,20 @@ def _json_value_to_value(data_type: DataType, json_value):
 
 
 @rest_api.app.route('/od/<index>/', methods=['GET', 'PUT'])
+def od_index_old(index: str):
+    '''backward compactability'''
+
+    return od_index(index)
+
+
+@rest_api.app.route('/od/<index>/<subindex>/', methods=['GET', 'PUT'])
+def od_subindex_old(index: str, subindex: str):
+    '''backward compactability'''
+
+    return od_subindex(index, subindex)
+
+
+@rest_api.app.route('/od/<index>', methods=['GET', 'PUT'])
 def od_index(index: str):
 
     try:
@@ -193,7 +207,7 @@ def od_index(index: str):
     try:
         obj = app.od[index]
     except Exception:
-        msg = f'no object at index {index:02X}'
+        msg = f'no object at index 0x{index:02X}'
         logger.error(f'REST API error: {msg}')
         return make_error_json(msg)
 
@@ -213,7 +227,7 @@ def od_index(index: str):
     return jsonify(_object_to_dict(index))
 
 
-@rest_api.app.route('/od/<index>/<subindex>/', methods=['GET', 'PUT'])
+@rest_api.app.route('/od/<index>/<subindex>', methods=['GET', 'PUT'])
 def od_subindex(index: str, subindex: str):
 
     try:
@@ -225,7 +239,7 @@ def od_subindex(index: str, subindex: str):
     try:
         obj = app.od[index][subindex]
     except Exception:
-        msg = f'no object at index {index:04X} subindex {subindex:02X}'
+        msg = f'no object at index 0x{index:04X} subindex 0x{subindex:02X}'
         logger.error(f'REST API error: {msg}')
         return make_error_json(msg)
 
