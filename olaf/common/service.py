@@ -31,7 +31,7 @@ class Service:
     def start(self, node: Node):
         '''
         App will call this to start the service. This will call `self.on_start()` start a thread
-        that will call on_loop.
+        that will call `self.on_loop()`.
         '''
 
         logger.debug(f'starting service {self.__class__.__name__}')
@@ -44,20 +44,27 @@ class Service:
 
         self._thread.start()
 
-    def on_start(self) -> None:
+    def on_start(self):
         '''
         Called when the service starts.
+
+        Should be used to add SDO read/write callbacks to app.
         '''
 
         pass
 
     def _loop(self):
+        '''
+        Loop until a exception is thrown or the app stops.
+        '''
 
         while not self._event.is_set():
             try:
                 self.on_loop()
             except Exception as e:
+                logger.error('unexpected exception raised by on_loop, stopping service')
                 self.on_loop_error(e)
+                self._event.set()
 
     def on_loop(self):
         '''
@@ -68,14 +75,16 @@ class Service:
 
     def on_loop_error(self, error: Exception):
         '''
-        Called when on_loop raises an exception.
+        Called when on_loop raises an exception before the thread stops.
+
+        Should be used to stop any hardware the service controls (if possible) and logs the errors.
         '''
 
         logger.exception(f'{self.__class__.__name__} on_loop raised: {error}')
 
     def stop(self):
         '''
-        App will call this to stop the service. This will call `self.on_stop()`.
+        App will call this to stop the service when the app stops. This will call `self.on_stop()`.
         '''
 
         logger.debug(f'stopping service {self.__class__.__name__}')
@@ -91,17 +100,18 @@ class Service:
         except Exception as e:
             logger.exception(f'{self.__class__.__name__}\'s on_stop raised: {e}')
 
-    def on_stop(self) -> None:
+    def on_stop(self):
         '''
-        Called when the program stops and if the services fails. Should be used to stop any
-        hardware the service controls.
+        Called when the app stops. Should be used to stop any hardware the service controls.
+
+        Will be called reguardless if `self.on_loop_error()` was called or not when the app stops.
         '''
 
         pass
 
     def sleep(self, timeout: float):
         '''
-        Sleep for time, that can be interupted if `stop()` is called.
+        Sleep for X seconds, that can be interupted if `stop()` is called.
 
         Parameters
         ----------
@@ -110,3 +120,15 @@ class Service:
         '''
 
         self._event.wait(timeout)
+
+    def sleep_ms(self, timeout: float):
+        '''
+        Sleep for X milliseconds, that can be interupted if `stop()` is called.
+
+        Parameters
+        ----------
+        timeout: float
+            The time to sleep in milliseconds.
+        '''
+
+        self._event.wait(timeout / 1000)
