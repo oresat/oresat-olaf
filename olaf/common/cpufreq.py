@@ -67,4 +67,4 @@ def set_cpufreq_gov(cpufreq_gov: str):
     '''
 
     with open('/sys/devices/system/cpu/cpufreq/policy0/scaling_governor', 'w') as f:
-        f.write(cpufreq_gov.value)
+        f.write(cpufreq_gov)
