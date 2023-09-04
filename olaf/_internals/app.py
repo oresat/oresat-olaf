@@ -58,37 +58,14 @@ class App:
         logger.debug(f'signal {signal.Signals(signo).name} was caught')
         self.stop()
 
-    def _load_od(self, node_id: int, eds: str):
-
-        self._od = canopen.objectdictionary.eds.import_eds(eds, node_id)
-
-        dcf_node_id = self._od.node_id
-        if node_id != 0:
-            self._node_id = node_id
-        elif dcf_node_id:
-            self._node_id = dcf_node_id
-        else:
-            self._node_id = 0x7C
-
-        # make sure these are set
-        self._od.node_id = self._node_id
-        self._od.bitrate = 1_000_000  # oresat node will always have 1 Mbps
-
-    def setup(self, eds: str, bus: str, node_id: int or str = 0, master_node: bool = False):
+    def setup(self, od, bus: str, master_od_db: dict = {}):
         '''
         Setup the app. Will be called by ``olaf_setup`` automatically.
 
         Parameters
         ----------
-        eds: str
-            File path to EDS or DCF file.
-        bus: str
-            Which CAN bus to use.
-        node_id: int, str
-            The node ID. If set to 0 and DCF was used for the eds arg, the value will be pulled
-            from the DCF, otherwise, it will be set to 0x7C.
-        master_node: bool
-            Node is a master node.
+        node: Node
+            The node for the app.
 
         Raises
         ------
@@ -96,52 +73,33 @@ class App:
             Invalid parameter(s)
         '''
 
-        if isinstance(node_id, str):
-            if node_id.startswith('0x'):
-                node_id = int(node_id, 16)
-            else:
-                node_id = int(node_id)
-        elif not isinstance(node_id, int):
-            raise ValueError('node_id is not a int/hex str or a int')
+        self._od = od
+        self._bus = bus
 
-        if eds is not None:
-            try:
-                self._load_od(node_id, eds)
-            except Exception as e:
-                logger.exception(f'{e.__class__.__name__}: {e}')
-                logger.warning(f'failed to read in {eds}, using OLAF\'s internal eds as backup')
-                eds = self._BACKUP_EDS
-                self._load_od(node_id, eds)
+        if master_od_db:
+            self._node = MasterNode(self._od, self._bus, master_od_db)
         else:
-            logger.warning('No eds or dcf was supplied, using OLAF\'s internal eds')
-            eds = self._BACKUP_EDS
-            self._load_od(node_id, eds)
-
-        self._name = self._od.device_information.product_name
-
-        if master_node:
-            self._node = MasterNode(self._od, bus)
-        else:
-            self._node = Node(self._od, bus)
+            self._node = Node(self._od, self._bus)
 
         # setup updater
         self._updater = Updater(f'{self._node.work_base_dir}/updater',
                                 f'{self._node.cache_base_dir}/updates')
 
         # default core services
-        self.add_service(UpdaterService(self._updater))
-        self.add_service(LogsService())
+        # self.add_service(UpdaterService(self._updater))
+        # self.add_service(LogsService())
         self.add_service(OSCommandService())
 
         # default core resources
         self.add_resource(ECSSResource())
+        '''
         self.add_resource(SystemInfoResource())
         self.add_resource(FileCachesResource())
         self.add_resource(FreadResource())
         self.add_resource(FwriteResource())
-        self.add_resource(StoreEdsResource(eds))
         self.add_resource(PowerControlResource())
         self.add_resource(DaemonsResource())
+        '''
 
     def add_resource(self, resource: Resource):
         '''

@@ -45,7 +45,7 @@ class Node:
 
         self._od = od
         self._bus = bus
-        self._node = None
+        self._node = None  # canopen.LocalNode instance
         self._network = None
         self._event = Event()
         self._read_cbs = {}
@@ -54,6 +54,7 @@ class Node:
         self._reset = NodeStop.SOFT_RESET
         self._tpdo_timers = []
         self._daemons = {}
+        self.first_bus_reset = False
 
         if geteuid() == 0:  # running as root
             self.work_base_dir = '/var/lib/oresat'
@@ -70,23 +71,6 @@ class Node:
 
         logger.debug(f'fread cache path {self._fread_cache.dir}')
         logger.debug(f'fwrite cache path {self._fwrite_cache.dir}')
-
-        # python canopen does not set the value to default for some reason
-        for i in self.od:
-            if not isinstance(self.od[i], canopen.objectdictionary.Variable):
-                for j in self.od[i]:
-                    if self.od[i][j].data_type == canopen.objectdictionary.BOOLEAN:
-                        # fix bools to be bools
-                        self.od[i][j].default = bool(self.od[i][j].default)
-                        self.od[i][j].value = bool(self.od[i][j].default)
-                    else:
-                        self.od[i][j].value = self.od[i][j].default
-            elif self.od[i].data_type == canopen.objectdictionary.BOOLEAN:
-                # fix bools to be bools
-                self.od[i].default = bool(self.od[i].default)
-                self.od[i].value = bool(self.od[i].default)
-            else:
-                self.od[i].value = self.od[i].default
 
     def __del__(self):
 
@@ -108,7 +92,7 @@ class Node:
         if self._syncs == 241:
             self._syncs = 1
 
-        for i in range(len(self._node.tpdo)):
+        for i in range(16):
             transmission_type = self.od[0x1800 + i][2].value
             if self._syncs % transmission_type == 0:
                 self.send_tpdo(i)
@@ -154,7 +138,7 @@ class Node:
                 break  # nothing todo
 
             pdo_map_bytes = pdo_map.to_bytes(4, 'big')
-            index, subindex, length = struct.unpack('>HBB', pdo_map_bytes)
+            index, subindex, _ = struct.unpack('>HBB', pdo_map_bytes)
 
             # call sdo callback(s) and convert data to bytes
             if isinstance(self.od[index], canopen.objectdictionary.Variable):
@@ -182,22 +166,22 @@ class Node:
 
         return True
 
-    def _on_rpdo_update_od(self, map: canopen.pdo.base.Map):
+    def _on_rpdo_update_od(self, mapping: canopen.pdo.base.Map):
         '''Handle parsering an RPDO'''
 
-        for i in map.map_array:
+        for i in mapping.map_array:
             if i == 0:
                 continue
 
-            value = map.map_array[i].raw
+            value = mapping.map_array[i].raw
             if value == 0:
                 break  # no more mapping
 
-            index, subindex, size = struct.unpack('>HBB', value.to_bytes(4, 'big'))
+            index, subindex, _ = struct.unpack('>HBB', value.to_bytes(4, 'big'))
             if isinstance(self.od[index], canopen.objectdictionary.Variable):
-                self._node.sdo[index].raw = map.map[i - 1].get_data()
+                self._node.sdo[index].raw = mapping.map[i - 1].get_data()
             else:
-                self._node.sdo[index][subindex].raw = map.map[i - 1].get_data()
+                self._node.sdo[index][subindex].raw = mapping.map[i - 1].get_data()
 
     def _setup_node(self):
         '''Create the CANopen and TPDO timer loops'''
@@ -207,48 +191,26 @@ class Node:
 
         self._node = canopen.LocalNode(self._od.node_id, self._od)
 
-        node_id = self._od.node_id
-        default_rpdos = [0x200 + node_id, 0x300 + node_id, 0x400 + node_id, 0x500 + node_id]
-        default_tpdos = [0x180 + node_id, 0x280 + node_id, 0x380 + node_id, 0x480 + node_id]
-
-        # fix COB-IDs for invaild PDOs
-        #
-        # all oresat node RPDO COB-ID follow values of 0x[2345]00 + $NODEID
-        # all oresat node TPDO COB-ID follow values of 0x[1234]80 + $NODEID
-        # this fixes the values for all 16 RPDOs/TPDOs
-        for i in range(len(self._node.rpdo)):
-            cob_id = self.od[0x1400 + i][1].default & 0xFFF
-            if cob_id in default_rpdos:
-                cob_id = 0x200 + 0x100 * (i % 4) + node_id + i // 4
-            else:
-                cob_id = self.od[0x1400 + i][1].default
-            self.od[0x1400 + i][1].value = cob_id
-        for i in range(len(self._node.tpdo)):
-            cob_id = self.od[0x1800 + i][1].default & 0xFFF
-            if cob_id in default_tpdos:
-                cob_id = 0x180 + 0x100 * (i % 4) + node_id + i // 4
-            else:
-                cob_id = self.od[0x1800 + i][1].default
-            self.od[0x1800 + i][1].value = cob_id
-
         self._node.add_read_callback(self._on_sdo_read)
         self._node.add_write_callback(self._on_sdo_write)
 
-        for i in range(len(self._node.tpdo)):
+        for i in range(16):
+            if i + 0x1800 not in self.od:
+                continue
             transmission_type = self.od[0x1800 + i][2].default
             event_time = self.od[0x1800 + i][5].default
             if transmission_type in [0xFE, 0xFF] and event_time > 0:
-                t = TimerLoop(name=f'TPDO{i + 1}', loop_func=self._tpdo_timer_loop,
-                              delay=self.od[0x1800 + i][5], start_delay=self.od[0x1800 + i][3],
-                              args=(i + 1,))
-                self._tpdo_timers.append(t)
-                t.start()
+                timer = TimerLoop(name=f'TPDO{i + 1}', loop_func=self._tpdo_timer_loop,
+                                  delay=self.od[0x1800 + i][5], start_delay=self.od[0x1800 + i][3],
+                                  args=(i + 1,))
+                self._tpdo_timers.append(timer)
+                timer.start()
 
     def _destroy_node(self):
         '''Destroy the CANopen and TPDO timer loops'''
 
-        for t in self._tpdo_timers:
-            t.stop()
+        for timer in self._tpdo_timers:
+            timer.stop()
 
         self._tpdo_timers = []  # remove all
 
@@ -266,7 +228,7 @@ class Node:
             cmd = (f'ip link set {self._bus} down;'
                    f'ip link set {self._bus} type can bitrate 1000000;'
                    f'ip link set {self._bus} up')
-            out = subprocess.run(cmd, shell=True)
+            out = subprocess.run(cmd, shell=True, check=True)
             if out.returncode != 0:
                 logger.error(out)
 

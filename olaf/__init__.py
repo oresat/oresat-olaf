@@ -3,6 +3,7 @@ import sys
 from logging.handlers import SysLogHandler
 from argparse import ArgumentParser, Namespace
 
+import canopen
 from loguru import logger
 
 from ._internals.app import app, App
@@ -27,16 +28,14 @@ from .common.pru import Pru, PruState, PruError
 __version__ = '2.2.0'
 
 
-def olaf_setup(eds_path: str = None, master_node: bool = False) -> Namespace:
+def olaf_setup(od: canopen.ObjectDictionary, master_od_db: dict = {}) -> Namespace:
     '''
     Parse runtime args and setup the app and REST API.
 
     Parameters
     ----------
-    eds_path: str
-        The path to the eds or dcf file.
-    master_node: bool
-        Run as master node.
+    node: Node
+        The card's node
 
     Returns
     -------
@@ -46,11 +45,8 @@ def olaf_setup(eds_path: str = None, master_node: bool = False) -> Namespace:
 
     parser = ArgumentParser(prog='OLAF')
     parser.add_argument('-b', '--bus', default='vcan0', help='CAN bus to use, defaults to vcan0')
-    parser.add_argument('-n', '--node-id', type=str, default='0', metavar='ID',
-                        help='set the node ID')
     parser.add_argument('-v', '--verbose', action='store_true', help='enable verbose logging')
     parser.add_argument('-l', '--log', action='store_true', help='log to only journald')
-    parser.add_argument('-e', '--eds', metavar='FILE', help='EDS / DCF file to use')
     parser.add_argument('-m', '--mock-hw', nargs='*', metavar='HW', default=[],
                         help='list the hardware to mock or just "all" to mock all hardware')
     parser.add_argument('-a', '--address', default='localhost',
@@ -72,20 +68,14 @@ def olaf_setup(eds_path: str = None, master_node: bool = False) -> Namespace:
     else:
         logger.add(sys.stdout, level=level, backtrace=True)
 
+    # log file for log service (overrides each time app starts)
     olaf_boot_logs = '/tmp/olaf.log'
     if os.path.isfile(olaf_boot_logs):
         os.remove(olaf_boot_logs)
     logger.add(olaf_boot_logs, level=level, backtrace=True)
 
-    if eds_path is None:
-        eds_path = args.eds
-
-    app.setup(eds_path, args.bus, args.node_id, master_node=master_node)
+    app.setup(od, args.bus, master_od_db)
     rest_api.setup(address=args.address, port=args.port)
-
-    if args.disable_flight_mode and 0x3007 in app.od and 0x2 in app.od[0x3007]:
-        logger.info('disabling flight mode')
-        app.od[0x3007][0x2].value = not args.disable_flight_mode
 
     return args
 
