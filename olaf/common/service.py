@@ -39,10 +39,10 @@ class Service:
 
         try:
             self.on_start()
+            self._thread.start()
         except Exception as e:
             logger.exception(f'{self.__class__.__name__}\'s on_start raised: {e}')
-
-        self._thread.start()
+            logger.critical(f'{self.__class__.__name__}\'s thread is being skipped')
 
     def on_start(self):
         '''

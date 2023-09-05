@@ -1,9 +1,12 @@
+'''OreSat CANopen Node'''
+
 import struct
 import subprocess
 from enum import IntEnum
 from os import geteuid
 from pathlib import Path
 from threading import Event
+from typing import Callable, Any
 
 import canopen
 import psutil
@@ -15,6 +18,7 @@ from ..common.oresat_file_cache import OreSatFileCache
 
 
 class NodeStop(IntEnum):
+    '''Node stop commands.'''
 
     SOFT_RESET = 1
     '''Just stop the app and exit. Systemd will restart the app.'''
@@ -31,7 +35,23 @@ class NetworkError(Exception):
 
 
 class Node:
-    '''OreSat CANopen Node'''
+    '''
+    OreSat CANopen Node class
+
+    Jobs:
+    - It abstracts away the canopen.LocalNode and canopen.Network from Resources and Services.
+    - Provides access to the OD for Resources and Services.
+    - Lets Resources and Services send TPDOs.
+    - Lets Resources and Services send EMCY messages.
+    - Set up the file transfer caches.
+    - Starts/stops all Resources and Services.
+    - Sets up all timer-base TPDO threads.
+    - Sets up all RPDO callbacks.
+    - Monitor and resets the CAN bus if it goes into a bad state.
+
+    Basically it tries to abstract all the CANopen things as much a possible, while providing a
+    basic API for CANopen things.
+    '''
 
     def __init__(self, od: canopen.ObjectDictionary, bus: str):
         '''
@@ -125,7 +145,7 @@ class Node:
         can_bus = psutil.net_if_stats().get(self._bus)
         if can_bus is None or self._node is None \
                 or (can_bus.isup and self._node.nmt.state != 'OPERATIONAL'):
-            return True
+            return
 
         cob_id = self.od[0x1800 + tpdo][1].value & 0x3F_FF_FF_FF
         maps = self.od[0x1A00 + tpdo][0].value
@@ -152,7 +172,7 @@ class Node:
             data += value_bytes
 
         try:
-            i = self._network.send_message(cob_id, data)
+            self._network.send_message(cob_id, data)
         except Exception as e:
             logger.exception(f'TPDO{tpdo} failed with: {e}')
 
@@ -332,40 +352,56 @@ class Node:
 
         self._daemons[name] = Daemon(name)
 
-    def add_sdo_read_callback(self, index: int, sdo_cb):
+    def add_sdo_callbacks(self, index: str, subindex: str,
+                         read_cb: Callable[None, Any], write_cb: Callable[Any, None]):
         '''
-        Add an SDO read callback
+        Add an SDO read callback for a variable at index and optional subindex.
 
         Parameters
         ----------
-        index: int
+        index: int or str
             The index to call the callback on.
-        sdo_cb
-            The SDO read callback. Must take index and subindex args and return a valid value or
-            None to use the value from the OD.
+        subindex: int or str
+            The subindex to call the callback on.
+        read_cb: Callable[None, Any]
+            The SDO read callback. Allows overriding the data being sent on a SDO read. If
+            overriding read data return the value or return :py:data:`None` to use the the value
+            from the od. Set to :py:data:`None` for no read_cb.
+        write_cb: Callable[Any, None]
+            The SDO writecallback. Gives access to the data being received on a SDO write.
+            Set to :py:data:`None` for no write_cb.
+            **Note:** data is still written to object dictionary before call.
+
+        Raises
+        ------
+        ValueError
+            Invalid index/subindex or callbacks already exist at index/subindex.
         '''
 
-        if index not in self._read_cbs:
-            self._read_cbs[index] = [sdo_cb]
+        obj = self.od[index]
+        obj_index = obj.index
+        index = obj.name
+
+        if obj_index not in self._read_cbs:
+            self._read_cbs[obj_index] = {}
+        if obj_index not in self._write_cbs:
+            self._write_cbs[obj_index] = {}
+
+        if subindex is None:
+            if not isinstance(obj, canopen.objectdictionary.Variable):
+                raise ValueError(f'object at index {index} is not a variable')
+            obj_subindex = 0
+            if obj_subindex in self._read_cbs[obj_index] or obj_subindex in self._write_cbs[obj_index]:
+                raise ValueError(f'callback(s) for index {index} already exist')
         else:
-            self._read_cbs[index].append(sdo_cb)
+            obj_subindex = obj[subindex].subindex
+            subindex = obj[subindex].name
+            if obj_subindex in self._read_cbs[obj_index] or obj_subindex in self._write_cbs[obj_index]:
+                raise ValueError(f'callback(s) for index {index} subindex {subindex} already exist')
 
-    def add_sdo_write_callback(self, index: int, sdo_cb):
-        '''
-        Add an SDO write callback
 
-        Parameters
-        ----------
-        index: int
-            The index to call the callback on.
-        sdo_cb
-            The SDO read callback. Must take index, subindex, value args.
-        '''
-
-        if index not in self._write_cbs:
-            self._write_cbs[index] = [sdo_cb]
-        else:
-            self._write_cbs[index].append(sdo_cb)
+        self._read_cbs[obj_index][obj_subindex] = read_cb
+        self._write_cbs[obj_index][obj_subindex] = write_cb
 
     def send_emcy(self, code: int, register: int = 0, data: bytes = b''):
         '''
@@ -410,18 +446,26 @@ class Node:
         Returns
         -------
         Any
-            The value to return for that index / subindex. Return :py:data:`None` if invalid index
-            / subindex.
+            The value to return for that index / subindex.
         '''
 
         ret = None
 
-        if index in self._read_cbs:
-            for cb_func in self._read_cbs[index]:
-                try:
-                    ret = cb_func(index, subindex)
-                except Exception as e:
-                    logger.exception(f'sdo read cb for 0x{index:04X} 0x{subindex:02X} raised: {e}')
+        if index not in self._read_cbs or subindex not in self._read_cbs[index]:
+            return
+
+        if isinstance(self.od[index], canopen.objectdictionary.Variable) and od == self.od[index]:
+            try:
+                ret = self._read_cbs[index]()
+            except Exception as e:
+                logger.exception(f'sdo read_cb for index {od.name} raised: {e}')
+        else:
+            try:
+                ret = self._read_cbs[index][subindex]()
+            except Exception as e:
+                logger.exception(
+                    f'sdo read_cb for index {self.od[index].name} subindex {od.name} raised: {e}'
+                )
 
         # get value from OD
         if ret is None:
@@ -448,17 +492,25 @@ class Node:
             The raw data being written.
         '''
 
+        if index not in self._write_cbs or subindex not in self._write_cbs[index]:
+            return
+
         # set value in OD before callback
         od.value = od.decode_raw(data)
 
-        if index in self._write_cbs:
-            value = od.decode_raw(data)
-            for cb_func in self._write_cbs[index]:
-                try:
-                    cb_func(index, subindex, value)
-                except Exception as e:
-                    logger.exception(f'sdo write cb for 0x{index:04X} 0x{subindex:02X} raised: '
-                                     f'{e}')
+        value = od.decode_raw(data)
+        if isinstance(self.od[index], canopen.objectdictionary.Variable) and od == self.od[index]:
+            try:
+                self._write_cbs[index](value)
+            except Exception as e:
+                logger.exception(f'sdo write_cb for index {od.name} raised: {e}')
+        else:
+            try:
+                self._write_cbs[index][subindex](value)
+            except Exception as e:
+                logger.exception(
+                    f'sdo write_cb for index {self.od[index].name} subindex {od.name} raised: {e}'
+                )
 
     @property
     def name(self) -> str:

@@ -11,15 +11,12 @@ from ..common.service import Service
 from .node import Node, NodeStop
 from .master_node import MasterNode
 from .updater import Updater
-from .resources.system_info import SystemInfoResource
-from .resources.file_caches import FileCachesResource
+from .resources.system import SystemResource
 from .resources.fread import FreadResource
 from .resources.fwrite import FwriteResource
-from .resources.ecss import ECSSResource
-from .resources.store_eds import StoreEdsResource
-from .resources.power_control import PowerControlResource
-from .resources.daemons import DaemonsResource
-from .services.os_command import OSCommandService
+from .resources.ecss import EcssResource
+# from .resources.daemons import DaemonsResource
+from .services.os_command import OsCommandService
 from .services.updater import UpdaterService
 from .services.logs import LogsService
 
@@ -86,20 +83,16 @@ class App:
                                 f'{self._node.cache_base_dir}/updates')
 
         # default core services
-        # self.add_service(UpdaterService(self._updater))
-        # self.add_service(LogsService())
-        self.add_service(OSCommandService())
+        self.add_service(UpdaterService(self._updater))
+        self.add_service(LogsService())
+        self.add_service(OsCommandService())
 
         # default core resources
-        self.add_resource(ECSSResource())
-        '''
-        self.add_resource(SystemInfoResource())
-        self.add_resource(FileCachesResource())
+        self.add_resource(EcssResource())
+        self.add_resource(SystemResource())
         self.add_resource(FreadResource())
         self.add_resource(FwriteResource())
-        self.add_resource(PowerControlResource())
-        self.add_resource(DaemonsResource())
-        '''
+        # self.add_resource(DaemonsResource())
 
     def add_resource(self, resource: Resource):
         '''

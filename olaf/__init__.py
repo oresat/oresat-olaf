@@ -10,6 +10,7 @@ from ._internals.app import app, App
 from ._internals.node import Node, NodeStop, NetworkError
 from ._internals.master_node import MasterNode
 from ._internals.rest_api import rest_api, RestAPI, render_olaf_template
+from ._internals.services.logs import TMP_LOGS_FILE
 from .common.resource import Resource
 from .common.service import Service
 from .common.ecss import scet_int_from_time, scet_int_to_time, utc_int_from_time, utc_int_to_time
@@ -69,10 +70,9 @@ def olaf_setup(od: canopen.ObjectDictionary, master_od_db: dict = {}) -> Namespa
         logger.add(sys.stdout, level=level, backtrace=True)
 
     # log file for log service (overrides each time app starts)
-    olaf_boot_logs = '/tmp/olaf.log'
-    if os.path.isfile(olaf_boot_logs):
-        os.remove(olaf_boot_logs)
-    logger.add(olaf_boot_logs, level=level, backtrace=True)
+    if os.path.isfile(TMP_LOGS_FILE):
+        os.remove(TMP_LOGS_FILE)
+    logger.add(TMP_LOGS_FILE, level=level, backtrace=True)
 
     app.setup(od, args.bus, master_od_db)
     rest_api.setup(address=args.address, port=args.port)

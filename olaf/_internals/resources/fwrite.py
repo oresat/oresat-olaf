@@ -1,9 +1,9 @@
+'''Resource for writing oresat files over the CAN bus'''
+
 import json
-import zlib
 from os import remove, listdir
-from os.path import basename, isfile
+from os.path import basename
 from pathlib import Path
-from enum import IntEnum, auto
 
 from loguru import logger
 
@@ -11,17 +11,8 @@ from ...common.oresat_file import OreSatFile
 from ...common.resource import Resource
 
 
-class Subindex(IntEnum):
-    FILE_NAME = auto()
-    FILE_DATA = auto()
-    CRC32 = auto()
-    DELETE_FILE = auto()
-    TOTAL_FILES = auto()
-    FILE_NAMES = auto()
-
-
 class FwriteResource(Resource):
-    '''Resource for writing files over the CAN bus'''
+    '''Resource for writing oresat files over the CAN bus'''
 
     def __init__(self):
         super().__init__()
@@ -37,65 +28,71 @@ class FwriteResource(Resource):
 
     def on_start(self):
 
-        self.node.add_sdo_read_callback(self.index, self.on_read)
-        self.node.add_sdo_write_callback(self.index, self.on_write)
+        self.node.add_sdo_callbacks('common_data', 'fwrite_cache_len', self.on_read_cache_len,
+                                    None)
+        self.node.add_sdo_callbacks('common_data', 'fwrite_cache_files_json',
+                                    self.on_read_cache_json, None)
+        self.node.add_sdo_callbacks('common_data', 'fwrite_cache_file_name',
+                                    self.on_read_file_name, self.on_write_file_name)
+        self.node.add_sdo_callbacks('common_data', 'fwrite_cache_file_data', None,
+                                    self.on_write_file_data)
+        self.node.add_sdo_callbacks('common_data', 'fwrite_cache_remove', None,
+                                    self.on_write_delete)
 
-    def on_read(self, index: int, subindex: int):
+    def on_read_cache_len(self) -> int:
+        '''SDO read callback to get the length of the write cache.'''
 
-        ret = None
+        return len(self.node.fwrite_cache)
 
-        if index != self.index:
+    def on_read_cache_json(self) -> str:
+        '''SDO read callback to get the list of file in the write cache as a JSON string.'''
+
+        return json.dumps([i.name for i in self.node.fwrite_cache.files()])
+
+    def on_read_file_name(self) -> str:
+        '''SDO read callback to for the selected file to write.'''
+
+        return basename(self.file_path)
+
+    def on_write_file_name(self, file_name: str):
+        '''SDO write callback to select the file to write.'''
+
+        try:
+            OreSatFile(file_name)  # valiate file name format
+            self.file_path = f'{self.tmp_dir}/{file_name}'
+        except ValueError:
+            logger.error(f'{file_name} is not a valid file name format')
+            self.file_path = ''
+
+    def on_write_file_data(self, data: bytes):
+        '''SDO write callback to write the selected file's data.'''
+
+        if not self.file_path:
+            logger.error('fwrite file path was not set before file data was sent')
             return
 
-        if subindex == Subindex.FILE_NAME:
-            ret = basename(self.file_path)
-        elif subindex == Subindex.CRC32:
-            if isfile(self.file_path):
-                with open(self.file_path, 'rb') as f:
-                    ret = zlib.crc32(f.read())
-            else:
-                logger.debug(f'cannot get CRC32, file "{self.file_path}" does not exist')
-                ret = 0
-        elif subindex == Subindex.TOTAL_FILES:
-            ret = len(self.node.fwrite_cache)
-        elif subindex == Subindex.FILE_NAMES:
-            ret = json.dumps([i.name for i in self.node.fwrite_cache.files()])
+        try:
+            with open(self.file_path, 'wb') as f:
+                f.write(data)
+            logger.info(f'receive new file: {basename(self.file_path)}')
+            self.node.fwrite_cache.add(self.file_path, consume=True)
+        except Exception as e:
+            logger.exception(e)
 
-        return ret
+        # clear file data OD obj value to not waste memory
+        self.node.od['common_data']['fwrite_cache_file_data'].value = ''
 
-    def on_write(self, index: int, subindex: int, value):
+    def on_write_delete(self, value: bool):
+        '''SDO read callback to delete the selected file.'''
 
-        if index != self.index:
+        if not value:
             return
 
-        if subindex == Subindex.FILE_NAME:
-            try:
-                OreSatFile(value)  # valiate file name format
-                self.file_path = self.tmp_dir + '/' + value
-            except ValueError:
-                logger.error(f'{value} is not a valid file name format')
-                self.file_path = ''
-        elif subindex == Subindex.FILE_DATA:
-            if not self.file_path:
-                logger.error('fwrite file path was not set before file data was sent')
-                return
-
-            try:
-                with open(self.file_path, 'wb') as f:
-                    f.write(value)
-                logger.info(f'receive new file: {basename(self.file_path)}')
-                self.node.fwrite_cache.add(self.file_path, consume=True)
-            except Exception as e:
-                logger.exception(e)
-
-            # clear file data OD obj value to not waste memory
-            self.node.od[index][subindex].value = ''
-        elif subindex == Subindex.DELETE_FILE:
-            if self.file_path:
-                # delete file from cache and tmp dir
-                self.node.fwrite_cache.remove(basename(self.file_path))
-                remove(self.file_path)
-                self.file_path = ''
-                logger.info(f'{basename(self.file_path)} was deleted from fwrite cache')
-            else:
-                logger.error('fwrite file path was not set before trying to delete file')
+        if self.file_path:
+            # delete file from cache and tmp dir
+            self.node.fwrite_cache.remove(basename(self.file_path))
+            remove(self.file_path)
+            self.file_path = ''
+            logger.info(f'{basename(self.file_path)} was deleted from write cache')
+        else:
+            logger.error('write file path was not set before trying to delete file')
