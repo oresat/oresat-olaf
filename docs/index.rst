@@ -23,7 +23,6 @@ Society).
    api/index
    rest_api
    updater/index
-   scripts
 
 
 Indices and tables

@@ -1,9 +1,9 @@
 build
 canopen
-flake8
 flask
 loguru
 natsort
+oresat-od-database
 psutil
 setuptools
 sphinx

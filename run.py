@@ -6,7 +6,8 @@ from argparse import ArgumentParser
 
 from oresat_od_db import NodeId
 from oresat_od_db.oresat0_5 import C3_OD, OD_DB
-from olaf import app, rest_api, logger, olaf_run
+
+from olaf import app, logger, olaf_run, rest_api
 
 if __name__ == '__main__':
     parser = ArgumentParser()

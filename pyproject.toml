@@ -30,14 +30,6 @@ dependencies = [
 ]
 dynamic = ["version"]
 
-[project.scripts]
-olaf-sdo-transfer = "olaf.scripts.sdo_transfer:main"
-olaf-file-transfer = "olaf.scripts.file_transfer:main"
-olaf-os-command = "olaf.scripts.os_command:main"
-olaf-system-info = "olaf.scripts.system_info:main"
-olaf-new-eds = "olaf.scripts.new_eds:main"
-olaf-sync = "olaf.scripts.sync:main"
-
 [tool.setuptools.dynamic]
 version = {attr = "olaf.__version__"}
 
