@@ -1,6 +1,6 @@
-from threading import Event
-
 import canopen
+from oresat_od_db.oresat0_5 import GPS_OD
+
 from olaf import Service, OreSatFileCache, logger
 from olaf._internals.node import Node
 
@@ -10,8 +10,7 @@ logger.disable('olaf')
 class MockNode(Node):
 
     def __init__(self):
-        eds_path = 'olaf/_internals/data/oresat_app.eds'
-        od = canopen.objectdictionary.eds.import_eds(eds_path, 0x10)
+        od = GPS_OD
         super().__init__(od, None)
 
         self._fread_cache = OreSatFileCache('/tmp/fread')
@@ -21,9 +20,9 @@ class MockNode(Node):
 
         self._setup_node()
 
-    def send_tpdo(self, tpdo: int) -> bool:
+    def send_tpdo(self, tpdo: int):
 
-        return True  # override to do nothing
+        pass  # override to do nothing
 
 
 class MockApp:
@@ -32,6 +31,7 @@ class MockApp:
         super().__init__()
 
         self.node = MockNode()
+        self.service = None
 
     def add_service(self, service: Service):
         '''Add the service for testing'''

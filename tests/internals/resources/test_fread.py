@@ -1,3 +1,5 @@
+'''Unit tests for the fread (aka file read over CAN bus) resource.'''
+
 import json
 import random
 import string
@@ -5,12 +7,13 @@ import unittest
 from os.path import basename
 
 from olaf import new_oresat_file
-from olaf._internals.resources.fread import FreadResource, Subindex
+from olaf._internals.resources.fread import FreadResource
 
 from . import MockApp
 
 
 class TestFreadResource(unittest.TestCase):
+    '''Test the fread resource.'''
 
     def setUp(self):
 
@@ -23,29 +26,33 @@ class TestFreadResource(unittest.TestCase):
         self.app.stop()
 
     def test_read(self):
+        '''Test file reads.'''
 
-        index = self.app.resource.index
+        index = 'common_data'
+        subindex_len = 'fread_cache_len'
+        subindex_remove = 'fread_cache_remove'
+        subindex_file_name = 'fread_cache_file_name'
+        subindex_file_data = 'fread_cache_file_data'
+        subindex_files_json = 'fread_cache_files_json'
 
         self.assertEqual(len(self.app.node.fread_cache), 0)
 
         # empty cache
-        self.assertIn(self.app.sdo_read(index, Subindex.FILE_NAME.value), ['', 'x'])
-        self.assertEqual(self.app.sdo_read(index, Subindex.FILE_DATA.value), b'')
-        self.assertEqual(self.app.sdo_read(index, Subindex.CRC32.value), 0)
-        self.app.sdo_write(index, Subindex.DELETE_FILE.value, True)
-        self.assertEqual(self.app.sdo_read(index, Subindex.TOTAL_FILES.value), 0)
-        file_names = json.loads(self.app.sdo_read(index, Subindex.FILE_NAMES.value))
+        self.assertEqual(self.app.sdo_read(index, subindex_file_name), '')
+        self.assertEqual(self.app.sdo_read(index, subindex_file_data), b'')
+        self.app.sdo_write(index, subindex_remove, True)
+        self.assertEqual(self.app.sdo_read(index, subindex_len), 0)
+        file_names = json.loads(self.app.sdo_read(index, subindex_files_json))
         self.assertListEqual(file_names, [])
 
         # test sdo trasfer of a file that does not exist
         file_name = new_oresat_file('test')
-        self.app.sdo_write(index, Subindex.FILE_NAME.value, file_name)
-        self.app.sdo_write(index, Subindex.FILE_NAME.value, new_oresat_file('abc'))
-        self.assertEqual(self.app.sdo_read(index, Subindex.FILE_NAME.value), '')
-        self.assertEqual(self.app.sdo_read(index, Subindex.FILE_DATA.value), b'')
-        self.assertEqual(self.app.sdo_read(index, Subindex.CRC32.value), 0)
-        self.assertEqual(self.app.sdo_read(index, Subindex.TOTAL_FILES.value), 0)
-        file_names = json.loads(self.app.sdo_read(index, Subindex.FILE_NAMES.value))
+        self.app.sdo_write(index, subindex_file_name, file_name)
+        self.app.sdo_write(index, subindex_file_name, new_oresat_file('abc'))
+        self.assertEqual(self.app.sdo_read(index, subindex_file_name), '')
+        self.assertEqual(self.app.sdo_read(index, subindex_file_data), b'')
+        self.assertEqual(self.app.sdo_read(index, subindex_len), 0)
+        file_names = json.loads(self.app.sdo_read(index, subindex_files_json))
         self.assertListEqual(file_names, [])
 
         # add a file to the cache
@@ -58,12 +65,11 @@ class TestFreadResource(unittest.TestCase):
         self.assertEqual(len(self.app.node.fread_cache), 1)
 
         # test sdo trasfer of a file
-        self.app.sdo_write(index, Subindex.FILE_NAME.value, basename(file_name))
-        self.assertEqual(self.app.sdo_read(index, Subindex.FILE_NAME.value), file_name)
-        self.assertEqual(self.app.sdo_read(index, Subindex.FILE_DATA.value).decode(), file_data)
-        self.assertNotEqual(self.app.sdo_read(index, Subindex.CRC32.value), 0)
-        self.assertEqual(self.app.sdo_read(index, Subindex.TOTAL_FILES.value), 1)
-        file_names = json.loads(self.app.sdo_read(index, Subindex.FILE_NAMES.value))
+        self.app.sdo_write(index, subindex_file_name, basename(file_name))
+        self.assertEqual(self.app.sdo_read(index, subindex_file_name), file_name)
+        self.assertEqual(self.app.sdo_read(index, subindex_file_data).decode(), file_data)
+        self.assertEqual(self.app.sdo_read(index, subindex_len), 1)
+        file_names = json.loads(self.app.sdo_read(index, subindex_files_json))
         self.assertListEqual(file_names, [file_name])
 
         # add a another file to the cache
@@ -76,32 +82,28 @@ class TestFreadResource(unittest.TestCase):
         self.assertEqual(len(self.app.node.fread_cache), 2)
 
         # test sdo trasfer of both files
-        self.app.sdo_write(index, Subindex.FILE_NAME.value, basename(file_name))
-        self.assertEqual(self.app.sdo_read(index, Subindex.FILE_NAME.value), file_name)
-        self.assertEqual(self.app.sdo_read(index, Subindex.FILE_DATA.value).decode(), file_data)
-        self.assertNotEqual(self.app.sdo_read(index, Subindex.CRC32.value), 0)
-        self.app.sdo_write(index, Subindex.FILE_NAME.value, basename(file_name2))
-        self.assertEqual(self.app.sdo_read(index, Subindex.FILE_NAME.value), file_name2)
-        self.assertEqual(self.app.sdo_read(index, Subindex.FILE_DATA.value).decode(), file_data2)
-        self.assertNotEqual(self.app.sdo_read(index, Subindex.CRC32.value), 0)
-        self.assertEqual(self.app.sdo_read(index, Subindex.TOTAL_FILES.value), 2)
-        file_names = json.loads(self.app.sdo_read(index, Subindex.FILE_NAMES.value))
+        self.app.sdo_write(index, subindex_file_name, basename(file_name))
+        self.assertEqual(self.app.sdo_read(index, subindex_file_name), file_name)
+        self.assertEqual(self.app.sdo_read(index, subindex_file_data).decode(), file_data)
+        self.app.sdo_write(index, subindex_file_name, basename(file_name2))
+        self.assertEqual(self.app.sdo_read(index, subindex_file_name), file_name2)
+        self.assertEqual(self.app.sdo_read(index, subindex_file_data).decode(), file_data2)
+        self.assertEqual(self.app.sdo_read(index, subindex_len), 2)
+        file_names = json.loads(self.app.sdo_read(index, subindex_files_json))
         self.assertListEqual(file_names, [file_name, file_name2])
 
         # delete the first file
-        self.app.sdo_write(index, Subindex.FILE_NAME.value, basename(file_name))
-        self.app.sdo_write(index, Subindex.DELETE_FILE.value, True)
+        self.app.sdo_write(index, subindex_file_name, basename(file_name))
+        self.app.sdo_write(index, subindex_remove, True)
         self.assertEqual(len(self.app.node.fread_cache), 1)
-        self.assertEqual(self.app.sdo_read(index, Subindex.CRC32.value), 0)
-        self.assertEqual(self.app.sdo_read(index, Subindex.TOTAL_FILES.value), 1)
-        file_names = json.loads(self.app.sdo_read(index, Subindex.FILE_NAMES.value))
+        self.assertEqual(self.app.sdo_read(index, subindex_len), 1)
+        file_names = json.loads(self.app.sdo_read(index, subindex_files_json))
         self.assertListEqual(file_names, [file_name2])
 
         # delete the second file
-        self.app.sdo_write(index, Subindex.FILE_NAME.value, basename(file_name2))
-        self.app.sdo_write(index, Subindex.DELETE_FILE.value, True)
+        self.app.sdo_write(index, subindex_file_name, basename(file_name2))
+        self.app.sdo_write(index, subindex_remove, True)
         self.assertEqual(len(self.app.node.fread_cache), 0)
-        self.assertEqual(self.app.sdo_read(index, Subindex.CRC32.value), 0)
-        self.assertEqual(self.app.sdo_read(index, Subindex.TOTAL_FILES.value), 0)
-        file_names = json.loads(self.app.sdo_read(index, Subindex.FILE_NAMES.value))
+        self.assertEqual(self.app.sdo_read(index, subindex_len), 0)
+        file_names = json.loads(self.app.sdo_read(index, subindex_files_json))
         self.assertListEqual(file_names, [])

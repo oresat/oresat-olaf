@@ -1,3 +1,5 @@
+'''Unit tests for the fwrite (aka file write over CAN bus) resource.'''
+
 import json
 import random
 import string
@@ -6,12 +8,13 @@ from os import remove
 from os.path import basename
 
 from olaf import new_oresat_file
-from olaf._internals.resources.fwrite import FwriteResource, Subindex
+from olaf._internals.resources.fwrite import FwriteResource
 
 from . import MockApp
 
 
 class TestFwriteResource(unittest.TestCase):
+    '''Test the fwrite resource.'''
 
     def setUp(self):
 
@@ -24,8 +27,13 @@ class TestFwriteResource(unittest.TestCase):
         self.app.stop()
 
     def test_write(self):
+        '''Test file writes.'''
 
-        index = self.app.resource.index
+        index = 'common_data'
+        subindex_len = 'fwrite_cache_len'
+        subindex_file_name = 'fwrite_cache_file_name'
+        subindex_file_data = 'fwrite_cache_file_data'
+        subindex_files_json = 'fwrite_cache_files_json'
 
         self.assertEqual(len(self.app.node.fwrite_cache), 0)
 
@@ -37,21 +45,21 @@ class TestFwriteResource(unittest.TestCase):
             f.write(file_data)
 
         # test sdo trasfer of a file
-        self.app.sdo_write(index, Subindex.FILE_NAME.value, basename(file_name))
-        self.assertEqual(self.app.sdo_read(index, Subindex.FILE_NAME.value), file_name)
-        self.app.sdo_write(index, Subindex.FILE_DATA.value, file_data.encode())
+        self.app.sdo_write(index, subindex_file_name, basename(file_name))
+        self.assertEqual(self.app.sdo_read(index, subindex_file_name), file_name)
+        self.app.sdo_write(index, subindex_file_data, file_data.encode())
         self.assertEqual(len(self.app.node.fwrite_cache), 1)
-        self.assertEqual(self.app.sdo_read(index, Subindex.TOTAL_FILES.value), 1)
-        file_names = json.loads(self.app.sdo_read(index, Subindex.FILE_NAMES.value))
+        self.assertEqual(self.app.sdo_read(index, subindex_len), 1)
+        file_names = json.loads(self.app.sdo_read(index, subindex_files_json))
         self.assertListEqual(file_names, [file_name])
 
         # test sdo trasfer of a file to over write
-        self.app.sdo_write(index, Subindex.FILE_NAME.value, basename(file_name))
-        self.assertEqual(self.app.sdo_read(index, Subindex.FILE_NAME.value), file_name)
-        self.app.sdo_write(index, Subindex.FILE_DATA.value, file_data.encode())
+        self.app.sdo_write(index, subindex_file_name, basename(file_name))
+        self.assertEqual(self.app.sdo_read(index, subindex_file_name), file_name)
+        self.app.sdo_write(index, subindex_file_data, file_data.encode())
         self.assertEqual(len(self.app.node.fwrite_cache), 1)
-        self.assertEqual(self.app.sdo_read(index, Subindex.TOTAL_FILES.value), 1)
-        file_names = json.loads(self.app.sdo_read(index, Subindex.FILE_NAMES.value))
+        self.assertEqual(self.app.sdo_read(index, subindex_len), 1)
+        file_names = json.loads(self.app.sdo_read(index, subindex_files_json))
         self.assertListEqual(file_names, [file_name])
 
         # remove test file
@@ -65,12 +73,12 @@ class TestFwriteResource(unittest.TestCase):
             f.write(file_data2)
 
         # test sdo trasfer of a file
-        self.app.sdo_write(index, Subindex.FILE_NAME.value, basename(file_name2))
-        self.assertEqual(self.app.sdo_read(index, Subindex.FILE_NAME.value), file_name2)
-        self.app.sdo_write(index, Subindex.FILE_DATA.value, file_data2.encode())
+        self.app.sdo_write(index, subindex_file_name, basename(file_name2))
+        self.assertEqual(self.app.sdo_read(index, subindex_file_name), file_name2)
+        self.app.sdo_write(index, subindex_file_data, file_data2.encode())
         self.assertEqual(len(self.app.node.fwrite_cache), 2)
-        self.assertEqual(self.app.sdo_read(index, Subindex.TOTAL_FILES.value), 2)
-        file_names = json.loads(self.app.sdo_read(index, Subindex.FILE_NAMES.value))
+        self.assertEqual(self.app.sdo_read(index, subindex_len), 2)
+        file_names = json.loads(self.app.sdo_read(index, subindex_files_json))
         self.assertListEqual(file_names, [file_name, file_name2])
 
         # remove test file

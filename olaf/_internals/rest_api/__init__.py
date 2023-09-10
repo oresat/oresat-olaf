@@ -214,7 +214,8 @@ def od_index(index: str):
     try:
         obj = app.od[index]
     except KeyError:
-        msg = f'no object at index {index}'
+        index_name = f'0x{index:X}' if isinstance(index, int) else index
+        msg = f'no object at index {index_name}'
         logger.error(f'REST API error: {msg}')
         return make_error_json(msg)
 
@@ -253,8 +254,10 @@ def od_subindex(index: str, subindex: str):
 
     try:
         obj = app.od[index][subindex]
-    except KeyError:
-        msg = f'no object at index {index} subindex {subindex}'
+    except (KeyError, TypeError):
+        index_name = f'0x{index:X}' if isinstance(index, int) else index
+        subindex_name = f'0x{subindex:X}' if isinstance(subindex, int) else subindex
+        msg = f'no object at index {index_name} subindex {subindex_name}'
         logger.error(f'REST API error: {msg}')
         return make_error_json(msg)
 

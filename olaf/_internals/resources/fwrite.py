@@ -17,7 +17,6 @@ class FwriteResource(Resource):
     def __init__(self):
         super().__init__()
 
-        self.index = 0x3004
         self.file_path = ''
 
         self.tmp_dir = '/tmp/oresat/fwrite'

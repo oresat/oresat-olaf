@@ -77,7 +77,6 @@ class FreadResource(Resource):
     def on_write_delete(self, value: bool):
         '''SDO read callback to delete the selected file.'''
 
-        print(value)
         if not value:
             return
 
