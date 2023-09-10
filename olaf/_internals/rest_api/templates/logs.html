@@ -17,13 +17,13 @@
   </div>
   <script>
     async function updateLogs() {
-      const logsObj = await readValue("0x3006", "0x02");
+      const logsObj = await readValue("common_data", "get_logs");
       document.getElementById("logs").value = logsObj.value;
     }
 
     updateLogs();
     const interval = setInterval(function() {
       updateLogs()
-    }, 60000);
+    }, 30000);
   </script>
 {% endblock %}

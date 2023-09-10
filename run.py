@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 
-import os
 import sys
 from argparse import ArgumentParser
 
 from oresat_od_db import NodeId
 from oresat_od_db.oresat0_5 import C3_OD, OD_DB
 
-from olaf import app, logger, olaf_run, rest_api
+from olaf import app, logger, olaf_run, rest_api, logger_tmp_file_setup
 
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -30,12 +29,7 @@ if __name__ == '__main__':
 
     logger.remove()  # remove default logger
     logger.add(sys.stdout, level=level, backtrace=True)
-
-    # log file for log service (overrides each time app starts)
-    olaf_boot_logs = '/tmp/olaf.log'
-    if os.path.isfile(olaf_boot_logs):
-        os.remove(olaf_boot_logs)
-    logger.add(olaf_boot_logs, level=level, backtrace=True)
+    logger_tmp_file_setup(level)
 
     card_name = args.card.upper().replace('-', '_')
     node_id = NodeId[card_name]

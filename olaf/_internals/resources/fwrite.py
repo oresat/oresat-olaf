@@ -80,7 +80,7 @@ class FwriteResource(Resource):
             logger.exception(e)
 
         # clear file data OD obj value to not waste memory
-        self.node.od['common_data']['fwrite_cache_file_data'].value = ''
+        self.node.od['common_data']['fwrite_cache_file_data'].value = b''
 
     def on_write_delete(self, value: bool):
         '''SDO read callback to delete the selected file.'''

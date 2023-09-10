@@ -65,8 +65,8 @@ class Node:
 
         self._od = od
         self._bus = bus
-        self._node = None  # canopen.LocalNode instance
-        self._network = None
+        self._node: canopen.LocalNode = None
+        self._network: canopen.Network = None
         self._event = Event()
         self._read_cbs = {}
         self._write_cbs = {}
@@ -353,7 +353,7 @@ class Node:
         self._daemons[name] = Daemon(name)
 
     def add_sdo_callbacks(self, index: str, subindex: str,
-                         read_cb: Callable[None, Any], write_cb: Callable[Any, None]):
+                          read_cb: Callable[[None], Any], write_cb: Callable[[Any], None]):
         '''
         Add an SDO read callback for a variable at index and optional subindex.
 
@@ -363,11 +363,11 @@ class Node:
             The index to call the callback on.
         subindex: int or str
             The subindex to call the callback on.
-        read_cb: Callable[None, Any]
+        read_cb: Callable[[None], Any]
             The SDO read callback. Allows overriding the data being sent on a SDO read. If
             overriding read data return the value or return :py:data:`None` to use the the value
             from the od. Set to :py:data:`None` for no read_cb.
-        write_cb: Callable[Any, None]
+        write_cb: Callable[[Any], None]
             The SDO writecallback. Gives access to the data being received on a SDO write.
             Set to :py:data:`None` for no write_cb.
             **Note:** data is still written to object dictionary before call.
@@ -378,30 +378,10 @@ class Node:
             Invalid index/subindex or callbacks already exist at index/subindex.
         '''
 
-        obj = self.od[index]
-        obj_index = obj.index
-        index = obj.name
-
-        if obj_index not in self._read_cbs:
-            self._read_cbs[obj_index] = {}
-        if obj_index not in self._write_cbs:
-            self._write_cbs[obj_index] = {}
-
-        if subindex is None:
-            if not isinstance(obj, canopen.objectdictionary.Variable):
-                raise ValueError(f'object at index {index} is not a variable')
-            obj_subindex = 0
-            if obj_subindex in self._read_cbs[obj_index] or obj_subindex in self._write_cbs[obj_index]:
-                raise ValueError(f'callback(s) for index {index} already exist')
-        else:
-            obj_subindex = obj[subindex].subindex
-            subindex = obj[subindex].name
-            if obj_subindex in self._read_cbs[obj_index] or obj_subindex in self._write_cbs[obj_index]:
-                raise ValueError(f'callback(s) for index {index} subindex {subindex} already exist')
-
-
-        self._read_cbs[obj_index][obj_subindex] = read_cb
-        self._write_cbs[obj_index][obj_subindex] = write_cb
+        if read_cb is not None:
+            self._read_cbs[index, subindex] = read_cb
+        if write_cb is not None:
+            self._write_cbs[index, subindex] = write_cb
 
     def send_emcy(self, code: int, register: int = 0, data: bytes = b''):
         '''
@@ -436,12 +416,12 @@ class Node:
 
         Parameters
         ----------
-        index: int
+        index: int or str
             The index the SDO is reading to.
-        subindex: int
+        subindex: int or str
             The subindex the SDO is reading to.
         od: canopen.objectdictionary.Variable
-            The variable object being read to. Badly named.
+            The variable object being read to. Badly named. And not appart of the actual OD.
 
         Returns
         -------
@@ -451,21 +431,16 @@ class Node:
 
         ret = None
 
-        if index not in self._read_cbs or subindex not in self._read_cbs[index]:
-            return
-
+        # convert any ints to strs
         if isinstance(self.od[index], canopen.objectdictionary.Variable) and od == self.od[index]:
-            try:
-                ret = self._read_cbs[index]()
-            except Exception as e:
-                logger.exception(f'sdo read_cb for index {od.name} raised: {e}')
+            index = od.name
+            subindex = None
         else:
-            try:
-                ret = self._read_cbs[index][subindex]()
-            except Exception as e:
-                logger.exception(
-                    f'sdo read_cb for index {self.od[index].name} subindex {od.name} raised: {e}'
-                )
+            index = self.od[index].name
+            subindex = od.name
+
+        if (index, subindex) in self._read_cbs:
+            ret = self._read_cbs[index, subindex]()
 
         # get value from OD
         if ret is None:
@@ -492,25 +467,24 @@ class Node:
             The raw data being written.
         '''
 
-        if index not in self._write_cbs or subindex not in self._write_cbs[index]:
-            return
+        binary_types = [canopen.objectdictionary.DOMAIN, canopen.objectdictionary.OCTET_STRING]
 
         # set value in OD before callback
-        od.value = od.decode_raw(data)
-
-        value = od.decode_raw(data)
-        if isinstance(self.od[index], canopen.objectdictionary.Variable) and od == self.od[index]:
-            try:
-                self._write_cbs[index](value)
-            except Exception as e:
-                logger.exception(f'sdo write_cb for index {od.name} raised: {e}')
+        if od.data_type in binary_types:
+            od.value = data
         else:
-            try:
-                self._write_cbs[index][subindex](value)
-            except Exception as e:
-                logger.exception(
-                    f'sdo write_cb for index {self.od[index].name} subindex {od.name} raised: {e}'
-                )
+            od.value = od.decode_raw(data)
+
+        # convert any ints to strs
+        if isinstance(self.od[index], canopen.objectdictionary.Variable) and od == self.od[index]:
+            index = od.name
+            subindex = None
+        else:
+            index = self.od[index].name
+            subindex = od.name
+
+        if (index, subindex) in self._write_cbs:
+            self._write_cbs[index, subindex](od.value)
 
     @property
     def name(self) -> str:

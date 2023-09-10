@@ -11,6 +11,15 @@ from ...common.oresat_file import new_oresat_file
 TMP_LOGS_FILE = '/tmp/olaf.log'
 
 
+def logger_tmp_file_setup(level: str):
+    '''Congfigure logger to save to tmp file for LogsService'''
+
+    # log file for log service (overrides each time app starts)
+    if os.path.isfile(TMP_LOGS_FILE):
+        os.remove(TMP_LOGS_FILE)
+    logger.add(TMP_LOGS_FILE, level=level, backtrace=True)
+
+
 class LogsService(Service):
     '''Service for getting system logs'''
 
@@ -50,6 +59,6 @@ class LogsService(Service):
             return 'no logs'
 
         with open(TMP_LOGS_FILE, 'r') as f:
-            ret = ''.join(reversed(f.readlines()[500:]))
+            ret = ''.join(reversed(f.readlines()[-500:]))
 
         return ret

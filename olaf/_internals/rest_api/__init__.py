@@ -1,8 +1,9 @@
+'''OLAF REST API for testing and integration.'''
+
 import os
 import base64
 import shutil
 import logging
-from enum import IntEnum
 from pathlib import Path
 from threading import Thread
 
@@ -14,38 +15,27 @@ from werkzeug.serving import make_server
 
 from ..app import app
 
-_TITLE = os.uname()[1]
-_PATH = os.path.dirname(os.path.abspath(__file__))
-_TEMPLATE_DIR = '/tmp/oresat/templates'
 
+DATA_TYPE_NAMES = {
+    canopen.objectdictionary.BOOLEAN: 'BOOLEAN',
+    canopen.objectdictionary.INTEGER8: 'INTEGER8',
+    canopen.objectdictionary.INTEGER16: 'INTEGER16',
+    canopen.objectdictionary.INTEGER32: 'INTEGER32',
+    canopen.objectdictionary.INTEGER64: 'INTEGER64',
+    canopen.objectdictionary.UNSIGNED8: 'UNSIGNED8',
+    canopen.objectdictionary.UNSIGNED16: 'UNSIGNED16',
+    canopen.objectdictionary.UNSIGNED32: 'UNSIGNED32',
+    canopen.objectdictionary.UNSIGNED64: 'UNSIGNED64',
+    canopen.objectdictionary.REAL32: 'REAL32',
+    canopen.objectdictionary.REAL64: 'REAL64',
+    canopen.objectdictionary.VISIBLE_STRING: 'VISIBLE_STRING',
+    canopen.objectdictionary.OCTET_STRING: 'OCTET_STRING',
+    canopen.objectdictionary.DOMAIN: 'DOMAIN',
+}
 
-class DataType(IntEnum):
-    BOOLEAN = 0x1
-    INTEGER8 = 0x2
-    INTEGER16 = 0x3
-    INTEGER32 = 0x4
-    UNSIGNED8 = 0x5
-    UNSIGNED16 = 0x6
-    UNSIGNED32 = 0x7
-    REAL32 = 0x8
-    VISIBLE_STRING = 0x9
-    OCTET_STRING = 0xA
-    UNICODE_STRING = 0xB
-    DOMAIN = 0xF
-    REAL64 = 0x11
-    INTEGER64 = 0x15
-    UNSIGNED64 = 0x1B
-
-
-INT_TYPES = [
-    DataType.INTEGER8,
-    DataType.INTEGER16,
-    DataType.INTEGER32,
-    DataType.INTEGER64,
-    DataType.UNSIGNED8,
-    DataType.UNSIGNED16,
-    DataType.UNSIGNED32,
-    DataType.UNSIGNED64,
+BYTES_TYPES = [
+    canopen.objectdictionary.OCTET_STRING,
+    canopen.objectdictionary.DOMAIN,
 ]
 
 
@@ -56,18 +46,22 @@ class RestAPI:
     Use the global ``olaf.rest_api`` object.
     '''
 
+    _PATH = os.path.dirname(os.path.abspath(__file__))
+    _TEMPLATE_DIR = '/tmp/oresat/templates'
+
     def __init__(self):
 
-        self.app = Flask(_TITLE, template_folder=_TEMPLATE_DIR, static_folder=f'{_PATH}/static')
+        self.app = Flask('OLAF', template_folder=self._TEMPLATE_DIR,
+                         static_folder=f'{self._PATH}/static')
         logging.getLogger('werkzeug').setLevel(logging.ERROR)
         self._thread = Thread(target=self._run)
         self._server = None
         self._ctx = None
-        Path(_TEMPLATE_DIR).mkdir(parents=True, exist_ok=True)
+        Path(self._TEMPLATE_DIR).mkdir(parents=True, exist_ok=True)
 
         # add all core templates
-        for i in os.listdir(f'{_PATH}/templates'):
-            self.add_template(f'{_PATH}/templates/{i}')
+        for i in os.listdir(f'{self._PATH}/templates'):
+            self.add_template(f'{self._PATH}/templates/{i}')
 
     def setup(self, address: str, port: int):
         '''Setup the REST API thread'''
@@ -105,7 +99,7 @@ class RestAPI:
             Path to the template file to add.
         '''
 
-        shutil.copy(template_path, _TEMPLATE_DIR)
+        shutil.copy(template_path, self._TEMPLATE_DIR)
 
 
 def render_olaf_template(template: str, name: str):
@@ -119,7 +113,9 @@ def render_olaf_template(template: str, name: str):
     name: str
         Nice name for the template.
     '''
-    return render_template(template, title=_TITLE, name=name)
+
+    title = app.od.device_information.product_name
+    return render_template(template, title=title, name=name)
 
 
 def make_error_json(error: str) -> str:
@@ -146,68 +142,79 @@ rest_api = RestAPI()
 
 @rest_api.app.route('/')
 def root():
+    '''Render the root template.'''
 
     routes = []
-    for p in rest_api.app.url_map.iter_rules():
-        route = str(p)
+    for rule in rest_api.app.url_map.iter_rules():
+        route = str(rule)
         if not route.startswith('/static/') and not route.startswith('/od/') \
                 and route not in ['/', '/favicon.ico', '/od-all']:
-            routes.append(str(p))
+            routes.append(str(rule))
 
     routes = natsorted(routes)
 
-    return render_template('root.html', title=os.uname()[1], routes=routes)
+    title = app.od.device_information.product_name
+    return render_template('root.html', title=title, routes=routes)
 
 
 @rest_api.app.route('/favicon.ico')
 def favicon():
+    '''Pass the favicon.icon.'''
+
     path = os.path.dirname(os.path.abspath(__file__))
     return send_from_directory(f'{path}/static', 'favicon.ico')
 
 
-def _json_value_to_value(data_type: DataType, json_value):
+def _json_value_to_value(data_type: int, json_value):
     '''Convert JSON value to real OD value to bytes for SDO callback'''
 
-    if data_type == DataType.BOOLEAN and not isinstance(json_value, bool):
-        value = True if json_value.lower() == 'true' else False
-    elif data_type in INT_TYPES and not isinstance(json_value, int):
+    value = json_value
+
+    if data_type == canopen.objectdictionary.BOOLEAN and not isinstance(json_value, bool):
+        value = json_value.lower() == 'true'
+    elif data_type in canopen.objectdictionary.INTEGER_TYPES and not isinstance(json_value, int):
         value = int(json_value, 16) if json_value.startswith('0x') else int(json_value)
-    elif data_type in [DataType.REAL32, DataType.REAL64]:
+    elif data_type in canopen.objectdictionary.FLOAT_TYPES:
         value = float(json_value)
-    elif data_type == DataType.DOMAIN:
-        value = base64.decodebytes(json_value.encode('utf-8'))
-    else:  # str
-        value = json_value
+    elif data_type in BYTES_TYPES:
+        try:
+            value = base64.decodebytes(json_value.encode('utf-8'))
+        except AttributeError:
+            pass
 
     return value
 
 
 @rest_api.app.route('/od/<index>/', methods=['GET', 'PUT'])
 def od_index_old(index: str):
-    '''backward compactability'''
+    '''Read or write a value from OD with only a index. For backward compactability.'''
 
     return od_index(index)
 
 
 @rest_api.app.route('/od/<index>/<subindex>/', methods=['GET', 'PUT'])
 def od_subindex_old(index: str, subindex: str):
-    '''backward compactability'''
+    ''' Read or write a value from OD. For backward compactability.'''
 
     return od_subindex(index, subindex)
 
 
 @rest_api.app.route('/od/<index>', methods=['GET', 'PUT'])
 def od_index(index: str):
+    '''Read or write a value from OD with only a index.'''
 
     try:
-        index = int(index, 16) if index.startswith('0x') else int(index)
+        if index.startswith('0x'):
+            index = int(index, 16)
+        elif index[0] in '0123456789':
+            index = int(index)
     except ValueError:
         return make_error_json(f'invalid index {index}')
 
     try:
         obj = app.od[index]
-    except Exception:
-        msg = f'no object at index 0x{index:02X}'
+    except KeyError:
+        msg = f'no object at index {index}'
         logger.error(f'REST API error: {msg}')
         return make_error_json(msg)
 
@@ -219,7 +226,7 @@ def od_index(index: str):
             value = _json_value_to_value(obj.data_type, json_value)
             raw = obj.encode_raw(value)
 
-            app.node._on_sdo_write(index, 0, obj, raw)
+            app.node._on_sdo_write(index, None, obj, raw)
         except Exception as e:
             logger.error(f'REST API error: {e}')
             return make_error_json(str(e))
@@ -229,17 +236,25 @@ def od_index(index: str):
 
 @rest_api.app.route('/od/<index>/<subindex>', methods=['GET', 'PUT'])
 def od_subindex(index: str, subindex: str):
+    '''Read or write a value from OD.'''
 
     try:
-        index = int(index, 16) if index.startswith('0x') else int(index)
-        subindex = int(subindex, 16) if subindex.startswith('0x') else int(subindex)
+        if index.startswith('0x'):
+            index = int(index, 16)
+        elif index[0] in '0123456789':
+            index = int(index)
+
+        if subindex.startswith('0x'):
+            subindex = int(subindex, 16)
+        elif subindex[0] in '0123456789':
+            subindex = int(subindex)
     except ValueError:
         return make_error_json(f'invalid index {index} or subindex {subindex}')
 
     try:
         obj = app.od[index][subindex]
-    except Exception:
-        msg = f'no object at index 0x{index:04X} subindex 0x{subindex:02X}'
+    except KeyError:
+        msg = f'no object at index {index} subindex {subindex}'
         logger.error(f'REST API error: {msg}')
         return make_error_json(msg)
 
@@ -249,11 +264,14 @@ def od_subindex(index: str, subindex: str):
 
             # convert value from JSON to bytes for SDO callback
             value = _json_value_to_value(obj.data_type, json_value)
-            raw = obj.encode_raw(value)
+            if obj.data_type in BYTES_TYPES:
+                raw = value
+            else:
+                raw = obj.encode_raw(value)
 
             app.node._on_sdo_write(index, subindex, obj, raw)
         except Exception as e:
-            logger.error(f'REST API error: {e}')
+            logger.exception(f'REST API error: {e}')
             return make_error_json(str(e))
 
     return jsonify(_object_to_dict(index, subindex))
@@ -279,36 +297,41 @@ def _object_to_dict(index: int, subindex: int = None) -> dict:
     if subindex is None:
         try:
             obj = app.node.od[index]
-        except Exception:
+        except KeyError:
             msg = f'0x{index:04X} is not a valid index'
             logger.debug('REST API error: ' + msg)
             return make_error_json(msg)
     else:
         try:
             obj = app.node.od[index][subindex]
-        except Exception:
+        except KeyError:
             msg = f'0x{subindex:02X} not a valid subindex for index 0x{index:04X}'
             logger.debug('REST API error: ' + msg)
             return make_error_json(msg)
 
     if isinstance(obj, canopen.objectdictionary.Variable):
         value = app.node._on_sdo_read(index, subindex, obj)
-        if obj.data_type in [DataType.DOMAIN, DataType.OCTET_STRING] and value is not None:
+        if obj.data_type in BYTES_TYPES and value is not None:
             # encode bytes data types for JSON
-            value = base64.encodebytes(value).decode('utf-8')
+            try:
+                value = base64.encodebytes(value).decode('utf-8')
+            except TypeError:
+                logger.error(f'object {obj.name} does not have bytes-like data')
 
     data = {
         'name': obj.name,
+        'index': obj.index,
     }
 
     if isinstance(obj, canopen.objectdictionary.Variable):
         data['object_type'] = 'VARIABLE'
         data['access_type'] = obj.access_type
-        data['data_type'] = DataType(obj.data_type).name
+        data['data_type'] = DATA_TYPE_NAMES[obj.data_type]
         if obj.access_type == 'wo':
             data['value'] = ''
         else:
             data['value'] = value
+        data['subindex'] = obj.subindex
     elif isinstance(obj, canopen.objectdictionary.Array):
         data['object_type'] = 'ARRAY'
         data['subindexes'] = {subindex: _object_to_dict(index, subindex) for subindex in obj}
@@ -321,6 +344,7 @@ def _object_to_dict(index: int, subindex: int = None) -> dict:
 
 @rest_api.app.route('/od-all', methods=['GET'])
 def get_all_object():
+    '''Get all object data as a one giant JSON.'''
     data = {}
     for index in app.od:
         if index < 0x1000:
@@ -331,49 +355,41 @@ def get_all_object():
 
 @rest_api.app.route('/od')
 def od_template():
+    '''Render the OD template.'''
     return render_olaf_template('od.html', name='Object Dictionary')
 
 
 @rest_api.app.route('/os-command')
 def os_command_template():
+    '''Render the OS command template.'''
     return render_olaf_template('os_command.html', name='OS Command')
-
-
-@rest_api.app.route('/system-info')
-def system_info_template():
-    return render_olaf_template('system_info.html', name='System Info')
 
 
 @rest_api.app.route('/updater')
 def updater_template():
+    '''Render the updater template.'''
     return render_olaf_template('updater.html', name='Updater')
 
 
 @rest_api.app.route('/fwrite')
 def fwrite_template():
-    return render_olaf_template('fwrite.html', name='Fwrite')
+    '''Render the fwrite cache template.'''
+    return render_olaf_template('fwrite.html', name='Fwrite Cache')
 
 
 @rest_api.app.route('/fread')
 def fread_template():
-    return render_olaf_template('fread.html', name='Fread')
+    '''Render the fread cache template.'''
+    return render_olaf_template('fread.html', name='Fread Cache')
 
 
 @rest_api.app.route('/logs')
 def logs_template():
+    '''Render the logs template.'''
     return render_olaf_template('logs.html', name='Logs')
-
-
-@rest_api.app.route('/power-control')
-def power_control_template():
-    return render_olaf_template('power_control.html', name='Power Control')
-
-
-@rest_api.app.route('/daemons')
-def daemons_template():
-    return render_olaf_template('daemons.html', name='External Daemons')
 
 
 @rest_api.app.route('/oresat-configs')
 def oresat_configs_template():
+    '''Render the configs template.'''
     return render_olaf_template('oresat_configs.html', name='OreSat Configs')

@@ -48,7 +48,7 @@
         .then(response => response.json())
         .then(data => {
           if (data.error !== undefined) {
-            console.log(data);
+            console.error(data.error);
           }
           return data;
         });
@@ -84,7 +84,7 @@
         .then(response => response.json())
         .then(data => {
           if (data.error !== undefined) {
-            console.log(data);
+            console.error(data.error);
           }
           return data;
         });

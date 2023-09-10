@@ -21,12 +21,16 @@ class MasterNode(Node):
             The CANopen ObjectDictionary
         bus: str
             Which CAN bus to use.
+        od_db: dict
+            Database of other nodes's ODs.
         '''
 
         super().__init__(od, bus)
 
         self._od_db = od_db
-        self._remote_nodes = {canopen.RemoteNode(node_id.value, od_db[node_id]) for node_id in od_db}
+        self._remote_nodes = {
+            canopen.RemoteNode(node_id.value, od_db[node_id]) for node_id in od_db
+        }
         self.node_status = {}
         for node_id in self._od_db:
             if node_id == self._od.node_id:

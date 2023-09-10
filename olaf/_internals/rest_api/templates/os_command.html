@@ -55,26 +55,26 @@
 
       const value = document.getElementById("command").value;
 
-      writeValue("0x1023", "0x01", btoa(value));
+      writeValue("os_command", "command", btoa(value));
     }
 
     async function updateStatus() {
       const reply_states = ["NO_ERROR_REPLY", "ERROR_REPLY"];
 
-      const statusObj = await readValue("0x1023", "0x02");
+      const statusObj = await readValue("os_command", "status");
       const status = document.getElementById("status");
       const newStatus = states[statusObj["value"]];
 
       // state has change to a new state with a reply, display reply
       if (status.textContent === "EXECUTING" && reply_states.includes(newStatus)) {
-        const replyObj = await readValue("0x1023", "0x03");
+        const replyObj = await readValue("os_command", "reply");
         document.getElementById("reply").value = atob(replyObj.value);
       }
 
       status.textContent = newStatus;
     }
 
-    runCommand();
+    //runCommand();
     updateStatus();
     const interval = setInterval(function() {
       updateStatus()

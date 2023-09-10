@@ -35,8 +35,9 @@ class OsCommandService(Service):
         self.state_obj = self.node.od['os_command']['status']
         self.state_obj.value = OsCommandState.NO_ERROR_NO_REPLY.value
         self.reply_obj = self.node.od['os_command']['reply']
-        self.reply_obj.value = ''
-        self.node.add_sdo_callbacks('os_command', 'command', self.on_command_read, self.on_command_write)
+        self.reply_obj.value = b''
+        self.node.add_sdo_callbacks('os_command', 'command', self.on_command_read,
+                                    self.on_command_write)
 
     def on_loop(self):
 
@@ -45,28 +46,28 @@ class OsCommandService(Service):
 
             out = subprocess.run(self.command, capture_output=True, shell=True)
             if out.returncode != 0:  # error
-                self.reply_obj.value = out.stderr[:self.reply_obj_max_len].decode()
+                self.reply_obj.value = out.stderr[:self.reply_obj_max_len]
                 if self.reply_obj.value:
                     self.state_obj.value = OsCommandState.ERROR_REPLY.value
                 else:
                     self.state_obj.value = OsCommandState.ERROR_NO_REPLY.value
             else:  # no error
-                self.reply_obj.value = out.stdout[:self.reply_obj_max_len].decode()
+                self.reply_obj.value = out.stdout[:self.reply_obj_max_len]
                 if self.reply_obj.value:
                     self.state_obj.value = OsCommandState.NO_ERROR_REPLY.value
                 else:
                     self.state_obj.value = OsCommandState.NO_ERROR_NO_REPLY.value
 
-            logger.info('os command has completed')
+            logger.info(f'os command has completed; ret code: {out.returncode}')
 
         self.sleep(0.1)
 
     def on_loop_error(self, exc: Exception):
 
         self.failed = True
-        self.command = ''
+        self.command = b''
         self.state_obj.value = OsCommandState.ERROR_NO_REPLY
-        self.reply_obj.value = ''
+        self.reply_obj.value = b''
         logger.exception(exc)
 
     def on_command_read(self) -> bytes:
@@ -84,4 +85,4 @@ class OsCommandService(Service):
 
         self.command = command.decode()
         self.state_obj.value = OsCommandState.EXECUTING.value
-        self.reply_obj.value = ''
+        self.reply_obj.value = b''

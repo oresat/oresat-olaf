@@ -12,12 +12,12 @@
   <script>
     function toggleFlightMode() {
       const value = document.getElementById("flightMode").checked;
-      const obj = writeValue("0x3007", "0x02", value);
+      const obj = writeValue("common_data", "flight_mode", value);
       document.getElementById("flightMode").checked = obj.value;
     }
 
     async function getFlightMode() {
-      const obj = await readValue("0x3007", "0x2");
+      const obj = await readValue("common_data", "flight_mode");
       console.log(obj);
       document.getElementById("flightMode").checked = obj.value;
     }
