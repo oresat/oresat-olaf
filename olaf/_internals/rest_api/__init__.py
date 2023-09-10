@@ -114,7 +114,7 @@ def render_olaf_template(template: str, name: str):
         Nice name for the template.
     '''
 
-    title = app.od.device_information.product_name
+    title = f'OreSat {app.od.device_information.product_name}'
     return render_template(template, title=title, name=name)
 
 
@@ -153,7 +153,7 @@ def root():
 
     routes = natsorted(routes)
 
-    title = app.od.device_information.product_name
+    title = f'OreSat {app.od.device_information.product_name}'
     return render_template('root.html', title=title, routes=routes)
 
 
