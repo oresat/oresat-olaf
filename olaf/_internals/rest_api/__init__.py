@@ -12,6 +12,7 @@ from flask import Flask, render_template, jsonify, request, send_from_directory
 from loguru import logger
 from natsort import natsorted
 from werkzeug.serving import make_server
+from oresat_od_db import OreSatId
 
 from ..app import app
 
@@ -114,7 +115,9 @@ def render_olaf_template(template: str, name: str):
         Nice name for the template.
     '''
 
-    title = f'OreSat {app.od.device_information.product_name}'
+    os_id = app.od['common_data']['satellite_id'].value
+    os_ver_str = OreSatId(os_id).name[6:].replace('_', '.')
+    title = f'OreSat{os_ver_str} {app.od.device_information.product_name}'
     return render_template(template, title=title, name=name)
 
 
@@ -153,7 +156,9 @@ def root():
 
     routes = natsorted(routes)
 
-    title = f'OreSat {app.od.device_information.product_name}'
+    os_id = app.od['common_data']['satellite_id'].value
+    os_ver_str = OreSatId(os_id).name[6:].replace('_', '.')
+    title = f'OreSat{os_ver_str} {app.od.device_information.product_name}'
     return render_template('root.html', title=title, routes=routes)
 
 
