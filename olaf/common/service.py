@@ -89,6 +89,11 @@ class Service:
 
         logger.debug(f'stopping service {self.__class__.__name__}')
 
+        try:
+            self.on_stop_before()
+        except Exception as e:
+            logger.exception(f'{self.__class__.__name__}\'s on_stop_before raised: {e}')
+
         if not self._event.is_set():
             self._event.set()
 
@@ -100,9 +105,20 @@ class Service:
         except Exception as e:
             logger.exception(f'{self.__class__.__name__}\'s on_stop raised: {e}')
 
+    def on_stop_before(self):
+        '''
+        Called when the app stops before the thread is stopped. Should be used to stop any blocking
+        calls in the thread loop.
+
+        Will be called reguardless if `self.on_loop_error()` was called or not when the app stops.
+        '''
+
+        pass
+
     def on_stop(self):
         '''
-        Called when the app stops. Should be used to stop any hardware the service controls.
+        Called when the app stops after the thread has stopped. Should be used to stop any hardware
+        the service controls.
 
         Will be called reguardless if `self.on_loop_error()` was called or not when the app stops.
         '''
