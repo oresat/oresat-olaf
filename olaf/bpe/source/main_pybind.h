@@ -96,26 +96,26 @@ typedef struct BITSTREAM
 
 typedef struct SYMBOLDETAILS
 { 
-	UCHAR8 sym_val : 4;
-	UCHAR8 sym_len : 4;
-	UCHAR8 sym_mapped_pattern : 4;
-	UCHAR8 sign : 4;	
-	UCHAR8 type : 3;
+	unsigned char sym_val : 4;
+	unsigned char sym_len : 4;
+	unsigned char sym_mapped_pattern : 4;
+	unsigned char sign : 4;	
+	unsigned char type : 3;
 }StrSymbolDetails;
 
 typedef struct TYPEC
 { 
-	UCHAR8 TypeC: 4;
+	unsigned char TypeC: 4;
 }StrTypeC;
 
 typedef struct TRANH
 { 
-	UCHAR8 TranH: 4;
+	unsigned char TranH: 4;
 }StrTranH;
 
 typedef struct TRANHI
 { 
-	UCHAR8 TranH: 4;
+	unsigned char TranH: 4;
 }StrTranHI;
 
 typedef struct TYPEHIJ
@@ -125,20 +125,20 @@ typedef struct TYPEHIJ
 
 typedef struct PARENTREFINE
 {
-	UCHAR8 ParentRefSymbol : 4;
-	UCHAR8 ParentSymbolLength: 2;
+	unsigned char ParentRefSymbol : 4;
+	unsigned char ParentSymbolLength: 2;
 }ParentRefine;
 
 typedef struct CHILDRENREF
 {
-	WORD16 ChildrenRefSymbol : 12;
-	UCHAR8 ChildrenSymbolLength: 4;
+	unsigned short ChildrenRefSymbol : 12;
+	unsigned char ChildrenSymbolLength: 4;
 }ChildrenRefine;
 
 typedef struct GRANDCHILDREDREF
 {
-	WORD16 GrandChildrenRefSymbol : 16;
-	UCHAR8 GrandChildrenSymbolLength: 5;
+	unsigned short GrandChildrenRefSymbol : 16;
+	unsigned char GrandChildrenSymbolLength: 5;
 }GrandChildrenRefine;
 
 typedef struct REFINEMENTBIT
@@ -150,11 +150,11 @@ typedef struct REFINEMENTBIT
 
 typedef struct PLANEHIT
 {
-	UCHAR8 TypeP : 3; // i = 0, 1, 2.
-	UCHAR8 TranB : 1; // Ds = 1 or 0. 
-	UCHAR8 TranD : 3; // i = 0, 1, 2.
+	unsigned char TypeP : 3; // i = 0, 1, 2.
+	unsigned char TranB : 1; // Ds = 1 or 0. 
+	unsigned char TranD : 3; // i = 0, 1, 2.
 	StrTypeC TypeCi[3];
-	UCHAR8 TranGi : 3;	
+	unsigned char TranGi : 3;	
 	StrTranH TranHi[3];
 	StrTypeHij TypeHij[3];
 }PlaneHit;
@@ -166,15 +166,15 @@ typedef struct BLOCKBITSHIT
 	float **PtrBlockAddressFloating;
 
 	//Bit plane and block information. 
-	UCHAR8 BitPlane : 5;
+	unsigned char BitPlane : 5;
 	long BlockIndex : 20;
 	// DC and AC_max information
-	DWORD32 MappedDC;
-	DWORD32 ShiftedDC;
-	WORD16 DCRemainder; 
+	unsigned long MappedDC;
+	unsigned long ShiftedDC;
+	unsigned short DCRemainder; 
 	float DecodingDCRemainder;
-	WORD16 BitMaxAC;	
-	WORD16 MappedAC;
+	unsigned short BitMaxAC;	
+	unsigned short MappedAC;
 	// status information ( hit history)
 	//bit plane hit information.
 	PlaneHit StrPlaneHitHistory;
@@ -192,60 +192,60 @@ typedef struct BLOCKBITSHIT
 
 typedef struct HEADER_STRUCTURE_PART1
   {
-	BOOL StartImgFlag;  // 1 bits
-	BOOL EngImgFlg; // 1 bit
-	UCHAR8 SegmentCount_8Bits; //8 bits Senment count/ 
-	UCHAR8 BitDepthDC_5Bits; // 5 bits
-	UCHAR8 BitDepthAC_5Bits; // 5 bits
-	BOOL Reserved; // 1 bits
-	BOOL Part2Flag; // 1 bit
-	BOOL Part3Flag; // 1 bit
-	BOOL Part4Flag; //1 bit	
-	UCHAR8 PadRows_3Bits; // 3 bits replicate the last row so that new rows are integal of 8. 
-	UCHAR8 Reserved_5Bits; // 5 bits: 00000
+	unsigned char StartImgFlag;  // 1 bits
+	unsigned char EngImgFlg; // 1 bit
+	unsigned char SegmentCount_8Bits; //8 bits Senment count/ 
+	unsigned char BitDepthDC_5Bits; // 5 bits
+	unsigned char BitDepthAC_5Bits; // 5 bits
+	unsigned char Reserved; // 1 bits
+	unsigned char Part2Flag; // 1 bit
+	unsigned char Part3Flag; // 1 bit
+	unsigned char Part4Flag; //1 bit	
+	unsigned char PadRows_3Bits; // 3 bits replicate the last row so that new rows are integal of 8. 
+	unsigned char Reserved_5Bits; // 5 bits: 00000
 }HeaderPart1;
 
 typedef struct HEADER_STRUCTURE_PART2
 {
-	DWORD32 SegByteLimit_27Bits; // 27 bits. 		
-	BOOL DCstop; //indicate whether the compressed output stops. 
-	UCHAR8 BitPlaneStop_5Bits; // 5 bits
-	UCHAR8 StageStop_2Bits; // 2 bits, transform input data quantication. 
-	BOOL UseFill;
-	UCHAR8 Reserved_4Bits; // 4 bits	
+	unsigned long SegByteLimit_27Bits; // 27 bits. 		
+	unsigned char DCstop; //indicate whether the compressed output stops. 
+	unsigned char BitPlaneStop_5Bits; // 5 bits
+	unsigned char StageStop_2Bits; // 2 bits, transform input data quantication. 
+	unsigned char UseFill;
+	unsigned char Reserved_4Bits; // 4 bits	
 }HeaderPart2;
 
 
 typedef struct HEADER_STRUCTURE_PART3
 {
-	DWORD32 S_20Bits; //max number of blocks in a segment is limited to 2^20
-	BOOL OptDCSelect;
-	BOOL OptACSelect;
-	UCHAR8 Reserved_2Bits;
+	unsigned long S_20Bits; //max number of blocks in a segment is limited to 2^20
+	unsigned char OptDCSelect;
+	unsigned char OptACSelect;
+	unsigned char Reserved_2Bits;
 }HeaderPart3;
 
 typedef struct HEADER_STRUCTURE_PART4
 {
-	BOOL DWTType; 
-	UCHAR8 Reserved_2Bits; //
-	BOOL SignedPixels;
-	UCHAR8 PixelBitDepth_4Bits;
-	DWORD32 ImageWidth_20Bits; // maximum image width is limited 2^20
-	BOOL TransposeImg;
-	UCHAR8 CodewordLength_2Bits;
-	BOOL Reserved;
-	BOOL CustomWtFlag;
-	UCHAR8 CustomWtHH1_2bits;
-	UCHAR8 CustomWtHL1_2bits;
-	UCHAR8 CustomWtLH1_2bits;
-	UCHAR8 CustomWtHH2_2bits;
-	UCHAR8 CustomWtHL2_2bits;
-	UCHAR8 CustomWtLH2_2bits;
-	UCHAR8 CustomWtHH3_2bits;
-	UCHAR8 CustomWtHL3_2bits;
-	UCHAR8 CustomWtLH3_2bits;
-	UCHAR8 CustomWtLL3_2bits;
-	WORD16 Reserved_11Bits;
+	unsigned char DWTType; 
+	unsigned char Reserved_2Bits; //
+	unsigned char SignedPixels;
+	unsigned char PixelBitDepth_4Bits;
+	unsigned long ImageWidth_20Bits; // maximum image width is limited 2^20
+	unsigned char TransposeImg;
+	unsigned char CodewordLength_2Bits;
+	unsigned char Reserved;
+	unsigned char CustomWtFlag;
+	unsigned char CustomWtHH1_2bits;
+	unsigned char CustomWtHL1_2bits;
+	unsigned char CustomWtLH1_2bits;
+	unsigned char CustomWtHH2_2bits;
+	unsigned char CustomWtHL2_2bits;
+	unsigned char CustomWtLH2_2bits;
+	unsigned char CustomWtHH3_2bits;
+	unsigned char CustomWtHL3_2bits;
+	unsigned char CustomWtLH3_2bits;
+	unsigned char CustomWtLL3_2bits;
+	unsigned short Reserved_11Bits;
 }HeaderPart4;
 	
 typedef struct HEADER
@@ -257,8 +257,8 @@ typedef struct HEADER
 }StructHeader;
 
 typedef union HEADERUNION { 
-	StructHeader Header;
 	long Field[5];
+	StructHeader Header;
 }HeaderStruct;
 
 
@@ -268,7 +268,7 @@ typedef struct STR_STOPLOCATION {
 	char BitPlaneStopDecoding; // for find adjustment. 
 	long BlockNoStopDecoding;
 	short TotalBitsReadThisTime; 
-	BOOL LocationFind;
+	unsigned char LocationFind;
 	char X_LocationStopDecoding;
 	char Y_LocationStopDecoding;
 	unsigned char stoppedstage;
@@ -279,21 +279,21 @@ typedef struct STR_STOPLOCATION {
 typedef struct CODINGPARAMETERS
 {
 	BitStream *Bits;
-	UCHAR8 BitPlane;
+	unsigned char BitPlane;
 	float BitsPerPixel;      // default coding BitsPerPixel, bits per pixels
-	DWORD32 DecodingAllowedBitsSizeInSegment;      // for decoding purpose. 
-	BOOL RateReached;
+	unsigned long DecodingAllowedBitsSizeInSegment;      // for decoding purpose. 
+	unsigned char RateReached;
 	StrStopLocation DecodingStopLocations;
-	UCHAR8 QuantizationFactorQ;
-	UINT32 BlockCounter;
-	UINT32 block_index;
-	UCHAR8 N;
-	BOOL SegmentFull; 
+	unsigned char QuantizationFactorQ;
+	unsigned int BlockCounter;
+	unsigned int block_index;
+	unsigned char N;
+	unsigned char SegmentFull; 
 	HeaderStruct * PtrHeader; 
-	UINT32 ImageRows; 
-	UINT32 ImageWidth; 
-	UCHAR8 PadCols_3Bits;
-	UCHAR8 PixelByteOrder; // default byte order. 1 means LSB first. 
+	unsigned int ImageRows; 
+	unsigned int ImageWidth; 
+	unsigned char PadCols_3Bits;
+	unsigned char PixelByteOrder; // default byte order. 1 means LSB first. 
 	char InputFile[100];	
 	char CodingOutputFile[100];
 }StructCodingPara;
@@ -303,15 +303,15 @@ typedef struct BLOCKSTRING
 {
 	long **FreqBlkString;
 	float ** FloatingFreqBlk;
-	UINT32 Blocks;
+	unsigned int Blocks;
 	struct BLOCKSTRING *next;
 	struct BLOCKSTRING *previous;
 }StructFreBlockString;
 
 
 void ErrorMsg(int err);
-void BitsOutput(StructCodingPara *, 	DWORD32 ,  int );
-short BitsRead(StructCodingPara *,   DWORD32 *,  short );
+void BitsOutput(StructCodingPara *, 	unsigned long ,  int );
+short BitsRead(StructCodingPara *,   unsigned long *,  short );
 
 //FILE *F_CodingInfo;
  
@@ -324,7 +324,7 @@ void HeaderInilization(StructCodingPara *Ptr);
                                                                                 
 //adapted from bpe_main.c                                                       
 void Usage();                                                                   
-BOOL ParameterValidCheck(StructCodingPara *PtrCoding);                          
+unsigned char ParameterValidCheck(StructCodingPara *PtrCoding);                          
 void command_flag_menu();                                                       
 //void main_encode();                                                           
 //void main_decode(); 

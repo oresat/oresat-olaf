@@ -2,13 +2,13 @@
 #The linker flag: -undefined dynamic_lookup  is for pybind11 usage with Mac M1+ OS
 
 #select compiler for C and C++
-CC = gcc
-CXX = g++
+#CC = gcc
+#CXX = g++
 
 
 PYLIB_SRC = .
 
-BPE_SRC = source_bpe
+BPE_SRC = source
 
 LINK_TARGET = bpe.so
 
