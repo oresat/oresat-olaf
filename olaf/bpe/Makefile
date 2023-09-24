@@ -1,8 +1,7 @@
-# Makefile for binding bpe C code to Python
-# The linker flagis: -Wl,-ld_classic -undefined dynamic_lookup  
-# are for pybind11 usage with Mac M1+ OS. Please comment out as needed.
+#Makefile for binding bpe C code to Python
+#The linker flag: -undefined dynamic_lookup  is for pybind11 usage with Mac M1+ OS
 
-# select compiler for C and C++
+#select compiler for C and C++
 #CC = gcc
 #CXX = g++
 
@@ -13,7 +12,7 @@ BPE_SRC = source
 
 LINK_TARGET = bpe.so
 
-INC_DIRS = \
+CPPFLAGS = \
 		   -I$(PYLIB_SRC) \
 		   -I$(BPE_SRC)
 
@@ -41,18 +40,18 @@ BPE_SOURCES = \
 			  $(BPE_SRC)/main_pybind.c 
 
 CFLAGS = \
-		 -g -Wall $(INC_DIRS) -fPIC \
+		 -g -Wall $(CPPFLAGS) -fPIC \
 		 $(shell python3-config --includes --cflags) \
 		 $(shell python3 -m pybind11 --includes)
 
 CXXFLAGS = \
-		 -std=c++11 -g -Wall $(INC_DIRS) -fPIC \
+		 -std=c++11 -g -Wall $(CPPFLAGS) -fPIC \
 		 $(shell python3-config --includes --cflags) \
 		 $(shell python3 -m pybind11 --includes)
 
 LDFLAGS = -lm $(shell python3-config --ldflags) \
-		  -Wl,-ld_classic -undefined dynamic_lookup
-# The above line is for succesful compilation on Mac M1+ architecture as of: 9/23/23
+		  -undefined dynamic_lookup \
+		  #$(shell python3 -m pybind11 --includes)
 
 OBJS = $(PYLIB_SOURCES:%.cpp=$(BUILD_DIR)/%.o) $(BPE_SOURCES:%.c=$(BUILD_DIR)/%.o)
 
@@ -77,3 +76,4 @@ clean:
 
 leak:
 	valgrind ./main --tool=memcheck --leak-check=full
+

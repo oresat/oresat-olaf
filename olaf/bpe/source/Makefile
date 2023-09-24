@@ -1,5 +1,6 @@
-# CCSDS image compression standard makefile for usage compiled as C code 
+# CCSDS image compression standard makefile for usage compiling as C code 
 # adapted from Dr Aaron Kiley's work for UNL
+# Kyle Klein for OreSat - August 2023 - kleinky@pdx.edu
 
 # Currently raises warnings
 
