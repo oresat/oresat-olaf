@@ -14,36 +14,17 @@ Email: hqwang@bigred.unl.edu, hqwang@eecomm.unl.edu
 Your comment and suggestions are welcome. Please report bugs to me via email and I would greatly appreciate it. 
 Nov. 3, 2006
 */ 
+// braces have been added in an attempt to better guard if, for etc. (Sept/23)
 
 #include <stdio.h>
 #include <stdlib.h>
-//#include "global.h"
-#include "main_pybind.h"
+#include "global.h"
 
 const int bit2_pattern[] = {0, 2, 1, 3};
 const int bit3_pattern[] = {1, 4, 0, 5, 2, 6, 3, 7};
 const int bit3_pattern_TranD[] = {0, 3, 0, 4, 1, 5, 2, 6};
 const int bit4_pattern_TypeCi[] = {10, 1, 3, 6, 2, 5, 9, 12, 0, 8, 7, 13, 4, 14, 11, 15};
 const int bit4_pattern_TypeHij_TranHi[] = {0, 1, 3, 6, 2, 5, 9, 11, 0, 8, 7, 12, 4, 13, 10, 14};
-
-extern void StagesEnCodingGaggles1(StructCodingPara *PtrCoding, 
-								 BitPlaneBits *BlockInfo, 
-								 UCHAR8 BlocksInGaggles, 
-								 UCHAR8 Option[], 
-								 BOOL FlagCodeOptionOutput[]);
-
-extern void StagesEnCodingGaggles2(StructCodingPara *PtrCoding,
-								 BitPlaneBits *BlockInfo, 
-								 UCHAR8 BlocksInGaggles,
-								 UCHAR8 Option[], 
-								 BOOL FlagCodeOptionOutput[]);
-
-extern void StagesEnCodingGaggles3(StructCodingPara *PtrCoding, 
-								 BitPlaneBits *BlockInfo, 
-								 UCHAR8 BlocksInGaggles,
-								 UCHAR8 Option[], 
-								 BOOL FlagCodeOptionOutput[]);
-
 
 
 void PatternMapping(StrSymbolDetails *StrSymbol)
@@ -421,7 +402,6 @@ void RefBitsDe( StructCodingPara *PtrCoding,
 				temp_y *= 2;
 				
 				for ( i = temp_x ; i < temp_x + 2; i ++)
-                {
 					for ( j =temp_y; j < temp_y + 2; j ++)
 					{						
 						if ((BlockInfo[BlockSeq].RefineBits.RefineChildren.ChildrenRefSymbol & (1 << (8 - k * 4 + counter ))) > 0) 
@@ -451,7 +431,6 @@ void RefBitsDe( StructCodingPara *PtrCoding,
 							return;
 						}
 					}
-                }
 			}
 			// reset to 0			
 			BlockInfo[BlockSeq].RefineBits.RefineChildren.ChildrenRefSymbol = 0;
@@ -466,9 +445,7 @@ void RefBitsDe( StructCodingPara *PtrCoding,
 			{
 			  short refine_stop_point_counter = 0;
 				if((PtrCoding->SegmentFull == TRUE) || (PtrCoding->RateReached == TRUE))
-                {
 					break;
-                }
 				for ( j = 0; j < 4; j ++)
 				{	
 					UCHAR8 temp_x; 
@@ -478,7 +455,6 @@ void RefBitsDe( StructCodingPara *PtrCoding,
 					temp_y = (i != 1 ? 1 : 0) * 4 + (j % 2) * 2;
 				
 					for ( k = temp_x; k < temp_x + 2; k ++)
-                    {
 						for ( p = temp_y; p < temp_y + 2; p ++)
 						{
 							if ((BlockInfo[BlockSeq].RefineBits.RefineGrandChildren[i].GrandChildrenRefSymbol & (1 << (12 - j * 4 + counter ))) > 0) 
@@ -512,8 +488,7 @@ void RefBitsDe( StructCodingPara *PtrCoding,
 								}
 							}
 						}
-                    }
-                }
+				}
 			}
 			BlockInfo[BlockSeq].RefineBits.RefineGrandChildren[i].GrandChildrenRefSymbol = 0;
 			BlockInfo[BlockSeq].RefineBits.RefineGrandChildren[i].GrandChildrenSymbolLength = 0;			
@@ -610,7 +585,7 @@ void StagesEnCoding(StructCodingPara *PtrCoding,
 			BlocksInGaggle, (CodeOptionsAllGaggles[GaggleIndex]), OptionHitFlag[GaggleIndex] );
 	}
 
-		for (GaggleIndex = 0; GaggleIndex < TotalGaggles; GaggleIndex ++)	
+	for (GaggleIndex = 0; GaggleIndex < TotalGaggles; GaggleIndex ++)	
 	{ 
 		BlockStartIndex = GaggleIndex * GAGGLE_SIZE;
 		BlocksInGaggle = (UCHAR8) ((BlockStartIndex + GAGGLE_SIZE < PtrCoding->PtrHeader->Header.Part3.S_20Bits) ? 
@@ -629,24 +604,6 @@ void StagesEnCoding(StructCodingPara *PtrCoding,
 	RefBitsEn(BlockInfo, PtrCoding);		
 	return;
 }
-extern void StagesDeCodingGaggles1(StructCodingPara *PtrCoding,
-							BitPlaneBits *BlockCodingInfo, 
-							UCHAR8 BlocksInGaggles,
-							UCHAR8 *CodeOptionsAllGaggles,
-							BOOL *FlagCodeOptionOutput);
-
-
-extern void StagesDeCodingGaggles2(StructCodingPara *PtrCoding,
-							BitPlaneBits *BlockCodingInfo, 
-							UCHAR8 BlocksInGaggles,
-							UCHAR8 *CodeOptionsAllGaggles,
-							BOOL *FlagCodeOptionOutput);
-
-extern void StagesDeCodingGaggles3(StructCodingPara *PtrCoding,
-							BitPlaneBits *BlockCodingInfo, 
-							UCHAR8 BlocksInGaggles,
-							UCHAR8 *CodeOptionsAllGaggles,
-							BOOL *FlagCodeOptionOutput);
 
 void StagesDeCoding(StructCodingPara *PtrCoding,
 				   BitPlaneBits *BlockInfo)

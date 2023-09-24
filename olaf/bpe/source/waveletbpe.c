@@ -16,34 +16,8 @@ Nov. 3, 2006
 */ 
 
 #include <stdlib.h> 
-//#include "global.h"
-#include "main_pybind.h"
+#include "global.h"
 
-extern void CoeffRegroupF97(float **TransformedImage,
-				  int rows, 
-				  int cols);
-
-extern void CoeffRegroup(int **TransformedImage,
-				  int rows, 
-				  int cols);
-
-extern void DWT_f97_2D(float **rows,
-						int ImgCols,
-						int ImgRows,
-						int levels,
-						BOOL inverse);
-
-extern void lifting_M97_2D(int **rows, 
-						   UINT32 ImgCols, 
-						   UINT32 ImgRows,
-						   UINT32 levels,
-						   BOOL inverse);
-
-extern void lifting_f97_2D(float **rows,
-					int ImgCols, 
-					int ImgRows, 
-					int levels, 
-					BOOL inverse);
 
 void CoefficientsRescaling(int **transformed,
 						   UINT32 Rows,

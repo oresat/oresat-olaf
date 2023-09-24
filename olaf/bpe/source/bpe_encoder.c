@@ -17,22 +17,12 @@ Nov. 3, 2006
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <stdio.h>
-//#include "global.h"
-#include "main_pybind.h"
+#include "global.h"
 
-extern void DWT_(StructCodingPara *, int **, int **);
-
-extern void HeaderUpdate(HeaderStruct * );
-
-extern void DCEncoding(StructCodingPara *,	   long **,   BitPlaneBits *);
-
-extern void ACBpeEncoding(StructCodingPara *,  BitPlaneBits *);
 
 int ImageSize(StructCodingPara * );
 
 short ImageRead(StructCodingPara *, int **);
-
-extern void DebugInfo(char *m);
 
 int ImageSize(StructCodingPara * PtrStructCodingPara)
 {

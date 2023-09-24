@@ -1,7 +1,8 @@
-// implementation file for main_pybind.h
+// implementation file for pybind
+                                                                              
+#include "source/global.h"                                                      
+#include <iostream>
 
-
-#include "main_pybind.h"
 
 void Usage()                                                                    
 {                                                                               
@@ -24,6 +25,8 @@ void Usage()
      fprintf(stderr, "*************   Department of Electrical Engineering    ********************\n");
      fprintf(stderr, "*************   University of Nebraska -Lincoln  **************************\n");
      fprintf(stderr, "*************   March 9, 2008   ******************************************\n");
+     fprintf(stderr, "/*******************************************************************\n");
+     fprintf(stderr, "/************  Altered Sept 2023 for OreSat/PSAS  ******************\n");
      fprintf(stderr, "/*******************************************************************\n");
     return;                                                                     
 }                                                                               
@@ -49,9 +52,18 @@ BOOL ParameterValidCheck(StructCodingPara *PtrCoding)
     return TRUE;                                                                
 }
 
-void command_flag_menu()
+//void command_flag_menu(int argc, char ** argv)
+void command_menu()
 {
     char i = 0;
+    char p = 0;
+    char pix_sign = 0;
+    float bpp; //bits per pixel
+    int value = 0;
+    std::string infile_name = "";
+    std::string outfile_name = "";
+    const char* c_infile = nullptr; 
+    const char* c_outfile = nullptr; 
     long TotalPixels = 0;
     char StringBuffer[100]  = {""};
 
@@ -65,79 +77,92 @@ void command_flag_menu()
 
     PtrCoding = (StructCodingPara *) calloc(sizeof(StructCodingPara), 1);       
     HeaderInilization(PtrCoding);  
+    
+    std::cout << "Enter input file: ";
+    std::cin >> infile_name;
+    c_infile = infile_name.c_str();
+    strcpy(PtrCoding->InputFile, c_infile);
+    
+    std::cout << "\nEnter output file name: ";
+    std::cin >> outfile_name; 
+    c_outfile = outfile_name.c_str();
+    strcpy(PtrCoding->CodingOutputFile, c_outfile);
 
-	do
+    std::cout << "\nEnter [s] to switch pixels to signed (not typical): ";
+    std::cin >> pix_sign;
+    if (pix_sign=='s')
     {
-        char choice = 0;
-        fgets(&choice, 1, stdin);
-        scanf(&choice, "%d", &i);
-		switch (i)
-		{
-		case 'e':
-			BoolEnCoder = TRUE; // encoder. 
-			strcpy(PtrCoding->InputFile, optarg);
-			break;
-		case 'd':
-			BoolDeCoder = TRUE; // decoder
-			strcpy(PtrCoding->InputFile, optarg);
-			break;
-		case 'o':
-			strcpy(PtrCoding->CodingOutputFile,optarg);
-			break;
-		case 'r':   // coding BitsPerPixel, bits per pixels
-			strcpy(StringBuffer,optarg);
-			PtrCoding->BitsPerPixel = (float)atof(StringBuffer);	
-			break;
-		case 'h':  // row size
-			strcpy(StringBuffer, optarg);
-			PtrCoding->ImageRows = atoi(StringBuffer); 
-			break;
-		case 'w':   // col size
-			strcpy(StringBuffer, optarg);
-			PtrCoding->ImageWidth = atoi(StringBuffer);
-			break;
-		case 'f': // flip order. 0: little endian (LSB first) 
-			// usually for intel processor, it is 0, the default value. 
-			//, 1: big endian
-			// If it is 1, byte order will be changed later. 
-			strcpy(StringBuffer, optarg);
-			PtrCoding->PixelByteOrder = atoi(StringBuffer);
-			break;	
-		case 'b': // bit per pixel
-			strcpy(StringBuffer, optarg);			
-	//		PtrCoding->PtrHeader->Header.Part4.PixelBitDepth_4Bits = atoi(StringBuffer) * 8;
-			PtrCoding->PtrHeader->Header.Part4.PixelBitDepth_4Bits = atoi(StringBuffer) % 16;
-			break;
-		case 't':  // type of wavelet transform			
-			strcpy(StringBuffer, optarg);
-			PtrCoding->PtrHeader->Header.Part4.DWTType = atoi(StringBuffer);
-			break;
-		case 'g':  // signed pixels or not		
-			strcpy(StringBuffer, optarg);
-			PtrCoding->PtrHeader->Header.Part4.SignedPixels = atoi(StringBuffer);
-			if(PtrCoding->PtrHeader->Header.Part4.SignedPixels > 0)
-				PtrCoding->PtrHeader->Header.Part4.SignedPixels = TRUE;
-			else
-				PtrCoding->PtrHeader->Header.Part4.SignedPixels= FALSE;
-			break;
-		case 's':			
-			strcpy(StringBuffer, optarg);
-			PtrCoding->PtrHeader->Header.Part3.S_20Bits  = atoi(StringBuffer);
-			break;
+            PtrCoding->PtrHeader->Header.Part4.SignedPixels = TRUE;
+    }
 
-		default:
-			Usage();
-			strcpy(StringBuffer, "CodingInfo.txt");		
-			/*
-			if ((F_CodingInfo = fopen(StringBuffer,"w")) == NULL) 
-			{
-				fprintf(stderr, "Cannot creat coding information file. \n");
-				exit(0);
-			}
-			*/
-			ErrorMsg(BPE_INVALID_CODING_PARAMETERS);
-		}
-    }while(!EOF);
+    std::cout << "\nEnter bits/pixel (typically only for encoding),\n"
+        << "If non-specified enter 0: ";
+    std::cin >> bpp;
+    if (bpp != 0)
+    {
+        PtrCoding->BitsPerPixel = (bpp);	
+    }
+
+    std::cout << "\nEncoding [e] or Decoding [d]?: ";
+    std::cin >> i;
+    while(i != 'd' && i != 'e')
+    {
+        std::cout << "Input error. Please try again: ";
+        std::cin >> i;
+    }
+    if(i=='d')
+    {
+        BoolDeCoder = TRUE; // decoder
+    }
+    else if(i=='e')
+    {
+        BoolEnCoder = TRUE; // encoder.
+        p = 0; 
+        std::cout << "\nEnter parameter letter for encoding, then enter value,\n"
+            << "Enter [q] when finished: ";
+        do
+        {
+            std::cout << "Parameter letter: ";
+            std::cin >> p;
+            if (p=='q')
+                break;
+            std::cout << "Value: ";
+            std::cin >> value;
+
+            switch(p)
+            {
+                case 'h':  // row size
+                    PtrCoding->ImageRows = UINT32(value); 
+                    break;
+                case 'w':   // col size
+                    PtrCoding->ImageWidth = UINT32(value);
+                    break;
+                case 'f': // flip order. 0: little endian (LSB first) 
+                    // usually for intel processor, it is 0, the default value. 
+                    //, 1: big endian
+                    // If it is 1, byte order will be changed later. 
+                    PtrCoding->PixelByteOrder = UCHAR8(value);
+                    break;	
+                case 'b': // bit per pixel
+            //		PtrCoding->PtrHeader->Header.Part4.PixelBitDepth_4Bits = atoi(StringBuffer) * 8;
+                    PtrCoding->PtrHeader->Header.Part4.PixelBitDepth_4Bits = UCHAR8(value) % 16;
+                    break;
+                case 't':  // type of wavelet transform			
+                    PtrCoding->PtrHeader->Header.Part4.DWTType = BOOL(value);
+                    break;
+                case 's':			
+                    PtrCoding->PtrHeader->Header.Part3.S_20Bits  = DWORD32(value);
+                    break;
+
+                default:
+                    break;
+            }
+        }while (p != 'q');
+    }
+    else
+    {
+        ErrorMsg(BPE_INVALID_CODING_PARAMETERS);
+    }
 
     if((BoolEnCoder && BoolDeCoder) ||
     ((!BoolEnCoder) && (!BoolDeCoder)) ||
@@ -241,91 +266,3 @@ void command_flag_menu()
     }         
     free(PtrCoding);
 }
-
-//attempted separate functions
-/*
-void main_encode()
-{                                                                           
-    //store information to a text file.                                     
-    strcpy(StringBuffer, PtrCoding->CodingOutputFile);                      
-    strcat(StringBuffer, "En.txt");                                         
-    *//*                                                                      
-    if ((F_CodingInfo = fopen(StringBuffer,"w")) == NULL)                   
-    {                                                                       
-        fprintf(stderr, "Cannot creat coding information file. \n");        
-        exit(0);                                                            
-    }                                                                       
-    *//*                                                                      
-                                                                            
-    if((PtrCoding->BitsPerPixel != 0) && PtrCoding->PtrHeader->Header.Part2.SegByteLimit_27Bits == 0)
-    {
-        PtrCoding->PtrHeader->Header.Part2.SegByteLimit_27Bits = 
-            (PtrCoding->BitsPerPixel * PtrCoding->PtrHeader->Header.Part3.S_20Bits * 64/8);
-    }                                                                    
-
-    //check validility of the input parameters.                             
-    if (ParameterValidCheck(PtrCoding) == FALSE)                            
-    {
-        ErrorMsg(BPE_INVALID_CODING_PARAMETERS);                            
-    // DebugInfo( "\tBegin to encode...\n");                                
-    }
-
-    // record the encoding time.                                            
-    t0 = time(NULL);                                                        
-    c0 = clock();                                                           
-    EncoderEngine(PtrCoding);                                               
-    c1 = clock();                                                           
-    t1 = time(NULL);                                                        
-                                                                            
-    // DebugInfo( "\tEncoding Success!\n");                                 
-    // fprintf (stderr, "\telapsed CPU time:        %f\n", (float) (c1 - c0)/CLOCKS_PER_SEC);       
-                                                                            
-    TotalPixels = PtrCoding->ImageRows *  PtrCoding->ImageWidth;            
-    // fprintf(F_CodingInfo, "Success! %f ", (float) PtrCoding->Bits->TotalBitCounter/ TotalPixels);
-}
-
-
-void main_decode()                                               
-{                                                                           
-    short TotalBitsPerpixel = 0;                                            
-    //store information to a text file.                                     
-    strcpy(StringBuffer, PtrCoding->CodingOutputFile);                      
-    strcat(StringBuffer, ".txt");                                           
-                                                                            
-    *//*                                                                      
-    if ((F_CodingInfo = fopen(StringBuffer,"w")) == NULL)                   
-    {                                                                       
-        fprintf(stderr, "Cannot creat coding information file. \n");        
-        exit(0);                                                            
-    }                                                                       
-    *//*                                                                      
-                                                                            
-    if(PtrCoding->BitsPerPixel < 0)                                         
-    {
-        ErrorMsg(BPE_INVALID_CODING_PARAMETERS);                            
-    }
-
-    // DebugInfo( "\tBegin to decode...\n");                                
-    // record the decoding time.                                            
-    t0 = time(NULL);                                                        
-    c0 = clock();                                                           
-    DecoderEngine(PtrCoding);                                               
-    c1 = clock();                                                           
-    t1 = time(NULL);                                                        
-                                                                            
-    // DebugInfo( "\tDecoding Success!\n");                                 
-    // fprintf (stderr, "\telapsed CPU time:        %f\n", (float) (c1 - c0)/CLOCKS_PER_SEC);
-                                                                            
-    TotalBitsPerpixel = PtrCoding->PtrHeader->Header.Part4.PixelBitDepth_4Bits;
-    if(TotalBitsPerpixel == 0)                                              
-    {
-        TotalBitsPerpixel = 16;                                             
-    }    
-
-    TotalPixels = PtrCoding->ImageRows *  PtrCoding->ImageWidth;            
-    
-    //fprintf(F_CodingInfo, "%s %f  %d  %d  %d", "Success!", (float) PtrCoding->Bits->TotalBitCounter/ TotalPixels, 
-    //    PtrCoding->ImageRows, PtrCoding->ImageWidth, TotalBitsPerpixel);    
-                                                                          
-}         
-*/

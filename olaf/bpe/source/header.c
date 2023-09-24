@@ -17,10 +17,7 @@ Nov. 3, 2006
 
 #include <string.h>
 #include <stdlib.h>
-//#include "global.h" 
-#include "main_pybind.h"
-
-
+#include "global.h" 
 void HeaderInilization(StructCodingPara *Ptr)
 {	
 	// first part of the header. 

@@ -16,17 +16,11 @@ Nov. 3, 2006
 */ 
 #include <math.h>
 #include <stdlib.h>
-//#include "global.h"
-#include "main_pybind.h"
+#include "global.h"
 
-
-long DeConvTwosComp(DWORD32 complement, 
-					short leftmost);
-
-extern void HeaderOutput(StructCodingPara *PtrCoding);
  
 long DeConvTwosComp(DWORD32 complement, 
-					short leftmost)
+					UCHAR8 leftmost)
 {
 /*	To determine the integer value of a 2's complement code
 Case #1            If the leftmost bit is 0:
@@ -145,7 +139,7 @@ void DCEncoder(StructCodingPara *PtrCoding,
 			else
 				total_bits = 0;
 			
-			for (i = max(StartIndex,1); i < StartIndex + gaggles; i ++)
+			for (i = the_max(StartIndex,1); i < StartIndex + gaggles; i ++)
 				total_bits += ((BlockInfo[i].MappedDC >> k ) + 1) + k;  // coded sample cost
 
 			if((total_bits < min_bits) && (total_bits < PtrCoding->N * gaggles)) {
@@ -189,7 +183,7 @@ void DCEncoder(StructCodingPara *PtrCoding,
 	}
 	// if we have coded samples, then we also have to send the second part
 	if (min_k != uncoded_flag)
-		for (i = max(StartIndex,1); i < StartIndex + gaggles; i ++)
+		for (i = the_max(StartIndex,1); i < StartIndex + gaggles; i ++)
 			BitsOutput(PtrCoding, BlockInfo[i].MappedDC, min_k);
 	/* --- End bug fix (Kiely) --- */
 }
@@ -221,7 +215,7 @@ void DCEntropyEncoder(StructCodingPara* PtrCoding,
 
 	/* --- Begin bug fix (Kiely) --- */
 	while( GaggleStartIndex < PtrCoding->PtrHeader->Header.Part3.S_20Bits ){
-		gaggles = min(GAGGLE_SIZE, PtrCoding->PtrHeader->Header.Part3.S_20Bits - GaggleStartIndex);
+		gaggles = the_min(GAGGLE_SIZE, PtrCoding->PtrHeader->Header.Part3.S_20Bits - GaggleStartIndex);
 		DCEncoder(PtrCoding, BlockInfo, GaggleStartIndex, gaggles, Max_k, ID_Length);
 		GaggleStartIndex += gaggles;
 	}
@@ -239,7 +233,7 @@ void DCEntropyEncoder(StructCodingPara* PtrCoding,
 		// calculate number of additional bit planes to include in DC coefficient coding (section 4.3.3 of the recommendation)
 		if (PtrCoding->PtrHeader->Header.Part4.DWTType == INTEGER_WAVELET)
 		    numaddbitplanes = PtrCoding->QuantizationFactorQ - 
-			    max( PtrCoding->PtrHeader->Header.Part1.BitDepthAC_5Bits, PtrCoding->PtrHeader->Header.Part4.CustomWtLL3_2bits );
+			    the_max( PtrCoding->PtrHeader->Header.Part1.BitDepthAC_5Bits, PtrCoding->PtrHeader->Header.Part4.CustomWtLL3_2bits );
 		else
 		    numaddbitplanes = PtrCoding->QuantizationFactorQ - PtrCoding->PtrHeader->Header.Part1.BitDepthAC_5Bits;
 
@@ -296,7 +290,7 @@ void DCGaggleDecoding(StructCodingPara *PtrCoding,
 	}
 	// If we have coded samples, and we haven't reached the limit, then decode each second part
 	if ((uncoded == FALSE) && (PtrCoding->RateReached != TRUE)){
-		for( i = max(StartIndex,1); i < StartIndex + gaggles; i++){
+		for( i = the_max(StartIndex,1); i < StartIndex + gaggles; i++){
 			BitsRead(PtrCoding, &TempWord, min_k);		
 			BlockInfo[i].MappedDC += TempWord;
 			if (PtrCoding->RateReached == TRUE)
@@ -336,7 +330,7 @@ short DCEntropyDecoder(StructCodingPara *PtrCoding,
 
 	/* --- Begin bug fix (Kiely) --- */
 	while( GaggleStartIndex < PtrCoding->PtrHeader->Header.Part3.S_20Bits ){
-		gaggles = min(GAGGLE_SIZE, PtrCoding->PtrHeader->Header.Part3.S_20Bits - GaggleStartIndex);
+		gaggles = the_min(GAGGLE_SIZE, PtrCoding->PtrHeader->Header.Part3.S_20Bits - GaggleStartIndex);
 		DCGaggleDecoding(PtrCoding, BlockInfo, GaggleStartIndex, gaggles, Max_k, ID_Length);
 		GaggleStartIndex += gaggles;
 	}
@@ -388,7 +382,7 @@ void DPCM_DCMapper(BitPlaneBits *BlockInfo,
 
 	for ( i = 1; i < size; i ++)
 	{
-		theta = min(BlockInfo[i - 1].ShiftedDC - X_Min, X_Max - BlockInfo[i - 1].ShiftedDC);
+		theta = the_min(BlockInfo[i - 1].ShiftedDC - X_Min, X_Max - BlockInfo[i - 1].ShiftedDC);
 		if (diff_DC[i] >= 0 && diff_DC[i] <= theta)
 			BlockInfo[i].MappedDC = 2 * diff_DC[i];
 		else if(diff_DC[i] <0 && diff_DC[i] >= -theta)
@@ -539,7 +533,7 @@ void DCEncoding(StructCodingPara *PtrCoding,
 
 	if(PtrCoding->PtrHeader->Header.Part4.DWTType == INTEGER_WAVELET) 
 		// have to consider the scaling factor
-		PtrCoding->QuantizationFactorQ = max(QuantizationFactorQ_prime,
+		PtrCoding->QuantizationFactorQ = the_max(QuantizationFactorQ_prime,
 		    PtrCoding->PtrHeader->Header.Part4.CustomWtLL3_2bits);
 	else
 		PtrCoding->QuantizationFactorQ = (UCHAR8) QuantizationFactorQ_prime;
@@ -556,7 +550,7 @@ void DCEncoding(StructCodingPara *PtrCoding,
 		BlockInfo[i].DCRemainder = (WORD16)(NewNum & k);
 	}
 
-	PtrCoding->N = max(PtrCoding->PtrHeader->Header.Part1.BitDepthDC_5Bits
+	PtrCoding->N = the_max(PtrCoding->PtrHeader->Header.Part1.BitDepthDC_5Bits
 		- PtrCoding->QuantizationFactorQ, 1);
 
 	// the maximum value of the N is 10. 
@@ -619,7 +613,7 @@ void DPCM_DCDeMapper(BitPlaneBits *BlockInfo,
 
 	for ( i = 1; i < size; i ++)
 	{
-		theta = min(BlockInfo[i-1].ShiftedDC - X_Min, X_Max - BlockInfo[i-1].ShiftedDC);
+		theta = the_min(BlockInfo[i-1].ShiftedDC - X_Min, X_Max - BlockInfo[i-1].ShiftedDC);
 		
 		/* --- Begin bug fix (Kiely) --- */
 		if (BlockInfo[i].MappedDC > 2*theta) {
@@ -674,12 +668,12 @@ short DCDeCoding(StructCodingPara *PtrCoding,  StructFreBlockString *StrBlocks, 
 
 	if(PtrCoding->PtrHeader->Header.Part4.DWTType == INTEGER_WAVELET) 
 		// have to consider the scaling factor
-		PtrCoding->QuantizationFactorQ = max(QuantizationFactorQ_prime,
+		PtrCoding->QuantizationFactorQ = the_max(QuantizationFactorQ_prime,
 		    PtrCoding->PtrHeader->Header.Part4.CustomWtLL3_2bits);
 	else
 		PtrCoding->QuantizationFactorQ = (UCHAR8) QuantizationFactorQ_prime;
 	// 2.2 Sample-spit entropy for bit shifted DC's
-	PtrCoding->N = max(PtrCoding->PtrHeader->Header.Part1.BitDepthDC_5Bits 	- PtrCoding->QuantizationFactorQ, 1);
+	PtrCoding->N = the_max(PtrCoding->PtrHeader->Header.Part1.BitDepthDC_5Bits 	- PtrCoding->QuantizationFactorQ, 1);
 
 	if (PtrCoding->N ==1)
 		for(i = 0; i < PtrCoding->PtrHeader->Header.Part3.S_20Bits; i ++) // shift the DC component to the right
@@ -702,7 +696,7 @@ short DCDeCoding(StructCodingPara *PtrCoding,  StructFreBlockString *StrBlocks, 
 		// calculate number of additional bit planes to include in DC coefficient coding (section 4.3.3 of the recommendation)
 		if (PtrCoding->PtrHeader->Header.Part4.DWTType == INTEGER_WAVELET)
 		    numaddbitplanes = PtrCoding->QuantizationFactorQ - 
-			    max( PtrCoding->PtrHeader->Header.Part1.BitDepthAC_5Bits, PtrCoding->PtrHeader->Header.Part4.CustomWtLL3_2bits );
+			    the_max( PtrCoding->PtrHeader->Header.Part1.BitDepthAC_5Bits, PtrCoding->PtrHeader->Header.Part4.CustomWtLL3_2bits );
 		else
 		    numaddbitplanes = PtrCoding->QuantizationFactorQ - PtrCoding->PtrHeader->Header.Part1.BitDepthAC_5Bits;
 

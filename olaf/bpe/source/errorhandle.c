@@ -17,9 +17,8 @@ Nov. 3, 2006
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-//#include "global.h"
-#include "main_pybind.h"
-//#define DEBUG
+#include "global.h"
+#define DEBUG
  
 const char *BpeErrorMsg[] = {
 "Success",         /* BPE_OK              0  */
@@ -44,9 +43,9 @@ const char *BpeErrorMsg[] = {
 
 void DebugInfo(char *m)
 {
-//#ifdef DEBUG
+#ifdef DEBUG
 	fprintf(stderr, m);
-//#endif
+#endif
 	return;
 }
 void ErrorMsg(int err)

@@ -17,8 +17,7 @@ Nov. 3, 2006
 
 #include <stdlib.h>
 #include <stdio.h>
-//#include "global.h"
-#include "main_pybind.h"
+#include "global.h"
 
 
 void RiceCoding(short InputVal, 

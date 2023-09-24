@@ -17,10 +17,8 @@ Nov. 3, 2006
 
 #include <stdlib.h>
 #include <math.h>
-//#include "global.h"
-#include "main_pybind.h"
+#include "global.h"
 
-extern long DeConvTwosComp(DWORD32 complement, short leftmost);
 
 void AdjustOutPut(StructCodingPara * PtrCoding, BitPlaneBits * BlockCodingInfo)// need to adjust the output 
 {

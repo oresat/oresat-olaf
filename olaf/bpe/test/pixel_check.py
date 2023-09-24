@@ -8,8 +8,13 @@ import numpy as np
 from PIL import Image
 
 # user input file names
-image1 = Image.open('filename1.png')
-image2 = Image.open('filename2.png')
+# image1 = Image.open('filename1.png')
+# image2 = Image.open('filename2.png')
+
+filenm = 'RR'
+
+image1 = Image.open('imgs_conv/' + filenm + '.raw.png')
+image2 = Image.open('imgs_conv/' + filenm + '.out.png')
 
 im1 = (image1).load()
 im2 = (image2).load()

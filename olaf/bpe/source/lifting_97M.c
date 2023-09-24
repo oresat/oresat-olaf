@@ -16,8 +16,7 @@ Nov. 3, 2006
 */ 
 #include <string.h>
 #include <stdlib.h>
-//#include "global.h"
-#include "main_pybind.h"
+#include "global.h"
 
 #define F_EXTPAD 4
 #define D_EXTPAD 2
@@ -46,7 +45,7 @@ void forwardf97M(int *x_in,
 	}
 
 	half = (N>>1);  	
-	d = malloc(sizeof(int)*(half + 1));
+	d = (int*)malloc(sizeof(int)*(half + 1));
 	temp_0 = d;
 
 	for (n=half + 1;n > 0; n--) 
@@ -64,7 +63,7 @@ void forwardf97M(int *x_in,
 		x += 2;
 	}
 	d = temp_0;
-	r = malloc(sizeof(int)*(half));
+	r = (int*)malloc(sizeof(int)*(half));
 	temp_1 = r;
 	x = x_alloc + F_EXTPAD;
 	for (n=half;n> 0; n--) 
@@ -115,10 +114,10 @@ void inversef97M(int *x, int N)
 	memcpy(r,x,half*sizeof(int));
 	memcpy(d,x+half,half*sizeof(int));
 
-	x_0 = malloc(sizeof(int)*(half + 3));
+	x_0 = (int*)malloc(sizeof(int)*(half + 3));
 	temp_0 = x_0;
 
-	x_1 = malloc(sizeof(int)*(half + 2));
+	x_1 = (int*)malloc(sizeof(int)*(half + 2));
 	temp_1 = x_1;
 
 	d0 = d;
@@ -193,9 +192,9 @@ void inversef97M(int *x, int N)
 }
 
 void lifting_M97_2D(int **rows,
-					int ImgRows,
-					int ImgCols,  
-					int levels, 
+					UINT32 ImgRows,
+					UINT32 ImgCols,  
+				    UINT32 levels, 
 					BOOL inverse)
 {
 	int x; 
@@ -213,7 +212,7 @@ void lifting_M97_2D(int **rows,
 		ErrorMsg(BPE_FILE_ERROR);
 	}
 
-	if ( (x_alloc = malloc(sizeof(int)*(ImgCols+ImgRows+F_EXTPAD+F_EXTPAD))) == NULL )  {
+	if ( (x_alloc = (int*)malloc(sizeof(int)*(ImgCols+ImgRows+F_EXTPAD+F_EXTPAD))) == NULL )  {
 		ErrorMsg(BPE_MEM_ERROR); 
 	}
 	else
@@ -224,7 +223,7 @@ void lifting_M97_2D(int **rows,
   
     /* Allocate a work array (for transposing columns) */
     
-   	if ( (buffer = calloc(ImgRows, sizeof(int))) == NULL ) {
+   	if ( (buffer = (int*)calloc(ImgRows, sizeof(int))) == NULL ) {
 		ErrorMsg(BPE_MEM_ERROR); 
 	}
 	else

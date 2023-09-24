@@ -16,8 +16,7 @@ Nov. 3, 2006
 */ 
 #include <string.h>
 #include <stdlib.h>
-//#include "global.h"
-#include "main_pybind.h"
+#include "global.h"
 
 #define F_EXTPAD 4
 #define D_EXTPAD 2
@@ -97,8 +96,8 @@ void forwardf97f(float *x_in,
 
 	
 	half = (N >> 1);  
-	d = malloc(sizeof(float)*(half + 3));
-	r = malloc(sizeof(float)*(half + 2));
+	d = (float*)malloc(sizeof(float)*(half + 3));
+	r = (float*)malloc(sizeof(float)*(half + 2));
 
 	for(i = 1; i <= F_EXTPAD; i++) 
 	{
@@ -202,9 +201,9 @@ void inversef97f(float *x, int N)
 }
 
 void lifting_f97_2D(float **rows,
-					int ImgRows, 
-					int ImgCols, 
-					int levels, 
+					UINT32 ImgRows, 
+					UINT32 ImgCols, 
+					UINT32 levels, 
 					BOOL inverse)
 {
 	int x;
@@ -222,7 +221,7 @@ void lifting_f97_2D(float **rows,
 		ErrorMsg(BPE_FILE_ERROR);
 	}
 
-	if ( (x_alloc = malloc(sizeof(float)*(ImgCols+ImgRows+F_EXTPAD+F_EXTPAD))) == NULL )  {
+	if ( (x_alloc = (float*)malloc(sizeof(float)*(ImgCols+ImgRows+F_EXTPAD+F_EXTPAD))) == NULL )  {
 		ErrorMsg(BPE_MEM_ERROR); 
 	}
 	else
@@ -233,7 +232,7 @@ void lifting_f97_2D(float **rows,
   
     /* Allocate a work array (for transposing columns) */
     
-   	if ( (buffer = calloc(ImgRows, sizeof(float))) == NULL ) {
+   	if ( (buffer = (float*)calloc(ImgRows, sizeof(float))) == NULL ) {
 		ErrorMsg(BPE_MEM_ERROR); 
 	}
 	else

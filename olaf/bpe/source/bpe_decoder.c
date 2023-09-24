@@ -17,30 +17,7 @@ Nov. 3, 2006
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-//#include "global.h"
-#include "main_pybind.h"
-
-
-extern void AdjustOutPut(StructCodingPara * PtrCoding, BitPlaneBits * BlockCodingInfo);
-
-extern void CoeffDegroup(int **img_wav,  int rows,	 int cols);
-
-extern void CoeffDegroupFloating(float **img_wav,  int rows,  int cols);
-
-extern void HeaderReadin(StructCodingPara *PtrCoding); 
-
-extern void DWT_Reverse(int **block,  StructCodingPara *PtrCoding);
-
-extern void DWT_ReverseFloating(float **block,  
-				 StructCodingPara *PtrCoding);
-
-extern short DCDeCoding(StructCodingPara *PtrCoding, 
-						StructFreBlockString * ,  
-						BitPlaneBits *BlockInfo);
-
-
-extern void  ACBpeDecoding(StructCodingPara *PtrCoding,
-					 BitPlaneBits *BlockCodingInfo);
+#include "global.h"
 
 
 short ImageWrite(StructCodingPara *StrPtr, int **image);
@@ -412,7 +389,7 @@ void TempCoeffOutput(FILE *fdc,
 	UINT32 i;	
 	int totalbytes_counter = 0;
 
-	for(i = 0; i < PtrCoding->PtrHeader->Header.Part3.S_20Bits; i++)
+	for(i = 0; i < PtrCoding->PtrHeader->Header.Part3.S_20Bits; i ++)
 	{
 		int m, n;
 //test			

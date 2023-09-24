@@ -17,10 +17,11 @@ Nov. 3, 2006
 
 #include <stdlib.h>
 #include <stdio.h>
+#include "global.h"
 
 void CoeffDegroup(int **img_wav, 
-			 int rows,
-			 int cols)
+			 UINT32 rows,
+			 UINT32 cols)
 {
 	long ** temp = NULL;
 	int i = 0; 
@@ -128,8 +129,8 @@ void CoeffDegroup(int **img_wav,
 
 
 void CoeffDegroupFloating(float **img_wav, 
-			 int rows,
-			 int cols)
+			 UINT32 rows,
+			 UINT32 cols)
 {
 	float ** temp = NULL;
 	int i = 0; 
@@ -238,8 +239,8 @@ void CoeffDegroupFloating(float **img_wav,
 
 
 void CoeffRegroupF97(float **TransformedImage,
-				  int rows, 
-				  int cols)
+				  UINT32 rows, 
+				  UINT32 cols)
 {
 	float ** temp;
 	int i; 
@@ -348,8 +349,8 @@ void CoeffRegroupF97(float **TransformedImage,
 
 
 void CoeffRegroup(int **TransformedImage,
-				  int rows, 
-				  int cols)
+				  UINT32 rows, 
+				  UINT32 cols)
 {
 	long ** temp;
 	int i; 

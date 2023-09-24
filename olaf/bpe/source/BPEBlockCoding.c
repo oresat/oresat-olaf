@@ -14,10 +14,12 @@ Email: hqwang@bigred.unl.edu, hqwang@eecomm.unl.edu
 Your comment and suggestions are welcome. Please report bugs to me via email and I would greatly appreciate it. 
 Nov. 3, 2006
 */ 
+// braces have been added in an attempt to better guard if, for etc. (Sept/23)
+
+
 #include <stdlib.h>
 #include <math.h>
-//#include "global.h"
-#include "main_pybind.h"
+#include "global.h"
 
 void BlockScanEncode(StructCodingPara *PtrCoding, 
 					 BitPlaneBits *BlockInfo)
@@ -500,7 +502,6 @@ NEW_Gij:;
 					if (counter == 0) // refinement bits. all bits have been hit before. 
 					{
 						for ( k = temp_x; k < temp_x + 2; k ++)
-                        {
 							for ( p = temp_y; p < temp_y + 2; p ++)
 							{
 								temp = ((AMPLITUDE(block[k][p]) & Bit_Set_Plane) > 0 ? 1 : 0); 
@@ -524,7 +525,6 @@ NEW_Gij:;
 								}
 							}
 							continue;
-                        }
 					} 
 
 				// if TranHi == 1, then four grand children TypeHij will be scanned/ 
@@ -586,6 +586,4 @@ NEW_Gij:;
 	
 return;
 }
-
-
 

@@ -18,14 +18,8 @@ Nov. 3, 2006
 
 #include <stdlib.h>
 #include <math.h>
-//#include "global.h"
-#include "main_pybind.h"
+#include "global.h"
 
-extern void BlockScanEncode(StructCodingPara *PtrCoding, 	 BitPlaneBits *BlockInfo);
-
-extern void StagesEnCoding(StructCodingPara *PtrCoding,   BitPlaneBits *BlockInfo);
-
-extern void StagesDeCoding(StructCodingPara *PtrCoding,   BitPlaneBits *BlockInfo);
 
 void ACDepthEncoder(StructCodingPara *PtrCoding,	BitPlaneBits *BlockInfo);
 
@@ -59,7 +53,7 @@ void ACGaggleEncoding(StructCodingPara *PtrCoding,
 			else
 				total_bits = 0;
 			
-			for (i = max(StartIndex,1); i < StartIndex + gaggles; i ++)
+			for (i = the_max(StartIndex,1); i < StartIndex + gaggles; i ++)
 				total_bits += ((BlockInfo[i].MappedAC >> k ) + 1) + k;  // coded sample cost
 
 			if((total_bits < min_bits) && (total_bits < PtrCoding->N * gaggles)) {
@@ -103,7 +97,7 @@ void ACGaggleEncoding(StructCodingPara *PtrCoding,
 	}
 	// if we have coded samples, then we also have to send the second part
 	if (min_k != uncoded_flag)
-		for (i = max(StartIndex,1); i < StartIndex + gaggles; i ++)
+		for (i = the_max(StartIndex,1); i < StartIndex + gaggles; i ++)
 			BitsOutput(PtrCoding, BlockInfo[i].MappedAC, min_k);
 	/* --- End bug fix (Kiely) --- */
 
@@ -129,7 +123,7 @@ void DPCM_ACMapper(BitPlaneBits *BlockInfo,
 		diff_AC[i] = BlockInfo[i].BitMaxAC - BlockInfo[i-1].BitMaxAC;
 
 	for ( i = 1; i < size; i ++) {
-		theta = min(BlockInfo[i-1].BitMaxAC - X_Min, X_Max - BlockInfo[i-1].BitMaxAC);
+		theta = the_min(BlockInfo[i-1].BitMaxAC - X_Min, X_Max - BlockInfo[i-1].BitMaxAC);
 		if (diff_AC[i] >= 0 && diff_AC[i] <= theta)
 			BlockInfo[i].MappedAC = 2 * diff_AC[i];
 		else if(diff_AC[i] < 0 && diff_AC[i] >= -theta)
@@ -179,7 +173,7 @@ void ACDepthEncoder(StructCodingPara *PtrCoding,
 	/* --- Begin bug fix (Kiely) --- */
 	GaggleStartIndex = 0;
 	while( GaggleStartIndex < PtrCoding->PtrHeader->Header.Part3.S_20Bits ){
-		gaggles = min(GAGGLE_SIZE, PtrCoding->PtrHeader->Header.Part3.S_20Bits - GaggleStartIndex);
+		gaggles = the_min(GAGGLE_SIZE, PtrCoding->PtrHeader->Header.Part3.S_20Bits - GaggleStartIndex);
 		ACGaggleEncoding(PtrCoding, BlockInfo, GaggleStartIndex, gaggles, Max_k, ID_Length);
 		if(PtrCoding->SegmentFull == TRUE) 
 			return;
@@ -338,7 +332,7 @@ void ACGaggleDecoding(StructCodingPara *PtrCoding,
 	// If we have coded samples, and we haven't reached the limit, then decode each second part
 	if ((uncoded == FALSE) && (PtrCoding->RateReached != TRUE)){
 		// i==0 indicates a reference sample, which was already decoded above
-		for( i = max(StartIndex,1); i < StartIndex + gaggles; i ++){
+		for( i = the_max(StartIndex,1); i < StartIndex + gaggles; i ++){
 			BitsRead(PtrCoding, &TempWord, min_k);		
 			BlockInfo[i].MappedAC += (WORD16)TempWord;
 			if (PtrCoding->RateReached == TRUE)
@@ -370,7 +364,7 @@ void DPCM_ACDeMapper(BitPlaneBits *BlockCodingInfo, //UCHAR8 *ACmax_blocks,
 
 	for ( i = 1; i < size; i ++)
 	{
-		theta = min(BlockCodingInfo[i-1].BitMaxAC  - X_Min, X_Max - BlockCodingInfo[i-1].BitMaxAC );		
+		theta = the_min(BlockCodingInfo[i-1].BitMaxAC  - X_Min, X_Max - BlockCodingInfo[i-1].BitMaxAC );		
 		if((float)BlockCodingInfo[i].MappedAC / 2 == BlockCodingInfo[i].MappedAC / 2)
 		{
 			diff_AC[i] = (short)(BlockCodingInfo[i].MappedAC / 2);
@@ -435,7 +429,7 @@ short ACDepthDecoder(StructCodingPara *PtrCoding,
 
 	/* --- Begin bug fix (Kiely) --- */
 	while( GaggleStartIndex < PtrCoding->PtrHeader->Header.Part3.S_20Bits ){
-		gaggles = min(GAGGLE_SIZE, PtrCoding->PtrHeader->Header.Part3.S_20Bits - GaggleStartIndex);
+		gaggles = the_min(GAGGLE_SIZE, PtrCoding->PtrHeader->Header.Part3.S_20Bits - GaggleStartIndex);
 		ACGaggleDecoding(PtrCoding, BlockInfo, GaggleStartIndex, gaggles, Max_k, ID_Length);
 		GaggleStartIndex += gaggles;
 	}

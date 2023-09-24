@@ -27,9 +27,6 @@ Modified August 2023 for PSAS
 
 //#define DEMO
 
-extern void EncoderEngine(StructCodingPara * PtrCoding);
-extern void DecoderEngine(StructCodingPara * PtrCoding);
-extern void HeaderInilization(StructCodingPara *Ptr);
 void DebugInfo(char *m);
 
 #define VERSION "Last modified on March 9, 2008\n"
@@ -92,7 +89,6 @@ BOOL ParameterValidCheck(StructCodingPara *PtrCoding)
 
 int main(int argc, char **argv)
 {
-	extern char *optarg;  	
 	char i = 0;
 	long TotalPixels = 0;
 	char StringBuffer[100]  = {""};

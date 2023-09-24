@@ -15,8 +15,7 @@ Your comment and suggestions are welcome. Please report bugs to me via email and
 Nov. 3, 2006
 */ 
 #include <stdlib.h>
-//#include "global.h"
-#include "main_pybind.h"
+#include "global.h"
 
 void OutputCodeWord(StructCodingPara * Ptr)
 {

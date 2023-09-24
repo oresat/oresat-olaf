@@ -14,21 +14,15 @@ Email: hqwang@bigred.unl.edu, hqwang@eecomm.unl.edu
 Your comment and suggestions are welcome. Please report bugs to me via email and I would greatly appreciate it. 
 Nov. 3, 2006
 */ 
+// braces have been added in an attempt to better guard if, for etc. (Sept/23)
 
-//#include "global.h"
-#include "main_pybind.h"
+#include "global.h"
 #include <stdlib.h>
 #include <stdio.h>
 
-extern void RiceCoding(short InputVal, 
-				  short BitLength,
-				  UCHAR8 *Option,
-				  StructCodingPara *PtrCoding );
-
-extern void BitPlaneSymbolReset(StrSymbolDetails *SymbolStr);
 
 void StagesEnCodingGaggles1(StructCodingPara *PtrCoding, BitPlaneBits *BlockInfo, 
-		    UCHAR8 BlocksInGaggles, UCHAR8 Option[], BOOL FlagCodeOptionOutput[])
+			UCHAR8 BlocksInGaggles, UCHAR8 Option[], BOOL FlagCodeOptionOutput[])
 {
 	UCHAR8 SymbolIndex = 0;
 	DWORD32 BlockSeq = 0;
@@ -49,28 +43,19 @@ void StagesEnCodingGaggles1(StructCodingPara *PtrCoding, BitPlaneBits *BlockInfo
 				case 2:
 				case 3:
 					if (BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len > 1)
-                    {
                         if (FlagCodeOptionOutput[BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len - 2]	== FALSE)
 						{
 							FlagCodeOptionOutput[BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len - 2] = TRUE;
 
 							if(BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len == 2)
-                            {
 								BitsOutput(PtrCoding, Option[0], 1);
-                            }
 							else if(BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len == 3)
-                            {
-                                BitsOutput(PtrCoding, Option[1], 2);
-                            }
-                            else if(BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len == 4)
-                            {
-                                BitsOutput(PtrCoding, Option[2], 2);
-                            }
-                            else
-                            {
-                                ErrorMsg(BPE_STAGE_CODING_ERROR);
-                            }
-                        }
+								BitsOutput(PtrCoding, Option[1], 2);
+							else if(BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len == 4)
+								BitsOutput(PtrCoding, Option[2], 2);
+							else
+								ErrorMsg(BPE_STAGE_CODING_ERROR);
+						}
 						
 						RiceCoding(BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_mapped_pattern, 
 							BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len, Option, 
@@ -87,8 +72,7 @@ void StagesEnCodingGaggles1(StructCodingPara *PtrCoding, BitPlaneBits *BlockInfo
 						BitPlaneSymbolReset(&(BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex])) ; 
 						//reset the entry to zero. 
 						break;
-                    }
-				default: ErrorMsg(BPE_STAGE_CODING_ERROR);//"invalid length");
+                default: ErrorMsg(BPE_STAGE_CODING_ERROR);//"invalid length");
 				}
 			}
 		}
@@ -122,7 +106,6 @@ void StagesEnCodingGaggles2(StructCodingPara *PtrCoding,
 			case ENUM_TRAN_D:
 			case ENUM_TYPE_CI:
 				if(BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len > 1)
-                {
 					if(FlagCodeOptionOutput[BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len - 2] == FALSE)
 					{	
 						FlagCodeOptionOutput[BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len - 2] = TRUE;
@@ -135,22 +118,16 @@ void StagesEnCodingGaggles2(StructCodingPara *PtrCoding,
 						else
 							ErrorMsg(BPE_STAGE_CODING_ERROR);
 					}
-                }
 				RiceCoding(BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_mapped_pattern ,
 					BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len, Option, PtrCoding);
 				if (BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].type == ENUM_TYPE_CI)
 				{
 					counter = 0;
 					for(i = 0; i < BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len; i++)
-                    {
-						if ((BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_val & (1 << i)) >0)
-                        {	
-                            counter ++;	
-                        }
-
-                        BitsOutput(PtrCoding, 
-                                BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sign, counter);
-                    }
+                        if ((BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_val & (1 << i)) >0)
+							counter ++;	
+						
+                        BitsOutput(PtrCoding, BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sign, counter);
                 }
 				
 				BitPlaneSymbolReset(&(BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex])) ; 
@@ -179,9 +156,7 @@ void StagesEnCodingGaggles3(StructCodingPara *PtrCoding,
 	{
 		
 		if (BlockInfo[BlockSeq].BitMaxAC < PtrCoding->BitPlane)
-        {
 			continue;
-        }
 
 		for(SymbolIndex = 0; SymbolIndex < MAX_SYMBOLS_IN_BLOCK; SymbolIndex ++)
 		{		
@@ -191,56 +166,35 @@ void StagesEnCodingGaggles3(StructCodingPara *PtrCoding,
 			case ENUM_TRAN_HI:
 			case ENUM_TYPE_HIJ:
 				if (BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len > 1)
-                {
-					if (FlagCodeOptionOutput[BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len - 2] == FALSE)
+					if(FlagCodeOptionOutput[BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len - 2] == FALSE)
 					{
 						FlagCodeOptionOutput[BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len - 2] = TRUE;
 
-						if (BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len == 2)
-                        {
+						if(BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len == 2)
 							BitsOutput(PtrCoding, Option[0], 1);
-                        }
-						else if (BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len == 3)
-                        {
+						else if(BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len == 3)
 							BitsOutput(PtrCoding, Option[1], 2);
-                        }
-						else if (BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len == 4)
-                        {
+						else if(BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len == 4)
 							BitsOutput(PtrCoding, Option[2], 2);
-                        }
 						else
-                        {
 							ErrorMsg(BPE_STAGE_CODING_ERROR);
-                        }
 					}
 					RiceCoding(BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_mapped_pattern , BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len, Option, PtrCoding);
 					if(BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].type == ENUM_TYPE_HIJ)
 					{
 						counter = 0;
 						for(i = 0; i < BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len; i++)
-                        {
 							if ((BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_val & (1 << i)) >0)
-                            {
 								counter ++;
-                            }
-
 							BitsOutput(PtrCoding, BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sign, counter);
-                        }
-					} 					
+                    } 					
 					BitPlaneSymbolReset(&(BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex])) ; 
 					break;
-                }
 			}
 		}
 	}
 }
 
-extern void RiceDecoding(DWORD32 *decoded,
-			   short BitLength, 
-			   UCHAR8 *splitOption, 
-			   StructCodingPara *Ptr);
-
-extern void DeMappingPattern(StrSymbolDetails *StrSymbol);
 
 void StagesDeCodingGaggles1(StructCodingPara *PtrCoding,
 							BitPlaneBits *BlockCodingInfo, 
@@ -260,11 +214,9 @@ void StagesDeCodingGaggles1(StructCodingPara *PtrCoding,
 	for ( BlockSeq = 0; BlockSeq < BlocksInGaggles; BlockSeq ++)		
 	{
 		if (BlockCodingInfo[BlockSeq].BitMaxAC < BitPlane)
-        {
 			continue;
-        }
-
 		counter = 0;
+
 		RefCounter = 0;
 		for(i = 0; i < 3; i++)
 		{
@@ -273,15 +225,11 @@ void StagesDeCodingGaggles1(StructCodingPara *PtrCoding,
 				if(((i == 0) && (PtrCoding->PtrHeader->Header.Part4.CustomWtHL3_2bits >= BitPlane)) || // HL3 band. 
 					((i == 1) && (PtrCoding->PtrHeader->Header.Part4.CustomWtLH3_2bits >= BitPlane))  ||// HL3 band. 
 					((i == 2) && (PtrCoding->PtrHeader->Header.Part4.CustomWtHH3_2bits >= BitPlane)))  // HL3 band. 
-                {
 					continue;
-                }
 			}
 			RefCounter ++;
 			if((BlockCodingInfo[BlockSeq].StrPlaneHitHistory.TypeP & (1 << (2 - i))) == 0)
-            {
 				counter ++;
-            }
 		}	
 
 		if(RefCounter != 0)
@@ -338,12 +286,10 @@ void StagesDeCodingGaggles1(StructCodingPara *PtrCoding,
 					if((PtrCoding->PtrHeader->Header.Part4).DWTType == INTEGER_WAVELET)
 					{
 
-                        if(((i == 0) && (PtrCoding->PtrHeader->Header.Part4.CustomWtHL3_2bits >= BitPlane)) || // HL3 band. 
-                            ((i == 1) && (PtrCoding->PtrHeader->Header.Part4.CustomWtLH3_2bits >= BitPlane))  ||// HL3 band. 
-                            ((i == 2) && (PtrCoding->PtrHeader->Header.Part4.CustomWtHH3_2bits >= BitPlane)))  // HL3 band.
-                        { 
-                            continue;
-                        }
+					if(((i == 0) && (PtrCoding->PtrHeader->Header.Part4.CustomWtHL3_2bits >= BitPlane)) || // HL3 band. 
+						((i == 1) && (PtrCoding->PtrHeader->Header.Part4.CustomWtLH3_2bits >= BitPlane))  ||// HL3 band. 
+						((i == 2) && (PtrCoding->PtrHeader->Header.Part4.CustomWtHH3_2bits >= BitPlane)))  // HL3 band. 
+						continue;
 					}
 
 					temp_x = (i >= 1 ? 1 : 0);
@@ -359,10 +305,8 @@ void StagesDeCodingGaggles1(StructCodingPara *PtrCoding,
 							BlockCodingInfo[BlockSeq].StrPlaneHitHistory.TypeP += (1 << (2 - i));
 							BitsRead(PtrCoding, &temp_DWORD, 1);
 							if (temp_DWORD == NEGATIVE_SIGN)
-                            {
 								BlockCodingInfo[BlockSeq].PtrBlockAddress[temp_x][temp_y] =
 								-BlockCodingInfo[BlockSeq].PtrBlockAddress[temp_x][temp_y];
-                            }
 							if ((PtrCoding->DecodingStopLocations.BitPlaneStopDecoding != -1)
 								&& PtrCoding->RateReached == TRUE && !PtrCoding->DecodingStopLocations.LocationFind)
 							{
@@ -765,20 +709,15 @@ void StagesDeCodingGaggles3(StructCodingPara *PtrCoding,
 	for (BlockSeq = 0; BlockSeq < BlocksInGaggles; BlockSeq ++)
 	{
 		if (BlockCodingInfo[BlockSeq].BitMaxAC < BitPlane)
-        {
-            continue;
-        }
-
+			continue;
+		
 		if (BlockCodingInfo[BlockSeq].StrPlaneHitHistory.TranB == 0)
-        {
-            continue;
-        }
+			continue;
+	// TranGi
 
 		if(PtrCoding->PtrHeader->Header.Part1.SegmentCount_8Bits == 28 && PtrCoding->BitPlane  == 13 
 			&& BlockSeq== 10)
-        {
-            BlockSeq = BlockSeq;
-        }    
+		BlockSeq = BlockSeq; 	
 
 		flag = FALSE; 
 		counter = 0;
