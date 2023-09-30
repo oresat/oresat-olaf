@@ -71,6 +71,25 @@ def olaf_setup(od: canopen.ObjectDictionary, master_od_db: dict = {}) -> Namespa
 
     logger_tmp_file_setup(level)
 
+    od['common_data']['olaf_version'].value = __version__
+
+    hw_ver = '0.0'
+    boot_uenv_path = '/boot/uEnv.txt'
+    if os.path.isfile(boot_uenv_path):
+        with open(boot_uenv_path, 'r') as f:
+            lines = f.readlines()
+        # find addr0 line
+        for line in lines:
+            if line.startswith('uboot_overlay_addr0='):
+                # extract dtbo name from line
+                dtbo_name = line.split('/')[-1]
+                # extract version from dtbo name
+                tmp = dtbo_name.split('-')[-2].lower()
+                if tmp.startswith('v'):
+                    hw_ver = tmp.replace('_', '.')[1:]  # remove the v
+                break
+    od['common_data']['hw_version'].value = hw_ver
+
     app.setup(od, args.bus, master_od_db)
     rest_api.setup(address=args.address, port=args.port)
 
