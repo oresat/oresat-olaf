@@ -161,17 +161,29 @@ class Gpio:
 
     On OreSat cards the GPIO pins don't always work nicely with common Python legacy GPIO
     libraries. This class can handle the GPIO export file raising an error on the A8 (when the
-    export actually works) and also works when export is not needed at all.
+    export actually works) and also works when export is not needed at all (pin mode and direction
+    is configured by device tree).
 
     Also supports mocking.
     '''
 
-    def __init__(self, pin: GpioPin, mock: bool = False, mode: str = 'out', export: bool = True):
+    _GPIO_DIR_PATH = '/sys/class/gpio'
+
+    _LABELS = {}
+    if os.path.isdir(_GPIO_DIR_PATH):
+        for i in os.listdir(_GPIO_DIR_PATH):
+            if i.startswith('gpiochip') or i in ['export', 'unexport']:
+                continue
+            with open(f'{_GPIO_DIR_PATH}/{i}/label', 'r') as f:
+                name = f.read()[:-1]  # remove the trailing '\n'
+                _LABELS[name] = int(i[4:])
+
+    def __init__(self, pin: str, mock: bool = False, mode: str = 'out', export: bool = True):
         '''
         Parameters
         ----------
-        pin: GpioPin
-            The GPIO pin.
+        pin: GpioPin, int, str
+            The pin name, GPIO pin number, or GPIO name/label defined by device tree.
         mock: bool
             Mock the GPIO.
         mode: str
@@ -181,16 +193,30 @@ class Gpio:
         '''
         # default values and order is for backwards compatibility
 
-        self._pin = pin if isinstance(pin, GpioPin) else GpioPin(pin)
         self._mock = mock
-        self._gpio_dir_path = f'/sys/class/gpio/gpio{self._pin.value}'
-        self._gpio_export_path = '/sys/class/gpio/export'
 
-        if self._mock:
-            self._mock_value = 0
+        # defaults
+        self._pin = 0
+        self._mock_value = 0
+        self._name = 'MOCKED'
+
+        if isinstance(pin, GpioPin):
+            self._pin = pin.value
+        elif isinstance(pin, int):
+            self._pin = pin
+        elif isinstance(pin, str):
+            if mock:
+                self._name = pin
+            else:
+                self._pin = self._LABELS[pin]
         else:
+            raise GpioError(f'invalid pin {pin}')
+
+        self._gpio_dir_path = f'{self._GPIO_DIR_PATH}/gpio{self._pin}'
+
+        if not self._mock:
             if not os.path.isdir(self._gpio_dir_path):
-                raise GpioError(f'self._pin.name aka (gpio{self._pin.value}) does not exist')
+                raise GpioError(f'gpio pin {self._name} (gpio{self._pin}) does not exist')
 
             if export:
                 self.export()
@@ -200,6 +226,8 @@ class Gpio:
             if cur_mode != mode:
                 with open(f'{self._gpio_dir_path}/direction', 'w') as f:
                     f.write(mode)
+            with open(f'{self._gpio_dir_path}/label', 'r') as f:
+                self._name = f.read()
 
         self._mode = mode  # save on IO calls
 
@@ -208,9 +236,9 @@ class Gpio:
 
         try:
             with open('/sys/class/gpio/export', 'w') as f:
-                f.write(str(self._pin.value))
+                f.write(str(self._pin))
             with open('/sys/class/gpio/export', 'w') as f:
-                f.write(str(self._pin.value))
+                f.write(str(self._pin))
         except PermissionError:
             pass  # will always fail the first time
 
@@ -219,12 +247,12 @@ class Gpio:
 
         try:
             with open('/sys/class/gpio/unexport', 'w') as f:
-                f.write(str(self._pin.value))
+                f.write(str(self._pin))
         except PermissionError:
             pass  # will always fail the first time
 
         with open('/sys/class/gpio/unexport', 'w') as f:
-            f.write(str(self._pin.value))
+            f.write(str(self._pin))
 
     @property
     def mode(self) -> str:
@@ -287,10 +315,18 @@ class Gpio:
     def number(self) -> int:
         '''int: The GPIO number. Readonly.'''
 
-        return self._pin.value
+        return self._pin
 
     @property
     def pin(self) -> GpioPin:
-        '''GpioPin: The GPIO pin. Readonly.'''
+        '''str: The pin name. Readonly.'''
 
-        return self._pin
+        if self._pin == 0:
+            return 'MOCKED'
+        return GpioPin(self._pin)
+
+    @property
+    def name(self) -> str:
+        '''str: The GPIO name. Readonly.'''
+
+        return self._name
