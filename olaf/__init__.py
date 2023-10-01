@@ -5,6 +5,7 @@ from argparse import ArgumentParser, Namespace
 
 import canopen
 from loguru import logger
+from oresat_od_db import OreSatId, NodeId
 
 from ._internals.app import app, App
 from ._internals.node import Node, NodeStop, NetworkError
@@ -29,7 +30,7 @@ from .common.pru import Pru, PruState, PruError
 __version__ = '2.2.0'
 
 
-def olaf_setup(od: canopen.ObjectDictionary, master_od_db: dict = {}) -> Namespace:
+def olaf_setup(od_db: dict, node_id: NodeId) -> Namespace:
     '''
     Parse runtime args and setup the app and REST API.
 
@@ -56,6 +57,8 @@ def olaf_setup(od: canopen.ObjectDictionary, master_od_db: dict = {}) -> Namespa
                         help='rest api port number, defaults to 8000')
     parser.add_argument('-d', '--disable-flight-mode', action='store_true',
                         help='disable flight mode on start, defaults to flight mode enabled')
+    parser.add_argument('-o', '--oresat', default='oresat0.5',
+                        help='oresat mission; oresat0, oresat0.5, etc')
     args = parser.parse_args()
 
     if args.verbose:
@@ -71,6 +74,18 @@ def olaf_setup(od: canopen.ObjectDictionary, master_od_db: dict = {}) -> Namespa
 
     logger_tmp_file_setup(level)
 
+    oid = args.oresat.lower()
+    if oid in ['oresat0', '0']:
+        oresat_id = OreSatId.ORESAT0
+    elif oid in ['oresat0.5', 'oresat0_5', '0.5']:
+        oresat_id = OreSatId.ORESAT0_5
+    elif oid in ['oresat', '1']:
+        oresat_id = OreSatId.ORESAT1
+    else:
+        raise ValueError(f'invalid oresat mission {args.oresat}')
+
+    od = od_db[oresat_id][node_id]
+
     od['common_data']['olaf_version'].value = __version__
 
     hw_ver = '0.0'
@@ -85,12 +100,17 @@ def olaf_setup(od: canopen.ObjectDictionary, master_od_db: dict = {}) -> Namespa
                 dtbo_name = line.split('/')[-1]
                 # extract version from dtbo name
                 tmp = dtbo_name.split('-')[-2].lower()
+                if 'pb' in tmp:
+                    hw_ver = tmp.replace('_pb', '-pb')
                 if tmp.startswith('v'):
                     hw_ver = tmp.replace('_', '.')[1:]  # remove the v
                 break
     od['common_data']['hw_version'].value = hw_ver
 
-    app.setup(od, args.bus, master_od_db)
+    if node_id == NodeId.C3:
+        app.setup(od, args.bus, od_db)
+    else:
+        app.setup(od, args.bus)
     rest_api.setup(address=args.address, port=args.port)
 
     return args
