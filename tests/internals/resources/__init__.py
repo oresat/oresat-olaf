@@ -1,5 +1,5 @@
 import canopen
-from oresat_od_db.oresat0_5 import GPS_OD
+from oresat_od_db.oresat0_5 import ORESAT0_5_GPS_OD
 
 from olaf import Resource, OreSatFileCache, logger
 from olaf._internals.node import Node
@@ -8,10 +8,11 @@ logger.disable('olaf')
 
 
 class MockNode(Node):
+    '''Mock node for testing Resources.'''
 
     def __init__(self):
-        od = GPS_OD
-        super().__init__(od, None)
+
+        super().__init__(ORESAT0_5_GPS_OD, None)
 
         self._fread_cache = OreSatFileCache('/tmp/fread')
         self._fread_cache.clear()
@@ -26,6 +27,7 @@ class MockNode(Node):
 
 
 class MockApp:
+    '''Mock app for testing Resources.'''
 
     def __init__(self):
         super().__init__()

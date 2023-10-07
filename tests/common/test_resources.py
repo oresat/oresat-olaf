@@ -1,11 +1,13 @@
+'''Test the Resource class.'''
 import unittest
 
 import canopen
-from oresat_od_db.oresat0_5 import GPS_OD
+from oresat_od_db.oresat0 import ORESAT0_GPS_OD
 from olaf import Node, Resource
 
 
 class BadResource(Resource):
+    '''Bad Resource for testing.'''
 
     def on_start(self):
 
@@ -17,12 +19,12 @@ class BadResource(Resource):
 
 
 class TestResource(unittest.TestCase):
+    '''Test the Resource class.'''
 
     def test_start_stop(self):
         '''All exception should be caught'''
 
-        od = GPS_OD
-        node = Node(od, 'vcan0')
+        node = Node(ORESAT0_GPS_OD, 'vcan0')
 
         good_res = Resource()
         bad_res = BadResource()

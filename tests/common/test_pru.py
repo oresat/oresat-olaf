@@ -1,3 +1,5 @@
+'''Test the PRU class.'''
+
 import unittest
 from os.path import isdir
 
@@ -6,10 +8,12 @@ from olaf.common.pru import Pru, PruState, PruError
 PRU_EXIST = isdir('/dev/remoteproc/pruss-core0') and isdir('/dev/remoteproc/pruss-core1')
 
 
-class TestPRU(unittest.TestCase):
+class TestPru(unittest.TestCase):
+    '''Test the PRU class.'''
 
     @unittest.skipUnless(PRU_EXIST, 'requires PRU hardware')
     def test_pru(self):
+        '''Test the PRU class constructor.'''
         pru0 = Pru(0)
         pru0.firmware = 'am335x-pru0-fw'
         pru1 = Pru(1)
@@ -30,6 +34,8 @@ class TestPRU(unittest.TestCase):
 
     @unittest.skipUnless(PRU_EXIST, 'requires PRU hardware')
     def test_pru_control(self):
+        '''Test the PRU class methods.'''
+
         pru0 = Pru(0)
 
         self.assertEqual(pru0.state, PruState.OFFLINE)

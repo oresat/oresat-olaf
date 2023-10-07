@@ -1,3 +1,5 @@
+'''Test the OreSat file cache class.'''
+
 import unittest
 from shutil import rmtree
 from os import rmdir, remove, listdir
@@ -7,7 +9,10 @@ from olaf.common.oresat_file_cache import OreSatFileCache
 
 
 class TestOreSatFileCache(unittest.TestCase):
-    def test_oresat_file_cache__init__(self):
+    '''Test the OreSat file cache class.'''
+
+    def test_oresat_file_cache(self):
+        '''Test the constructor.'''
 
         # TEST:non-existing directory name
         dir_name = 'delete_me'
@@ -49,6 +54,7 @@ class TestOreSatFileCache(unittest.TestCase):
         remove(abspath(dir_name))
 
     def test_oresat_file_cache_add(self):
+        '''Test the add method.'''
 
         # TEST: populated directory with good file name conventions
         dir_name = 'good_cache'
@@ -97,6 +103,7 @@ class TestOreSatFileCache(unittest.TestCase):
         rmtree(abspath(dir_name), ignore_errors=True)
 
     def test_oresat_file_cache_remove(self):
+        '''Test the remove method.'''
 
         # TEST: populate remove_cache with files and delete files
         dir_name = 'remove_cache'
@@ -134,6 +141,7 @@ class TestOreSatFileCache(unittest.TestCase):
         rmtree(abspath(dir_name), ignore_errors=True)
 
     def test_oresat_file_cache_pop(self):
+        '''Test the pop method.'''
 
         # TEST: Pop an empty cache
         dir_name = 'pop_cache'
@@ -174,6 +182,7 @@ class TestOreSatFileCache(unittest.TestCase):
         rmtree(abspath(dir_name2), ignore_errors=True)
 
     def test_oresat_file_cache_get(self):
+        '''Test the get method.'''
 
         # TEST: Get file from cache and move it to a specific directory
         dir_name = 'get_cache'
@@ -215,6 +224,7 @@ class TestOreSatFileCache(unittest.TestCase):
         rmtree(abspath(dir_name2), ignore_errors=True)
 
     def test_oresat_file_cache_files(self):
+        '''Test the files method.'''
 
         # TEST: populate cache with files by keyword, then return using keyword filter
         dir_name = 'files_cache'
@@ -264,6 +274,7 @@ class TestOreSatFileCache(unittest.TestCase):
         rmtree(abspath(dir_name), ignore_errors=True)
 
     def test_oresat_file_cache_clear(self):
+        '''Test the clear method.'''
 
         dir_name = 'clear_cache'
         result = OreSatFileCache(dir_name)

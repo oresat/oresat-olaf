@@ -1,3 +1,5 @@
+'''Test the OreSat file class.'''
+
 import os
 import unittest
 
@@ -5,7 +7,10 @@ from olaf.common.oresat_file import new_oresat_file, OreSatFile
 
 
 class TestOreSatFile(unittest.TestCase):
+    '''Test the OreSat file class.'''
+
     def test_new_oresat_file(self):
+        '''Test the new_oresat_file functions.'''
 
         file = new_oresat_file('keyword', 'test', 100)
         self.assertEqual(file, 'test_keyword_100000')
@@ -19,6 +24,7 @@ class TestOreSatFile(unittest.TestCase):
         self.assertIsNotNone(new_oresat_file('test'))
 
     def test_oresat_file(self):
+        '''Test the OreSatFile class constructor.'''
 
         name = 'name_test_12345.txt'
         file = OreSatFile(name)

@@ -8,6 +8,7 @@ from . import MockApp
 
 
 class TestOsCommand(unittest.TestCase):
+    '''Test the OS command resource.'''
 
     def setUp(self):
 

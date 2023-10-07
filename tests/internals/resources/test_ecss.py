@@ -1,3 +1,5 @@
+'''Test ECSS resource.'''
+
 import unittest
 
 from olaf._internals.resources.ecss import EcssResource
@@ -6,6 +8,7 @@ from . import MockApp
 
 
 class TestEcssResource(unittest.TestCase):
+    '''Test ECSS resource.'''
 
     def setUp(self):
 
@@ -18,6 +21,7 @@ class TestEcssResource(unittest.TestCase):
         self.app.stop()
 
     def test_ecss(self):
+        '''Test the scet and utc objects callbacks.'''
 
         self.assertIsNot(self.app.sdo_read('scet', None), 0)
         self.assertIsNot(self.app.sdo_read('utc', None), 0)
