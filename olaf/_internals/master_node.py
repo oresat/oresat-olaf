@@ -28,13 +28,13 @@ class MasterNode(Node):
         super().__init__(od, bus)
 
         self._od_db = od_db
-        self._remote_nodes = {
-            canopen.RemoteNode(node_id.value, od_db[node_id]) for node_id in od_db
-        }
+
+        self._remote_nodes = {}
         self.node_status = {}
-        for node_id in self._od_db:
+        for node_id in od_db:
             if node_id == self._od.node_id:
                 continue  # skip itself
+            self._remote_nodes[node_id] = canopen.RemoteNode(node_id.value, od_db[node_id])
             self.node_status[node_id] = (0xFF, time())  # 0xFF is a flag, not a CANopen standard
 
     def _restart_network(self):

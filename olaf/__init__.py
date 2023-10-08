@@ -103,12 +103,13 @@ def olaf_setup(od_db: dict, node_id: NodeId) -> Namespace:
                 if tmp.startswith('v'):
                     hw_ver = tmp.replace('_', '.')[1:]  # remove the v
                 break
-    od['versions']['hw_version'].value = hw_ver
+        od['versions']['hw_version'].value = hw_ver
 
     if node_id == NodeId.C3:
-        app.setup(od, args.bus, od_db)
+        app.setup(od, args.bus, od_db[oresat_id])
     else:
         app.setup(od, args.bus)
+
     rest_api.setup(address=args.address, port=args.port)
 
     return args
