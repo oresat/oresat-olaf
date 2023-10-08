@@ -84,7 +84,7 @@ def olaf_setup(od_db: dict, node_id: NodeId) -> Namespace:
 
     od = od_db[oresat_id][node_id]
 
-    od['common_data']['olaf_version'].value = __version__
+    od['versions']['olaf_version'].value = __version__
 
     hw_ver = '0.0'
     boot_uenv_path = '/boot/uEnv.txt'
@@ -103,7 +103,7 @@ def olaf_setup(od_db: dict, node_id: NodeId) -> Namespace:
                 if tmp.startswith('v'):
                     hw_ver = tmp.replace('_', '.')[1:]  # remove the v
                 break
-    od['common_data']['hw_version'].value = hw_ver
+    od['versions']['hw_version'].value = hw_ver
 
     if node_id == NodeId.C3:
         app.setup(od, args.bus, od_db)

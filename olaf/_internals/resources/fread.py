@@ -25,15 +25,12 @@ class FreadResource(Resource):
 
     def on_start(self):
 
-        self.node.add_sdo_callbacks('common_data', 'fread_cache_len', self.on_read_cache_len, None)
-        self.node.add_sdo_callbacks('common_data', 'fread_cache_files_json',
-                                    self.on_read_cache_json, None)
-        self.node.add_sdo_callbacks('common_data', 'fread_cache_file_name', self.on_read_file_name,
+        self.node.add_sdo_callbacks('fread_cache', 'length', self.on_read_cache_len, None)
+        self.node.add_sdo_callbacks('fread_cache', 'files_json', self.on_read_cache_json, None)
+        self.node.add_sdo_callbacks('fread_cache', 'file_name', self.on_read_file_name,
                                     self.on_write_file_name)
-        self.node.add_sdo_callbacks('common_data', 'fread_cache_file_data', self.on_read_file_data,
-                                    None)
-        self.node.add_sdo_callbacks('common_data', 'fread_cache_remove', None,
-                                    self.on_write_delete)
+        self.node.add_sdo_callbacks('fread_cache', 'file_data', self.on_read_file_data, None)
+        self.node.add_sdo_callbacks('fread_cache', 'remove', None, self.on_write_delete)
 
     def on_read_cache_len(self) -> int:
         '''SDO read callback to get the length of the fread cache.'''

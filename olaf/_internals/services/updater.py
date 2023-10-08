@@ -1,5 +1,6 @@
 '''Service for interacting with the updater'''
 
+import canopen
 from loguru import logger
 
 from ...common.service import Service
@@ -13,24 +14,22 @@ class UpdaterService(Service):
         super().__init__()
 
         self._updater = updater
-        self.update_obj = None
-        self.make_status_obj = None
+        self.update_obj: canopen.objectdictionary.Variable = None
+        self.make_status_obj: canopen.objectdictionary.Variable = None
 
     def on_start(self):
 
-        record = self.node.od['common_data']
+        record = self.node.od['updater']
         self.update_obj = record['update']
-        self.make_status_obj = record['make_updater_status_file']
+        self.make_status_obj = record['make_status_file']
 
         # make sure defaults are set correctly
         self.update_obj.value = False
         self.make_status_obj.value = False
 
-        self.node.add_sdo_callbacks('common_data', 'updater_status', self.on_read_status, None)
-        self.node.add_sdo_callbacks('common_data', 'update_cache_files_json',
-                                    self.on_read_cache_json, None)
-        self.node.add_sdo_callbacks('common_data', 'update_cache_len', self.on_read_cache_len,
-                                    None)
+        self.node.add_sdo_callbacks('updater', 'status', self.on_read_status, None)
+        self.node.add_sdo_callbacks('updater', 'cache_files_json', self.on_read_cache_json, None)
+        self.node.add_sdo_callbacks('updater', 'cache_length', self.on_read_cache_len, None)
 
     def on_loop(self):
 

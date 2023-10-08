@@ -3,6 +3,7 @@
 import os
 import tarfile
 
+import canopen
 from loguru import logger
 
 from ...common.service import Service
@@ -27,18 +28,18 @@ class LogsService(Service):
         super().__init__()
 
         self.logs_dir_path = '/var/log/journal/'
-        self.make_logs_obj = None
+        self.make_file_obj: canopen.objectdictionary.Variable = None
 
     def on_start(self):
 
-        self.make_logs_obj = self.node.od['common_data']['make_logs_file']
-        self.make_logs_obj.value = False  # make sure this is False by default
+        self.make_file_obj = self.node.od['logs']['make_file']
+        self.make_file_obj.value = False  # make sure this is False by default
 
-        self.node.add_sdo_callbacks('common_data', 'get_logs', self.on_read_get_logs, None)
+        self.node.add_sdo_callbacks('logs', 'since_boot', self.on_read_since_boot, None)
 
     def on_loop(self):
 
-        if self.make_logs_obj.value:
+        if self.make_file_obj.value:
             logger.info('Making a copy of logs')
 
             tar_file_path = '/tmp/' + new_oresat_file('logs', ext='.tar.xz')
@@ -48,11 +49,11 @@ class LogsService(Service):
                     t.add(self.logs_dir_path + '/' + i, arcname=i)
 
             self.node.fread_cache.add(tar_file_path, consume=True)
-            self.make_logs_obj.value = False
+            self.make_file_obj.value = False
 
         self.sleep(0.1)
 
-    def on_read_get_logs(self) -> str:
+    def on_read_since_boot(self) -> str:
         '''SDO callback to get a copy of logs since boot.'''
 
         if not os.path.isfile(TMP_LOGS_FILE):

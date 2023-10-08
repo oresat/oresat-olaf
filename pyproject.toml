@@ -37,4 +37,4 @@ version = {attr = "olaf.__version__"}
 exclude = ["docs*"]
 
 [tool.setuptools.package-data]
-"*" = ["*.eds", "*.html", "*.ico"]
+"*" = ["*.html", "*.ico"]

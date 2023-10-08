@@ -14,7 +14,7 @@
       const select = document.getElementById("files");
       const fileName = select.value;
 
-      const filesJsonObj = await readValue("common_data", "fread_cache_files_json");
+      const filesJsonObj = await readValue("fread_cache", "files_json");
       const files = JSON.parse(filesJsonObj.value);
 
       if (files.length === 0) {
@@ -47,8 +47,8 @@
 
     async function downloadFile() {
       const fileName = document.getElementById("files").value;
-      const fileNameObj = await writeValue("common_data", "fread_cache_file_name", fileName);
-      const fileDataObj = await readValue("common_data", "fread_cache_file_data");
+      const fileNameObj = await writeValue("fread_cache", "file_name", fileName);
+      const fileDataObj = await readValue("fread_cache", "file_data");
 
       const byteCharacters = atob(fileDataObj.value);
       const byteArrays = [];
@@ -78,8 +78,8 @@
 
     async function deleteFile() {
       const fileName = document.getElementById("files").value;
-      const fileNameObj = await writeValue("common_data", "fread_cache_file_name", fileName);
-      const fileDeleteObj = await writeValue("common_data", "fread_cache_remove", true);
+      const fileNameObj = await writeValue("fread_cache", "file_name", fileName);
+      const fileDeleteObj = await writeValue("fread_cache", "remove", true);
       getFileList();
     }
 

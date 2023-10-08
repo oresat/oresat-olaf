@@ -17,7 +17,7 @@
   </div>
   <script>
     async function updateLogs() {
-      const logsObj = await readValue("common_data", "get_logs");
+      const logsObj = await readValue("logs", "since_boot");
       document.getElementById("logs").value = logsObj.value;
     }
 
