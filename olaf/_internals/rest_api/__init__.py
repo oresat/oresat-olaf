@@ -395,9 +395,3 @@ def fread_template():
 def logs_template():
     '''Render the logs template.'''
     return render_olaf_template('logs.html', name='Logs')
-
-
-@rest_api.app.route('/oresat-configs')
-def oresat_configs_template():
-    '''Render the configs template.'''
-    return render_olaf_template('oresat_configs.html', name='OreSat Configs')

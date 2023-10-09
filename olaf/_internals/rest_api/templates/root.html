@@ -1,15 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <title>{{title}}</title>
-</head>
-<body>
+{% extends "_base.html" %}
+
+{% block baseContent %}
   <style>
-    #pageTitle {
+    #headerGrid {
+      display: grid;
+      grid-template-columns: 25% 50% 25%;
+    }
+    #headerCenter {
       text-align: center;
     }
+    #headerRight {
+      text-align: right;
+    }
   </style>
-  <h2 id="pageTitle">{{title}}</h2>
+  <div id="headerGrid">
+    <div id="headerLeft">
+    </div>
+    <div id="headerCenter">
+      <h2>{{title}}</h2>
+    </div>
+    <div id="headerRight">
+      <label for="flightMode">Flight Mode: </label>
+      <input type="checkbox" id="flightMode" onclick="toggleFlightMode()"></input>
+    </div>
+  </div>
   <br/>
   <a>Endpoints:</a>
   <br/>
@@ -18,5 +32,4 @@
   <a href="{{route}}">{{route}}</a>
   <br/>
   {% endfor %}
-</body>
-</html>
+{% endblock %}

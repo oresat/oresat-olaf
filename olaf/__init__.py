@@ -84,6 +84,9 @@ def olaf_setup(od_db: dict, node_id: NodeId) -> Namespace:
 
     od = od_db[oresat_id][node_id]
 
+    if args.disable_flight_mode:
+        od['flight_mode'].value = False
+
     od['versions']['olaf_version'].value = __version__
 
     hw_ver = '0.0'
