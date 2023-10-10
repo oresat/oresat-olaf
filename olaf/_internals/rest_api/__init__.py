@@ -329,6 +329,7 @@ def _object_to_dict(index: int, subindex: int = None) -> dict:
     data = {
         'name': obj.name,
         'index': obj.index,
+        'description': obj.description,
     }
 
     if isinstance(obj, canopen.objectdictionary.Variable):

@@ -37,6 +37,10 @@
         <td><span id="varName"></span></td>
       </tr>
       <tr>
+        <td>Description</td>
+        <td><pre id="varDesc"></pre></td>
+      </tr>
+      <tr>
         <td>Data Type</td>
         <td><span id="varDataType"></span></td>
       </tr>
@@ -67,6 +71,10 @@
         <td><span id="objName"></span></td>
       </tr>
       <tr>
+        <td>Description</td>
+        <td><pre id="objDesc"></pre></td>
+      </tr>
+      <tr>
         <td>Subindexes</td>
         <td><span id="objSubindexes"></span></td>
       </tr>
@@ -94,6 +102,7 @@
         document.getElementById("arrayRecordObj").style.display = "none";
 
         document.getElementById("varName").textContent = obj.name;
+        document.getElementById("varDesc").textContent = obj.description;
         document.getElementById("varDataType").textContent = obj.data_type;
         document.getElementById("varAccessType").textContent = obj.access_type;
         document.getElementById("varValue").textContent = obj.value;
@@ -110,6 +119,7 @@
 
         document.getElementById("objType").textContent = obj.object_type;
         document.getElementById("objName").textContent = obj.name;
+        document.getElementById("objDesc").textContent = obj.description;
         document.getElementById("objSubindexes").textContent = Object.keys(obj.subindexes).length;
       }
     }
