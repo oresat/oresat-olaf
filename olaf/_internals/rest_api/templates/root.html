@@ -20,6 +20,7 @@
       <h2>{{title}}</h2>
     </div>
     <div id="headerRight">
+      <text><span id="busChannel">vcan0</span>: <span id="busStatus">BUS_DOWN</span> | </text>
       <label for="flightMode">Flight Mode: </label>
       <input type="checkbox" id="flightMode" onclick="toggleFlightMode()"></input>
     </div>
@@ -32,4 +33,16 @@
   <a href="{{route}}">{{route}}</a>
   <br/>
   {% endfor %}
+  <script>
+    async function updateBusStatus() {
+      const status = await getBusStatus();
+      document.getElementById("busChannel").textContent = status.channel;
+      document.getElementById("busStatus").textContent = status.status;
+    }
+
+    updateBusStatus();
+    const busInterval = setInterval(function() {
+      updateBusStatus();
+    }, 1000);
+  </script>
 {% endblock %}

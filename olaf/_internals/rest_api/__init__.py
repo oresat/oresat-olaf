@@ -151,7 +151,7 @@ def root():
     for rule in rest_api.app.url_map.iter_rules():
         route = str(rule)
         if not route.startswith('/static/') and not route.startswith('/od/') \
-                and route not in ['/', '/favicon.ico', '/od-all']:
+                and route not in ['/', '/favicon.ico', '/od-all', '/bus']:
             routes.append(str(rule))
 
     routes = natsorted(routes)
@@ -188,6 +188,17 @@ def _json_value_to_value(data_type: int, json_value):
             pass
 
     return value
+
+
+@rest_api.app.route('/bus', methods=['GET'])
+def can_bus():
+    '''Get CAN bus info.'''
+
+    return jsonify({
+        "channel": app.node.bus,
+        "bitrate": app.od.bitrate // 1000,  # bps -> kpbs
+        "status": app.node.bus_state,
+    })
 
 
 @rest_api.app.route('/od/<index>/', methods=['GET', 'PUT'])

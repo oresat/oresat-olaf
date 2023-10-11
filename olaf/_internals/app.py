@@ -1,3 +1,5 @@
+'''OLAF App.'''
+
 import os
 import signal
 import subprocess
@@ -34,7 +36,7 @@ class App:
     def __init__(self):
 
         self._od = None
-        self._bus = None
+        self._bus = ''
         self._resources = []
         self._services = []
         self._node = None
@@ -184,6 +186,8 @@ class App:
 
     @property
     def node(self) -> Node or MasterNode:
+        '''Node: The CANopen node.'''
+
         return self._node
 
     def set_factory_reset_callback(self, cb_func):
@@ -193,6 +197,8 @@ class App:
 
     @property
     def od(self) -> canopen.ObjectDictionary:
+        '''canopen.ObjectDictionary: The node's Object Dictionary.'''
+
         return self._od
 
 

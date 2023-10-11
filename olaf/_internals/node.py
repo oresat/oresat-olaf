@@ -2,7 +2,7 @@
 
 import struct
 import subprocess
-from enum import IntEnum
+from enum import IntEnum, auto
 from os import geteuid
 from pathlib import Path
 from threading import Event
@@ -15,6 +15,15 @@ from loguru import logger
 from ..common.daemon import Daemon
 from ..common.timer_loop import TimerLoop
 from ..common.oresat_file_cache import OreSatFileCache
+
+
+class CanState(IntEnum):
+    '''CAN bus states.'''
+
+    BUS_UP_NETWORK_UP = auto()
+    BUS_UP_NETWORK_DOWN = auto()
+    BUS_DOWN = auto()
+    BUS_NOT_FOUND = auto()
 
 
 class NodeStop(IntEnum):
@@ -65,6 +74,7 @@ class Node:
 
         self._od = od
         self._bus = bus
+        self._bus_state = CanState.BUS_DOWN
         self._node: canopen.LocalNode = None
         self._network: canopen.Network = None
         self._event = Event()
@@ -297,18 +307,22 @@ class Node:
         while not self._event.is_set():
             bus = psutil.net_if_stats().get(self._bus)
             if not bus:  # bus does not exist
+                self._bus_state = CanState.BUS_NOT_FOUND
                 self._disable_network()
                 if first_bus_down:
                     logger.critical(f'{self._bus} does not exists, nothing OLAF can do')
                     first_bus_down = False
             elif not bus.isup:  # bus is down
+                self._bus_state = CanState.BUS_DOWN
                 first_bus_down = True  # reset flag
                 self._disable_network()
                 self._restart_bus()
             elif not self._network:  # bus is up, network is down
+                self._bus_state = CanState.BUS_UP_NETWORK_DOWN
                 first_bus_down = True  # reset flag
                 self._restart_network()
             else:  # bus is up, network is up
+                self._bus_state = CanState.BUS_UP_NETWORK_UP
                 self.first_bus_reset = True  # reset flag
                 first_bus_down = True  # reset flag
 
@@ -485,6 +499,18 @@ class Node:
 
         if (index, subindex) in self._write_cbs:
             self._write_cbs[index, subindex](od.value)
+
+    @property
+    def bus(self) -> str:
+        '''str: The CAN bus.'''
+
+        return self._bus
+
+    @property
+    def bus_state(self) -> str:
+        '''str: The CAN bus status.'''
+
+        return self._bus_state.name
 
     @property
     def name(self) -> str:
