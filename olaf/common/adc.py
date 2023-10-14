@@ -50,6 +50,6 @@ class Adc:
 
     @property
     def value(self) -> float:
-        '''float: The value from the ADC adjusted for the voltage'''
+        '''float: The ADC voltage value in volts.'''
 
         return (self.raw / self.ADC_MAX_VALUE) * self.ADC_VIN

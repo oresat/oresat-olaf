@@ -385,12 +385,23 @@ class Node:
             The SDO writecallback. Gives access to the data being received on a SDO write.
             Set to :py:data:`None` for no write_cb.
             **Note:** data is still written to object dictionary before call.
-
-        Raises
-        ------
-        ValueError
-            Invalid index/subindex or callbacks already exist at index/subindex.
         '''
+
+        try:
+            self.od[index]
+        except KeyError:
+            logger.warning(f"index {index} does not exist, ignoring request for new sdo callback")
+            return
+
+        if subindex:
+            try:
+                self.od[index][subindex]
+            except KeyError:
+                logger.warning(
+                    f"subindex {subindex} for index {index} does not exist, ignoring request for "
+                    "new sdo callback"
+                )
+                return
 
         if read_cb is not None:
             self._read_cbs[index, subindex] = read_cb
