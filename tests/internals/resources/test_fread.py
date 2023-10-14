@@ -28,12 +28,12 @@ class TestFreadResource(unittest.TestCase):
     def test_read(self):
         '''Test file reads.'''
 
-        index = 'common_data'
-        subindex_len = 'fread_cache_len'
-        subindex_remove = 'fread_cache_remove'
-        subindex_file_name = 'fread_cache_file_name'
-        subindex_file_data = 'fread_cache_file_data'
-        subindex_files_json = 'fread_cache_files_json'
+        index = 'fread_cache'
+        subindex_len = 'length'
+        subindex_remove = 'remove'
+        subindex_file_name = 'file_name'
+        subindex_file_data = 'file_data'
+        subindex_files_json = 'files_json'
 
         self.assertEqual(len(self.app.node.fread_cache), 0)
 

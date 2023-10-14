@@ -29,11 +29,11 @@ class TestFwriteResource(unittest.TestCase):
     def test_write(self):
         '''Test file writes.'''
 
-        index = 'common_data'
-        subindex_len = 'fwrite_cache_len'
-        subindex_file_name = 'fwrite_cache_file_name'
-        subindex_file_data = 'fwrite_cache_file_data'
-        subindex_files_json = 'fwrite_cache_files_json'
+        index = 'fwrite_cache'
+        subindex_len = 'length'
+        subindex_file_name = 'file_name'
+        subindex_file_data = 'file_data'
+        subindex_files_json = 'files_json'
 
         self.assertEqual(len(self.app.node.fwrite_cache), 0)
 
