@@ -367,7 +367,7 @@ def get_all_object():
     '''Get all object data as a one giant JSON.'''
     data = {}
     for index in app.od:
-        if index < 0x1000:
+        if index < 0x3000:
             continue
         data[index] = _object_to_dict(index)
     return data
