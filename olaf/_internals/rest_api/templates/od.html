@@ -13,7 +13,7 @@
       text-align: left;
       padding: 8px;
     }
-    #variableObj, #arrayRecordObj, #varNewValueInput {
+    #variableObj, #arrayRecordObj {
       display: none;
     }
     label, .boldText {
@@ -45,7 +45,7 @@
         <td><span id="varDataType"></span></td>
       </tr>
       <tr>
-        <td>Access Type</td>
+        <td>Access Type *</td>
         <td><span id="varAccessType"></span></td>
       </tr>
       <tr>
@@ -54,11 +54,12 @@
       </tr>
     </table>
     <br/>
-    <div id="varNewValueInput">
-      <label for="objNewValue">New Value:</label>
-      <input type="text" id="objNewValue" name="objNewValue"/>
-      <button id="setObjectValueButton" onclick="setObjectValue()">Change</button>
-    </div>
+    <label for="objNewValue">New Value:</label>
+    <input type="text" id="objNewValue" name="objNewValue"/>
+    <button id="setObjectValueButton" onclick="setObjectValue()">Change</button>
+    <br/>
+    <br/>
+    <small>* Access premissions are be bypassed by REST API for testing/integration purposes. They are inforce over the CAN bus.</small>
   </div>
   <div id="arrayRecordObj">
     <table>
@@ -107,12 +108,6 @@
         document.getElementById("varAccessType").textContent = obj.access_type;
         document.getElementById("varValue").textContent = obj.value;
         document.getElementById("objNewValue").value = obj.value;
-
-        if (obj.access_type === "ro" || obj.access_type === "const") {
-          document.getElementById("varNewValueInput").style.display = "none";
-        } else {
-          document.getElementById("varNewValueInput").style.display = "inline";
-        }
       } else {
         document.getElementById("variableObj").style.display = "none";
         document.getElementById("arrayRecordObj").style.display = "inline";
