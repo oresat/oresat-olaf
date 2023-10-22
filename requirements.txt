@@ -3,7 +3,7 @@ canopen
 flask
 loguru
 natsort
-oresat-od-database
+oresat-configs
 psutil
 setuptools
 sphinx

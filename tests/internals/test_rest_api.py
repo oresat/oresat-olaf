@@ -1,6 +1,6 @@
 import unittest
 
-from oresat_od_db import OD_DB, NodeId
+from oresat_configs import OD_DB, NodeId
 
 from olaf import olaf_setup, app, rest_api
 

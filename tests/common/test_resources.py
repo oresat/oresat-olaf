@@ -2,7 +2,7 @@
 import unittest
 
 import canopen
-from oresat_od_db.oresat0 import ORESAT0_GPS_OD
+from oresat_configs.oresat0 import ORESAT0_GPS_OD
 from olaf import Node, Resource
 
 

@@ -1,5 +1,5 @@
 import canopen
-from oresat_od_db.oresat0_5 import ORESAT0_5_GPS_OD
+from oresat_configs.oresat0_5 import ORESAT0_5_GPS_OD
 
 from olaf import Resource, OreSatFileCache, logger
 from olaf._internals.node import Node

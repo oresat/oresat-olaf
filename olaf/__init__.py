@@ -5,7 +5,7 @@ from argparse import ArgumentParser, Namespace
 
 import canopen
 from loguru import logger
-from oresat_od_db import OreSatId, NodeId
+from oresat_configs import OreSatId, NodeId
 
 from ._internals.app import app, App
 from ._internals.node import Node, NodeStop, NetworkError

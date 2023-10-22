@@ -5,7 +5,7 @@ from typing import Any
 
 import canopen
 from loguru import logger
-from oresat_od_db import NodeId
+from oresat_configs import NodeId
 
 from .node import Node, NetworkError
 

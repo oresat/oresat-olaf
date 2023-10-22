@@ -3,7 +3,7 @@
 import sys
 from argparse import ArgumentParser
 
-from oresat_od_db import OD_DB, NodeId, OreSatId
+from oresat_configs import OD_DB, NodeId, OreSatId
 
 from olaf import app, logger, olaf_run, rest_api, logger_tmp_file_setup
 

@@ -12,7 +12,7 @@ from flask import Flask, render_template, jsonify, request, send_from_directory
 from loguru import logger
 from natsort import natsorted
 from werkzeug.serving import make_server
-from oresat_od_db import OreSatId
+from oresat_configs import OreSatId
 
 from ..app import app
 
