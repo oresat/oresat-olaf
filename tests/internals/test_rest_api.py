@@ -1,6 +1,6 @@
 import unittest
 
-from oresat_configs import NodeId, OreSatConfig, OreSatId
+from oresat_configs import NodeId
 
 from olaf import olaf_setup, app, rest_api
 
@@ -10,8 +10,7 @@ class TestRestApi(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
-        od_db = OreSatConfig(OreSatId.ORESAT0).od_db
-        olaf_setup(od_db, NodeId.GPS)
+        olaf_setup(NodeId.GPS)
         cls.client = rest_api.app.test_client()
 
         app.node._setup_node()
