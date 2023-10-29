@@ -28,7 +28,7 @@ from .common.pru import Pru, PruState, PruError
 __version__ = '2.2.0'
 
 
-def olaf_setup(od_db: dict, node_id: NodeId) -> Namespace:
+def olaf_setup(node_id: NodeId) -> (Namespace, dict):
     '''
     Parse runtime args and setup the app and REST API.
 
@@ -41,6 +41,8 @@ def olaf_setup(od_db: dict, node_id: NodeId) -> Namespace:
     -------
     Namespace
         The runtime args.
+    dict
+        The OreSat configs.
     '''
 
     parser = ArgumentParser(prog='OLAF')
@@ -91,13 +93,13 @@ def olaf_setup(od_db: dict, node_id: NodeId) -> Namespace:
     od['versions']['olaf_version'].value = __version__
 
     if node_id == NodeId.C3:
-        app.setup(od, args.bus, config.od_db[oresat_id])
+        app.setup(od, args.bus, config.od_db)
     else:
         app.setup(od, args.bus)
 
     rest_api.setup(address=args.address, port=args.port)
 
-    return args
+    return args, config
 
 
 def olaf_run():
