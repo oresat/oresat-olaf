@@ -25,7 +25,7 @@ from .common.cpufreq import get_cpufreq, get_cpufreq_gov, set_cpufreq, set_cpufr
 from .common.pru import Pru, PruState, PruError
 
 
-__version__ = '2.2.0'
+__version__ = '3.0.0'
 
 
 def olaf_setup(node_id: NodeId) -> (Namespace, dict):
