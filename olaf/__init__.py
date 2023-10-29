@@ -5,7 +5,7 @@ from argparse import ArgumentParser, Namespace
 
 import canopen
 from loguru import logger
-from oresat_configs import OreSatId, NodeId
+from oresat_configs import OreSatId, NodeId, OreSatConfig
 
 from ._internals.app import app, App
 from ._internals.node import Node, NodeStop, NetworkError
@@ -72,44 +72,26 @@ def olaf_setup(od_db: dict, node_id: NodeId) -> Namespace:
 
     logger_tmp_file_setup(level)
 
-    oid = args.oresat.lower()
-    if oid in ['oresat0', '0']:
+    arg_oresat = args.oresat.lower()
+    if arg_oresat in ['oresat0', '0']:
         oresat_id = OreSatId.ORESAT0
-    elif oid in ['oresat0.5', 'oresat0_5', '0.5']:
+    elif arg_oresat in ['oresat0.5', 'oresat0_5', '0.5']:
         oresat_id = OreSatId.ORESAT0_5
-    elif oid in ['oresat', '1']:
+    elif arg_oresat in ['oresat', '1']:
         oresat_id = OreSatId.ORESAT1
     else:
         raise ValueError(f'invalid oresat mission {args.oresat}')
 
-    od = od_db[oresat_id][node_id]
+    config = OreSatConfig(oresat_id)
+    od = config.od_db[node_id]
 
     if args.disable_flight_mode:
         od['flight_mode'].value = False
 
     od['versions']['olaf_version'].value = __version__
 
-    hw_ver = '0.0'
-    boot_uenv_path = '/boot/uEnv.txt'
-    if os.path.isfile(boot_uenv_path):
-        with open(boot_uenv_path, 'r') as f:
-            lines = f.readlines()
-        # find addr0 line
-        for line in lines:
-            if line.startswith('uboot_overlay_addr0='):
-                # extract dtbo name from line
-                dtbo_name = line.split('/')[-1]
-                # extract version from dtbo name
-                tmp = dtbo_name.split('-')[-2].lower()
-                if 'pb' in tmp:
-                    hw_ver = tmp.replace('_pb', '-pb')
-                if tmp.startswith('v'):
-                    hw_ver = tmp.replace('_', '.')[1:]  # remove the v
-                break
-        od['versions']['hw_version'].value = hw_ver
-
     if node_id == NodeId.C3:
-        app.setup(od, args.bus, od_db[oresat_id])
+        app.setup(od, args.bus, config.od_db[oresat_id])
     else:
         app.setup(od, args.bus)
 

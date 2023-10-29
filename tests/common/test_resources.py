@@ -2,7 +2,7 @@
 import unittest
 
 import canopen
-from oresat_configs.oresat0 import ORESAT0_GPS_OD
+from oresat_configs import OreSatConfig, OreSatId, NodeId
 from olaf import Node, Resource
 
 
@@ -24,7 +24,8 @@ class TestResource(unittest.TestCase):
     def test_start_stop(self):
         '''All exception should be caught'''
 
-        node = Node(ORESAT0_GPS_OD, 'vcan0')
+        od = OreSatConfig(OreSatId.ORESAT0).od_db[NodeId.GPS]
+        node = Node(od, 'vcan0')
 
         good_res = Resource()
         bad_res = BadResource()

@@ -3,7 +3,7 @@
 import sys
 from argparse import ArgumentParser
 
-from oresat_configs import OD_DB, NodeId, OreSatId
+from oresat_configs import NodeId, OreSatId, OreSatConfig
 
 from olaf import app, logger, olaf_run, rest_api, logger_tmp_file_setup
 
@@ -37,10 +37,11 @@ if __name__ == '__main__':
     card_name = args.card.upper().replace('-', '_')
     node_id = NodeId[card_name]
 
-    od_db = OD_DB[oresat_id]
-    od = od_db[node_id]
+    config = OreSatConfig(oresat_id)
+
+    od = config.od_db[node_id]
     if node_id == NodeId.C3:
-        app.setup(od, args.bus, od_db)
+        app.setup(od, args.bus, config.od_db)
     else:
         app.setup(od, args.bus)
 
