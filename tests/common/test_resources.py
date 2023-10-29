@@ -1,7 +1,6 @@
 '''Test the Resource class.'''
 import unittest
 
-import canopen
 from oresat_configs import OreSatConfig, OreSatId, NodeId
 from olaf import Node, Resource
 
