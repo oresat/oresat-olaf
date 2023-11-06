@@ -1,4 +1,4 @@
-'''OreSat CANopen Node'''
+"""OreSat CANopen Node"""
 
 import struct
 import subprocess
@@ -6,19 +6,19 @@ from enum import IntEnum, auto
 from os import geteuid
 from pathlib import Path
 from threading import Event
-from typing import Callable, Any
+from typing import Any, Callable
 
 import canopen
 import psutil
 from loguru import logger
 
 from ..common.daemon import Daemon
-from ..common.timer_loop import TimerLoop
 from ..common.oresat_file_cache import OreSatFileCache
+from ..common.timer_loop import TimerLoop
 
 
 class CanState(IntEnum):
-    '''CAN bus states.'''
+    """CAN bus states."""
 
     BUS_UP_NETWORK_UP = auto()
     BUS_UP_NETWORK_DOWN = auto()
@@ -27,24 +27,24 @@ class CanState(IntEnum):
 
 
 class NodeStop(IntEnum):
-    '''Node stop commands.'''
+    """Node stop commands."""
 
     SOFT_RESET = 1
-    '''Just stop the app and exit. Systemd will restart the app.'''
+    """Just stop the app and exit. Systemd will restart the app."""
     HARD_RESET = 2
-    '''Reboot system after app has stopped'''
+    """Reboot system after app has stopped"""
     FACTORY_RESET = 3
-    '''Clear all file cachces and reboot system after app has stopped'''
+    """Clear all file cachces and reboot system after app has stopped"""
     POWER_OFF = 4
-    '''Just power off the system.'''
+    """Just power off the system."""
 
 
 class NetworkError(Exception):
-    '''Error with the CANopen network / bus'''
+    """Error with the CANopen network / bus"""
 
 
 class Node:
-    '''
+    """
     OreSat CANopen Node class
 
     Jobs:
@@ -60,17 +60,17 @@ class Node:
 
     Basically it tries to abstract all the CANopen things as much a possible, while providing a
     basic API for CANopen things.
-    '''
+    """
 
     def __init__(self, od: canopen.ObjectDictionary, bus: str):
-        '''
+        """
         Parameters
         ----------
         od: canopen.ObjectDictionary
             The CANopen ObjectDictionary
         bus: str
             Which CAN bus to use.
-        '''
+        """
 
         self._od = od
         self._bus = bus
@@ -87,23 +87,22 @@ class Node:
         self.first_bus_reset = False
 
         if geteuid() == 0:  # running as root
-            self.work_base_dir = '/var/lib/oresat'
-            self.cache_base_dir = '/var/cache/oresat'
+            self.work_base_dir = "/var/lib/oresat"
+            self.cache_base_dir = "/var/cache/oresat"
         else:
-            self.work_base_dir = str(Path.home()) + '/.oresat'
-            self.cache_base_dir = str(Path.home()) + '/.cache/oresat'
+            self.work_base_dir = str(Path.home()) + "/.oresat"
+            self.cache_base_dir = str(Path.home()) + "/.cache/oresat"
 
-        fread_path = self.cache_base_dir + '/fread'
-        fwrite_path = self.cache_base_dir + '/fwrite'
+        fread_path = self.cache_base_dir + "/fread"
+        fwrite_path = self.cache_base_dir + "/fwrite"
 
         self._fread_cache = OreSatFileCache(fread_path)
         self._fwrite_cache = OreSatFileCache(fwrite_path)
 
-        logger.debug(f'fread cache path {self._fread_cache.dir}')
-        logger.debug(f'fwrite cache path {self._fwrite_cache.dir}')
+        logger.debug(f"fread cache path {self._fread_cache.dir}")
+        logger.debug(f"fwrite cache path {self._fwrite_cache.dir}")
 
     def __del__(self):
-
         # stop the monitor thread if it is running
         if not self._event.is_set():
             self.stop()
@@ -116,7 +115,7 @@ class Node:
                 pass
 
     def _on_sync(self, cob_id: int, data: bytes, timestamp: float):
-        '''On SYNC message send TPDOs configured to be SYNC-based'''
+        """On SYNC message send TPDOs configured to be SYNC-based"""
 
         self._syncs += 1
         if self._syncs == 241:
@@ -128,7 +127,7 @@ class Node:
                 self.send_tpdo(i)
 
     def send_tpdo(self, tpdo: int):
-        '''
+        """
         Send a TPDO. Will not be sent if not node is not in operational state.
 
         Parameters
@@ -140,35 +139,38 @@ class Node:
         ------
         NetworkError
             Cannot send a TPDO message when the network is down.
-        '''
+        """
 
         if self._network is None:
-            raise NetworkError('network is down cannot send an TPDO message')
+            raise NetworkError("network is down cannot send an TPDO message")
 
         if tpdo < 1:
-            raise ValueError('TPDO number must be greather than 1')
+            raise ValueError("TPDO number must be greather than 1")
 
         tpdo -= 1  # number to offset
 
         # PDOs can't be sent if CAN bus is down and PDOs should not be sent if CAN bus not in
         # 'OPERATIONAL' state
         can_bus = psutil.net_if_stats().get(self._bus)
-        if can_bus is None or self._node is None \
-                or (can_bus.isup and self._node.nmt.state != 'OPERATIONAL'):
+        if (
+            can_bus is None
+            or self._node is None
+            or (can_bus.isup and self._node.nmt.state != "OPERATIONAL")
+        ):
             return
 
         cob_id = self.od[0x1800 + tpdo][1].value & 0x3F_FF_FF_FF
         maps = self.od[0x1A00 + tpdo][0].value
 
-        data = b''
+        data = b""
         for i in range(maps):
             pdo_map = self.od[0x1A00 + tpdo][i + 1].value
 
             if pdo_map == 0:
                 break  # nothing todo
 
-            pdo_map_bytes = pdo_map.to_bytes(4, 'big')
-            index, subindex, _ = struct.unpack('>HBB', pdo_map_bytes)
+            pdo_map_bytes = pdo_map.to_bytes(4, "big")
+            index, subindex, _ = struct.unpack(">HBB", pdo_map_bytes)
 
             # call sdo callback(s) and convert data to bytes
             if isinstance(self.od[index], canopen.objectdictionary.Variable):
@@ -184,10 +186,10 @@ class Node:
         try:
             self._network.send_message(cob_id, data)
         except Exception as e:
-            logger.exception(f'TPDO{tpdo} failed with: {e}')
+            logger.exception(f"TPDO{tpdo} failed with: {e}")
 
     def _tpdo_timer_loop(self, tpdo: int) -> bool:
-        '''Send TPDO for TPDO loop. Can handle network errors.'''
+        """Send TPDO for TPDO loop. Can handle network errors."""
 
         try:
             self.send_tpdo(tpdo)
@@ -197,7 +199,7 @@ class Node:
         return True
 
     def _on_rpdo_update_od(self, mapping: canopen.pdo.base.Map):
-        '''Handle parsering an RPDO'''
+        """Handle parsering an RPDO"""
 
         for i in mapping.map_array:
             if i == 0:
@@ -207,14 +209,14 @@ class Node:
             if value == 0:
                 break  # no more mapping
 
-            index, subindex, _ = struct.unpack('>HBB', value.to_bytes(4, 'big'))
+            index, subindex, _ = struct.unpack(">HBB", value.to_bytes(4, "big"))
             if isinstance(self.od[index], canopen.objectdictionary.Variable):
                 self._node.sdo[index].raw = mapping.map[i - 1].get_data()
             else:
                 self._node.sdo[index][subindex].raw = mapping.map[i - 1].get_data()
 
     def _setup_node(self):
-        '''Create the CANopen and TPDO timer loops'''
+        """Create the CANopen and TPDO timer loops"""
 
         if self._od.node_id is None:
             self._od.node_id = 0x7C
@@ -230,14 +232,18 @@ class Node:
             transmission_type = self.od[0x1800 + i][2].default
             event_time = self.od[0x1800 + i][5].default
             if transmission_type in [0xFE, 0xFF] and event_time > 0:
-                timer = TimerLoop(name=f'TPDO{i + 1}', loop_func=self._tpdo_timer_loop,
-                                  delay=self.od[0x1800 + i][5], start_delay=self.od[0x1800 + i][3],
-                                  args=(i + 1,))
+                timer = TimerLoop(
+                    name=f"TPDO{i + 1}",
+                    loop_func=self._tpdo_timer_loop,
+                    delay=self.od[0x1800 + i][5],
+                    start_delay=self.od[0x1800 + i][3],
+                    args=(i + 1,),
+                )
                 self._tpdo_timers.append(timer)
                 timer.start()
 
     def _destroy_node(self):
-        '''Destroy the CANopen and TPDO timer loops'''
+        """Destroy the CANopen and TPDO timer loops"""
 
         for timer in self._tpdo_timers:
             timer.stop()
@@ -247,17 +253,19 @@ class Node:
         self._node = None
 
     def _restart_bus(self):
-        '''Try to restart the CAN bus'''
+        """Try to restart the CAN bus"""
 
         if self.first_bus_reset:
-            logger.error(f'{self._bus} is down')
+            logger.error(f"{self._bus} is down")
 
         if geteuid() == 0:  # running as root
             if self.first_bus_reset:
-                logger.info(f'trying to restart CAN bus {self._bus}')
-            cmd = (f'ip link set {self._bus} down;'
-                   f'ip link set {self._bus} type can bitrate 1000000;'
-                   f'ip link set {self._bus} up')
+                logger.info(f"trying to restart CAN bus {self._bus}")
+            cmd = (
+                f"ip link set {self._bus} down;"
+                f"ip link set {self._bus} type can bitrate 1000000;"
+                f"ip link set {self._bus} up"
+            )
             out = subprocess.run(cmd, shell=True, check=True)
             if out.returncode != 0:
                 logger.error(out)
@@ -265,20 +273,20 @@ class Node:
         self.first_bus_reset = False
 
     def _restart_network(self):
-        '''Restart the CANopen network'''
+        """Restart the CANopen network"""
 
-        logger.info('(re)starting CANopen network')
+        logger.info("(re)starting CANopen network")
 
         self._network = canopen.Network()
-        self._network.connect(bustype='socketcan', channel=self._bus)
+        self._network.connect(bustype="socketcan", channel=self._bus)
         self._setup_node()
         self._network.add_node(self._node)
 
         try:
             self._node.nmt.start_heartbeat(self.od[0x1017].default)
-            self._node.nmt.state = 'OPERATIONAL'
+            self._node.nmt.state = "OPERATIONAL"
         except Exception as e:
-            logger.exception(f'failed to (re)start CANopen network with {e}')
+            logger.exception(f"failed to (re)start CANopen network with {e}")
 
         self._network.subscribe(0x80, self._on_sync)
 
@@ -289,7 +297,7 @@ class Node:
                 self._node.rpdo[i].add_callback(self._on_rpdo_update_od)
 
     def _disable_network(self):
-        '''Disable the CANopen network'''
+        """Disable the CANopen network"""
 
         try:
             if self._network:
@@ -300,7 +308,7 @@ class Node:
             self._node = None
 
     def _monitor_can(self):
-        '''Monitor the CAN bus and CAN network'''
+        """Monitor the CAN bus and CAN network"""
 
         first_bus_down = True  # flag to only log error message on first error
         self.first_bus_reset = True  # flag to only log error message on first error
@@ -310,7 +318,7 @@ class Node:
                 self._bus_state = CanState.BUS_NOT_FOUND
                 self._disable_network()
                 if first_bus_down:
-                    logger.critical(f'{self._bus} does not exists, nothing OLAF can do')
+                    logger.critical(f"{self._bus} does not exists, nothing OLAF can do")
                     first_bus_down = False
             elif not bus.isup:  # bus is down
                 self._bus_state = CanState.BUS_DOWN
@@ -329,7 +337,7 @@ class Node:
             self._event.wait(1)
 
     def run(self) -> int:
-        '''
+        """
         Go into operational mode, start all the resources, start all the threads, and monitor
         everything in a loop.
 
@@ -337,11 +345,11 @@ class Node:
         -------
         NodeStop
             Reset / power off condition.
-        '''
+        """
 
-        logger.info(f'{self.name} node is starting')
+        logger.info(f"{self.name} node is starting")
         if geteuid() != 0:  # running as root
-            logger.warning('not running as root, cannot restart CAN bus if it goes down')
+            logger.warning("not running as root, cannot restart CAN bus if it goes down")
 
         try:
             self._monitor_can()
@@ -351,24 +359,29 @@ class Node:
         # stop the node and TPDO timers
         self._destroy_node()
 
-        logger.info(f'{self.name} node has ended')
+        logger.info(f"{self.name} node has ended")
         return self._reset
 
     def stop(self, reset: NodeStop = None):
-        '''End the run loop'''
+        """End the run loop"""
 
         if reset is not None:
             self._reset = reset
         self._event.set()
 
     def add_daemon(self, name: str):
-        '''Add a daemon for the node to monitor and/or control'''
+        """Add a daemon for the node to monitor and/or control"""
 
         self._daemons[name] = Daemon(name)
 
-    def add_sdo_callbacks(self, index: str, subindex: str,
-                          read_cb: Callable[[None], Any], write_cb: Callable[[Any], None]):
-        '''
+    def add_sdo_callbacks(
+        self,
+        index: str,
+        subindex: str,
+        read_cb: Callable[[None], Any],
+        write_cb: Callable[[Any], None],
+    ):
+        """
         Add an SDO read callback for a variable at index and optional subindex.
 
         Parameters
@@ -385,7 +398,7 @@ class Node:
             The SDO writecallback. Gives access to the data being received on a SDO write.
             Set to :py:data:`None` for no write_cb.
             **Note:** data is still written to object dictionary before call.
-        '''
+        """
 
         try:
             self.od[index]
@@ -408,8 +421,8 @@ class Node:
         if write_cb is not None:
             self._write_cbs[index, subindex] = write_cb
 
-    def send_emcy(self, code: int, register: int = 0, data: bytes = b''):
-        '''
+    def send_emcy(self, code: int, register: int = 0, data: bytes = b""):
+        """
         Send a EMCY message. Wrapper on canopen's `EmcyProducer.send`.
 
         Parameters
@@ -426,15 +439,15 @@ class Node:
         ------
         NetworkError
             Cannot send a EMCY message when the network is down.
-        '''
+        """
 
         if self._network is None:
-            raise NetworkError('network is down cannot send an EMCY message')
+            raise NetworkError("network is down cannot send an EMCY message")
 
         self._node.emcy.send(code, register, data)
 
     def _on_sdo_read(self, index: int, subindex: int, od: canopen.objectdictionary.Variable):
-        '''
+        """
         SDO read callback function. Allows overriding the data being sent on a SDO read. Return
         valid datatype for object, if overriding read data, or :py:data:`None` to use the the value
         on object dictionary.
@@ -452,7 +465,7 @@ class Node:
         -------
         Any
             The value to return for that index / subindex.
-        '''
+        """
 
         ret = None
 
@@ -473,9 +486,10 @@ class Node:
 
         return ret
 
-    def _on_sdo_write(self, index: int, subindex: int, od: canopen.objectdictionary.Variable,
-                      data: bytes):
-        '''
+    def _on_sdo_write(
+        self, index: int, subindex: int, od: canopen.objectdictionary.Variable, data: bytes
+    ):
+        """
         SDO write callback function. Gives access to the data being received on a SDO write.
 
         *Note:* data is still written to object dictionary before call.
@@ -490,7 +504,7 @@ class Node:
             The variable object being written to. Badly named.
         data: bytes
             The raw data being written.
-        '''
+        """
 
         binary_types = [canopen.objectdictionary.DOMAIN, canopen.objectdictionary.OCTET_STRING]
 
@@ -513,48 +527,48 @@ class Node:
 
     @property
     def bus(self) -> str:
-        '''str: The CAN bus.'''
+        """str: The CAN bus."""
 
         return self._bus
 
     @property
     def bus_state(self) -> str:
-        '''str: The CAN bus status.'''
+        """str: The CAN bus status."""
 
         return self._bus_state.name
 
     @property
     def name(self) -> str:
-        '''str: The nodes name.'''
+        """str: The nodes name."""
 
         return self._od.device_information.product_name
 
     @property
     def od(self) -> canopen.ObjectDictionary:
-        '''canopen.ObjectDictionary: Access to the object dictionary.'''
+        """canopen.ObjectDictionary: Access to the object dictionary."""
 
         return self._od
 
     @property
     def fread_cache(self) -> OreSatFileCache:
-        '''OreSatFile: Cache the CANopen master node can read to.'''
+        """OreSatFile: Cache the CANopen master node can read to."""
 
         return self._fread_cache
 
     @property
     def fwrite_cache(self) -> OreSatFileCache:
-        '''OreSatFile: Cache the CANopen master node can write to.'''
+        """OreSatFile: Cache the CANopen master node can write to."""
 
         return self._fwrite_cache
 
     @property
     def is_running(self) -> bool:
-        '''bool: Is the node loop running'''
+        """bool: Is the node loop running"""
 
         return not self._event.is_set()
 
     @property
     def daemons(self) -> dict:
-        '''dict: The dictionary of external daemons that are monitored and/or controllable'''
+        """dict: The dictionary of external daemons that are monitored and/or controllable"""
 
         return self._daemons

@@ -3,7 +3,7 @@ from ...common.resource import Resource
 
 
 class DaemonsResource(Resource):
-    '''Resource for getting daemons'''
+    """Resource for getting daemons"""
 
     def __init__(self):
         super().__init__()
@@ -11,7 +11,6 @@ class DaemonsResource(Resource):
         self.index = 0x3005
 
     def on_start(self):
-
         daemon_manager_obj = self.node.od[self.index]
         self._total_daemons_obj = daemon_manager_obj[1]
         self._select_daemon_obj = daemon_manager_obj[4]
@@ -23,7 +22,6 @@ class DaemonsResource(Resource):
         self.node.add_sdo_read_callback(self.index, self._on_read)
 
     def _on_read(self, index: int, subindex: int):
-
         ret = None
 
         if index != self.index:

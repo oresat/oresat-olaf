@@ -1,4 +1,4 @@
-'''Test ECSS resource.'''
+"""Test ECSS resource."""
 
 import unittest
 
@@ -8,20 +8,18 @@ from . import MockApp
 
 
 class TestEcssResource(unittest.TestCase):
-    '''Test ECSS resource.'''
+    """Test ECSS resource."""
 
     def setUp(self):
-
         self.app = MockApp()
         self.app.add_resource(EcssResource())
         self.app.start()
 
     def tearDown(self):
-
         self.app.stop()
 
     def test_ecss(self):
-        '''Test the scet and utc objects callbacks.'''
+        """Test the scet and utc objects callbacks."""
 
-        self.assertIsNot(self.app.sdo_read('scet', None), 0)
-        self.assertIsNot(self.app.sdo_read('utc', None), 0)
+        self.assertIsNot(self.app.sdo_read("scet", None), 0)
+        self.assertIsNot(self.app.sdo_read("utc", None), 0)

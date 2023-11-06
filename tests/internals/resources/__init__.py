@@ -1,33 +1,32 @@
 import canopen
-from oresat_configs import OreSatConfig, OreSatId, NodeId
+from oresat_configs import NodeId, OreSatConfig, OreSatId
 
-from olaf import Resource, OreSatFileCache, logger
+from olaf import OreSatFileCache, Resource, logger
 from olaf._internals.node import Node
 
-logger.disable('olaf')
+logger.disable("olaf")
 
 
 class MockNode(Node):
-    '''Mock node for testing Resources.'''
+    """Mock node for testing Resources."""
 
     def __init__(self):
         od = OreSatConfig(OreSatId.ORESAT0).od_db[NodeId.GPS]
         super().__init__(od, None)
 
-        self._fread_cache = OreSatFileCache('/tmp/fread')
+        self._fread_cache = OreSatFileCache("/tmp/fread")
         self._fread_cache.clear()
-        self._fwrite_cache = OreSatFileCache('/tmp/fwrite')
+        self._fwrite_cache = OreSatFileCache("/tmp/fwrite")
         self._fwrite_cache.clear()
 
         self._setup_node()
 
     def send_tpdo(self, tpdo: int):
-
         pass  # override to do nothing
 
 
 class MockApp:
-    '''Mock app for testing Resources.'''
+    """Mock app for testing Resources."""
 
     def __init__(self):
         super().__init__()
@@ -36,12 +35,12 @@ class MockApp:
         self.resource = None
 
     def add_resource(self, resource: Resource):
-        '''Add the resource for testing'''
+        """Add the resource for testing"""
 
         self.resource = resource
 
     def sdo_read(self, index: [int, str], subindex: [None, int, str]):
-        '''Call a internal SDO read for testing'''
+        """Call a internal SDO read for testing"""
 
         co_node = self.node._node
         domain = canopen.objectdictionary.DOMAIN
@@ -58,7 +57,7 @@ class MockApp:
                 return co_node.sdo[index][subindex].phys
 
     def sdo_write(self, index: [int, str], subindex: [None, int, str], value):
-        '''Call a internal SDO write for testing'''
+        """Call a internal SDO write for testing"""
 
         co_node = self.node._node
         domain = canopen.objectdictionary.DOMAIN
@@ -75,11 +74,9 @@ class MockApp:
                 co_node.sdo[index][subindex].phys = value
 
     def start(self):
-
         self.resource.start(self.node)
 
     def stop(self):
-
         self.resource.end()
         self.node._destroy_node()
         self.node.stop()

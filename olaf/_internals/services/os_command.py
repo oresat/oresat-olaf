@@ -1,4 +1,4 @@
-'''Service for running OS (bash) commands over CAN bus.'''
+"""Service for running OS (bash) commands over CAN bus."""
 
 import subprocess
 from enum import IntEnum
@@ -9,7 +9,7 @@ from ...common.service import Service
 
 
 class OsCommandState(IntEnum):
-    '''Valid states for OS command as defined by CiA 301 specs.'''
+    """Valid states for OS command as defined by CiA 301 specs."""
 
     NO_ERROR_NO_REPLY = 0x00
     NO_ERROR_REPLY = 0x01
@@ -19,70 +19,66 @@ class OsCommandState(IntEnum):
 
 
 class OsCommandService(Service):
-    '''Service for running OS commands over CAN bus as defined by CiA 301 specs.'''
+    """Service for running OS commands over CAN bus as defined by CiA 301 specs."""
 
     def __init__(self):
         super().__init__()
 
-        self.command = ''  # internal to prevent overwriting it when running a command
+        self.command = ""  # internal to prevent overwriting it when running a command
         self.reply_obj_max_len = 10000
         self.failed = False
         self.state_obj = None
         self.reply_obj = None
 
     def on_start(self):
-
-        self.state_obj = self.node.od['os_command']['status']
+        self.state_obj = self.node.od["os_command"]["status"]
         self.state_obj.value = OsCommandState.NO_ERROR_NO_REPLY.value
-        self.reply_obj = self.node.od['os_command']['reply']
-        self.reply_obj.value = b''
-        self.node.add_sdo_callbacks('os_command', 'command', self.on_command_read,
-                                    self.on_command_write)
+        self.reply_obj = self.node.od["os_command"]["reply"]
+        self.reply_obj.value = b""
+        self.node.add_sdo_callbacks(
+            "os_command", "command", self.on_command_read, self.on_command_write
+        )
 
     def on_loop(self):
-
         if self.state_obj.value == OsCommandState.EXECUTING:
-            logger.info('running os command: ' + self.command)
+            logger.info("running os command: " + self.command)
 
             out = subprocess.run(self.command, capture_output=True, shell=True)
             if out.returncode != 0:  # error
-                self.reply_obj.value = out.stderr[:self.reply_obj_max_len]
+                self.reply_obj.value = out.stderr[: self.reply_obj_max_len]
                 if self.reply_obj.value:
                     self.state_obj.value = OsCommandState.ERROR_REPLY.value
                 else:
                     self.state_obj.value = OsCommandState.ERROR_NO_REPLY.value
             else:  # no error
-                self.reply_obj.value = out.stdout[:self.reply_obj_max_len]
+                self.reply_obj.value = out.stdout[: self.reply_obj_max_len]
                 if self.reply_obj.value:
                     self.state_obj.value = OsCommandState.NO_ERROR_REPLY.value
                 else:
                     self.state_obj.value = OsCommandState.NO_ERROR_NO_REPLY.value
 
-            logger.info(f'os command has completed; ret code: {out.returncode}')
+            logger.info(f"os command has completed; ret code: {out.returncode}")
 
         self.sleep(0.1)
 
     def on_loop_error(self, exc: Exception):
-
         self.failed = True
-        self.command = b''
+        self.command = b""
         self.state_obj.value = OsCommandState.ERROR_NO_REPLY
-        self.reply_obj.value = b''
+        self.reply_obj.value = b""
         logger.exception(exc)
 
     def on_command_read(self) -> bytes:
-
         return self.command.encode()
 
     def on_command_write(self, command: bytes):
-
         if self.state_obj.value == OsCommandState.EXECUTING:
-            logger.error('cannot start another os command when one is running')
+            logger.error("cannot start another os command when one is running")
             return
         if self.failed:
-            logger.error('cannot run os command as service has errored')
+            logger.error("cannot run os command as service has errored")
             return
 
         self.command = command.decode()
         self.state_obj.value = OsCommandState.EXECUTING.value
-        self.reply_obj.value = b''
+        self.reply_obj.value = b""

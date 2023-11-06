@@ -1,4 +1,4 @@
-'''Unit tests for the fwrite (aka file write over CAN bus) resource.'''
+"""Unit tests for the fwrite (aka file write over CAN bus) resource."""
 
 import json
 import random
@@ -14,34 +14,32 @@ from . import MockApp
 
 
 class TestFwriteResource(unittest.TestCase):
-    '''Test the fwrite resource.'''
+    """Test the fwrite resource."""
 
     def setUp(self):
-
         self.app = MockApp()
         self.app.add_resource(FwriteResource())
         self.app.start()
 
     def tearDown(self):
-
         self.app.stop()
 
     def test_write(self):
-        '''Test file writes.'''
+        """Test file writes."""
 
-        index = 'fwrite_cache'
-        subindex_len = 'length'
-        subindex_file_name = 'file_name'
-        subindex_file_data = 'file_data'
-        subindex_files_json = 'files_json'
+        index = "fwrite_cache"
+        subindex_len = "length"
+        subindex_file_name = "file_name"
+        subindex_file_data = "file_data"
+        subindex_files_json = "files_json"
 
         self.assertEqual(len(self.app.node.fwrite_cache), 0)
 
         # add a file to the cache
-        file_name = new_oresat_file('test')
-        file_path = '/tmp/' + file_name
-        file_data = ''.join(random.choice(string.ascii_letters) for i in range(100))
-        with open(file_path, 'w') as f:
+        file_name = new_oresat_file("test")
+        file_path = "/tmp/" + file_name
+        file_data = "".join(random.choice(string.ascii_letters) for i in range(100))
+        with open(file_path, "w") as f:
             f.write(file_data)
 
         # test sdo trasfer of a file
@@ -66,10 +64,10 @@ class TestFwriteResource(unittest.TestCase):
         remove(file_path)
 
         # add another file to the cache
-        file_name2 = new_oresat_file('test2')
-        file_path2 = '/tmp/' + file_name2
-        file_data2 = ''.join(random.choice(string.ascii_letters) for i in range(100))
-        with open(file_path2, 'w') as f:
+        file_name2 = new_oresat_file("test2")
+        file_path2 = "/tmp/" + file_name2
+        file_data2 = "".join(random.choice(string.ascii_letters) for i in range(100))
+        with open(file_path2, "w") as f:
             f.write(file_data2)
 
         # test sdo trasfer of a file
