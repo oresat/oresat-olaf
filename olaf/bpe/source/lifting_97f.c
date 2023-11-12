@@ -14,8 +14,7 @@ Email: hqwang@bigred.unl.edu, hqwang@eecomm.unl.edu
 Your comment and suggestions are welcome. Please report bugs to me via email and I would greatly appreciate it. 
 Nov. 3, 2006
 */ 
-#include <string.h>
-#include <stdlib.h>
+
 #include "global.h"
 
 #define F_EXTPAD 4
@@ -93,7 +92,6 @@ void forwardf97f(float *x_in,
 	x = x_alloc + F_EXTPAD;
 
 	memcpy(x,x_in,sizeof(float)*N);
-
 	
 	half = (N >> 1);  
 	d = (float*)malloc(sizeof(float)*(half + 3));
@@ -134,6 +132,8 @@ void forwardf97f(float *x_in,
 	memcpy(x_in,d,sizeof(float)*half);
 	memcpy(x_in+half,r,sizeof(float)*half);
 
+    free(d);
+    free(r);
 }
 
 void inversef97f(float *x, int N)
@@ -295,11 +295,7 @@ void lifting_f97_2D(float **rows,
 				inversef97f(rows[y], w);
     	}
 	}
-
 	free(x_alloc); x_alloc = NULL;
 	free(buffer);
 }
-
-
-
 

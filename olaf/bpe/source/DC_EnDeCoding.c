@@ -9,13 +9,9 @@ Author:
 Hongqiang Wang
 Department of Electrical Engineering
 University of Nebraska-Lincoln
-Email: hqwang@bigred.unl.edu, hqwang@eecomm.unl.edu
-
-Your comment and suggestions are welcome. Please report bugs to me via email and I would greatly appreciate it. 
 Nov. 3, 2006
 */ 
-#include <math.h>
-#include <stdlib.h>
+
 #include "global.h"
 
  
@@ -55,9 +51,6 @@ Case #2            If the leftmost bit is 1:
 		return Original;
 	}
 }
-
-
-
 
 
 DWORD32 ConvTwosComp(long Original, 
@@ -108,8 +101,6 @@ DWORD32 ConvTwosComp(long Original,
 		return complement;
 	}
 }
-
-
 
 void DCEncoder(StructCodingPara *PtrCoding, 
 						   BitPlaneBits *BlockInfo, 
@@ -187,8 +178,6 @@ void DCEncoder(StructCodingPara *PtrCoding,
 			BitsOutput(PtrCoding, BlockInfo[i].MappedDC, min_k);
 	/* --- End bug fix (Kiely) --- */
 }
-
-
 
 void DCEntropyEncoder(StructCodingPara* PtrCoding, 
 					  BitPlaneBits *BlockInfo)
@@ -298,11 +287,8 @@ void DCGaggleDecoding(StructCodingPara *PtrCoding,
 		}
 	}
 	/* --- End bug fix (Kiely) --- */
-
 	return;
 }
-
-
 
 short DCEntropyDecoder(StructCodingPara *PtrCoding, 
 					   BitPlaneBits *BlockInfo)
@@ -326,7 +312,6 @@ short DCEntropyDecoder(StructCodingPara *PtrCoding,
 		ID_Length = 4;	
 	} else 
 		ErrorMsg(BPE_DATA_ERROR);	
-
 
 	/* --- Begin bug fix (Kiely) --- */
 	while( GaggleStartIndex < PtrCoding->PtrHeader->Header.Part3.S_20Bits ){
@@ -580,7 +565,6 @@ void DCEncoding(StructCodingPara *PtrCoding,
 	//referred to as the 0th most significant bit.)
 
 }
-
 
 void DPCM_DCDeMapper(BitPlaneBits *BlockInfo, 
 					 int size,

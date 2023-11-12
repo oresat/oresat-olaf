@@ -9,16 +9,8 @@ Author:
 Hongqiang Wang
 Department of Electrical Engineering
 University of Nebraska-Lincoln
-Email: hqwang@bigred.unl.edu, hqwang@eecomm.unl.edu
-
-Your comment and suggestions are welcome. Please report bugs to me via email and I would greatly appreciate it. 
 Nov. 3, 2006
 */ 
-// braces have been added in an attempt to better guard if, for etc. (Sept/23)
-
-
-#include <stdlib.h>
-#include <math.h>
 #include "global.h"
 
 void BlockScanEncode(StructCodingPara *PtrCoding, 
@@ -502,6 +494,7 @@ NEW_Gij:;
 					if (counter == 0) // refinement bits. all bits have been hit before. 
 					{
 						for ( k = temp_x; k < temp_x + 2; k ++)
+                        {
 							for ( p = temp_y; p < temp_y + 2; p ++)
 							{
 								temp = ((AMPLITUDE(block[k][p]) & Bit_Set_Plane) > 0 ? 1 : 0); 
@@ -524,6 +517,7 @@ NEW_Gij:;
 										BlockInfo[BlockSeq].RefineBits.RefineGrandChildren[i].GrandChildrenSymbolLength ++;
 								}
 							}
+                        }
 							continue;
 					} 
 

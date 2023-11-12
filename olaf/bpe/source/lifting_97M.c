@@ -14,8 +14,6 @@ Email: hqwang@bigred.unl.edu, hqwang@eecomm.unl.edu
 Your comment and suggestions are welcome. Please report bugs to me via email and I would greatly appreciate it. 
 Nov. 3, 2006
 */ 
-#include <string.h>
-#include <stdlib.h>
 #include "global.h"
 
 #define F_EXTPAD 4
@@ -86,13 +84,12 @@ void forwardf97M(int *x_in,
 	memcpy(x_in,r, sizeof(int)*half);
 	memcpy(x_in + half,d+1, sizeof(int)*half);	
 	
-	free(temp_0);
-	free(temp_1);
+	free(d);
+	free(r);
 }
 
 void inversef97M(int *x, int N)
 {
-
 	//r is the low pass and d is the high pass. 
 	int i; 
 	int n;
@@ -187,8 +184,8 @@ void inversef97M(int *x, int N)
 		*x++ = x_0[n];
 		*x++ = x_1[n];
 	}
-	free(temp_1);
 	free(temp_0);
+	free(x_1);
 }
 
 void lifting_M97_2D(int **rows,
@@ -284,11 +281,6 @@ void lifting_M97_2D(int **rows,
 				inversef97M(rows[y], w);
     	}
 	}
-
 	free(x_alloc); x_alloc = NULL;
 	free(buffer);
 }
-
-
-
-

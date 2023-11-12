@@ -1,10 +1,14 @@
 // ```This global.h file DOES have bit colons for struct members.
 //
 // main header file for source code that has been altered
-// -bit colons were removed due to compilation issues
 // -reformatted source code to include function declarations here 
 //      instead of using externs
 // -function declarations for pybind have been included at EOF 
+
+#pragma once                                                                    
+                                                                                 
+#ifndef _INCL_GUARD                                                             
+#define _INCL_GUARD 
 
 #ifdef __cplusplus
 extern "C"
@@ -79,8 +83,8 @@ typedef double DOUBLE4;
 #define NEGATIVE_SIGN 1
 #define POSITIVE_SIGN 0
 
-#define max(a,b) (((a) > (b)) ? (a) : (b))
-#define min(a,b) (((a) < (b)) ? (a) : (b))
+#define the_max(a,b) (((a) > (b)) ? (a) : (b))
+#define the_min(a,b) (((a) < (b)) ? (a) : (b))
 
 #define SIGN(var) ((var < 0) ? NEGATIVE_SIGN : POSITIVE_SIGN)
 
@@ -373,13 +377,11 @@ void DeMappingPattern(StrSymbolDetails *StrSymbol);
 void CoeffRegroupF97(float **TransformedImage, UINT32 rows, UINT32 cols);   
 void CoeffRegroup(int **TransformedImage, UINT32 rows, UINT32 cols);
 
-//void DWT_f97_2D(float **rows, UINT32 ImgCols, UINT32 ImgRows, UINT32 levels, BOOL inverse);     
+void DWT_f97_2D(float **rows, UINT32 ImgCols, UINT32 ImgRows, UINT32 levels, BOOL inverse);     
 // edtied here and lifting source files
 void lifting_M97_2D(int **rows, UINT32 ImgCols, UINT32 ImgRows, UINT32 levels, BOOL inverse);
 void lifting_f97_2D(float **rows, UINT32 ImgCols, UINT32 ImgRows, UINT32 levels, BOOL inverse); 
 
-
-// pybind
 // for bpe_encoder.c
 void EncoderEngine(StructCodingPara * PtrCoding);
 // for bpe_decoder.c
@@ -390,10 +392,15 @@ void HeaderInilization(StructCodingPara *Ptr);
 // adapted from bpe_main.c
 void Usage();
 BOOL ParameterValidCheck(StructCodingPara *PtrCoding);
+
+// pybind functions
 void command_menu();
-//void main_encode();
-//void main_decode();
+void encode(char * c_infile, char * c_outfile, const UINT32 w,
+                    const UINT32 h, const float bpp, const UINT32 bit_depth);
+void decode(char* c_infile, char* c_outfile);
 
 #ifdef __cplusplus
 }
 #endif
+
+#endif // _INCL_GUARD

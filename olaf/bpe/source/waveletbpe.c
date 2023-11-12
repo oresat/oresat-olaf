@@ -9,13 +9,9 @@ Author:
 Hongqiang Wang
 Department of Electrical Engineering
 University of Nebraska-Lincoln
-Email: hqwang@bigred.unl.edu, hqwang@eecomm.unl.edu
-
-Your comment and suggestions are welcome. Please report bugs to me via email and I would greatly appreciate it. 
 Nov. 3, 2006
 */ 
 
-#include <stdlib.h> 
 #include "global.h"
 
 
@@ -222,11 +218,14 @@ void DWT_(StructCodingPara *PtrCoding,
 
 				}
 
-			CoeffRegroupF97(f97_Transed, 
-				PtrCoding->ImageRows + PtrCoding->PtrHeader->Header.Part1.PadRows_3Bits,
-				PtrCoding->ImageWidth + PtrCoding->PadCols_3Bits);
-				//	free(f97_Transed);
-					break;
+			CoeffRegroupF97(f97_Transed, PtrCoding->ImageRows + 
+                    PtrCoding->PtrHeader->Header.Part1.PadRows_3Bits,
+                    PtrCoding->ImageWidth + PtrCoding->PadCols_3Bits);
+
+            for (i = 0; i < PadRows; ++i)
+			    free(f97_Transed[i]);
+			free(f97_Transed);
+			break;
 		}
 	case INTEGER_WAVELET: // integer 9-7
 		{
@@ -248,11 +247,11 @@ void DWT_(StructCodingPara *PtrCoding,
 
 
 /************************  Transform it to image ********************/
-void DWT_Reverse(int **block,  
-				 StructCodingPara *PtrCoding)
+void DWT_Reverse(int **block, StructCodingPara *PtrCoding)
 {
 	UINT32 k = 0;
 	UINT32 p = 0;
+	UINT32 i = 0;
 
 	if(PtrCoding->PtrHeader->Header.Part4.DWTType == FLOAT_WAVELET)
 	{
@@ -269,6 +268,10 @@ void DWT_Reverse(int **block,
 		for( k = 0; k < PtrCoding->ImageRows; k ++)
 			for( p = 0; p < PtrCoding->ImageWidth+ PtrCoding->PadCols_3Bits; p++)
 				block[k][p] = (long)temp_f[k][p];	
+
+        for (i = 0; i < PtrCoding->ImageRows; ++i)
+            free(temp_f[i]);
+        free(temp_f);
 	}
 	else if(PtrCoding->PtrHeader->Header.Part4.DWTType == INTEGER_WAVELET)
 	{
@@ -284,6 +287,8 @@ void DWT_ReverseFloating(float **block,
 {
 	UINT32 k = 0;
 	UINT32 p = 0;	
+	UINT32 i = 0;	
+    
 	float **temp_f = (float **)calloc(PtrCoding->ImageRows,sizeof(float *)); 		
 	for(k = 0; k < PtrCoding->ImageRows; k ++)
 		temp_f[k] = (float *) calloc(PtrCoding->ImageWidth +PtrCoding->PadCols_3Bits,sizeof(float)); 
@@ -302,5 +307,8 @@ void DWT_ReverseFloating(float **block,
 			else
 				block[k][p] = (float)(temp_f[k][p] - 0.5);		
 		}	
+    for (i = 0; i < PtrCoding->ImageRows; ++i)
+        free(temp_f[i]);
+    free(temp_f);
 	return;
 }

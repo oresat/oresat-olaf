@@ -14,10 +14,9 @@ Email: hqwang@bigred.unl.edu, hqwang@eecomm.unl.edu
 Your comment and suggestions are welcome. Please report bugs to me via email and I would greatly appreciate it. 
 Nov. 3, 2006
 */ 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
+
 #include "global.h"
+
 #define DEBUG
  
 const char *BpeErrorMsg[] = {
@@ -26,7 +25,7 @@ const char *BpeErrorMsg[] = {
 "Error code 2: File Error Msg",          /* BPE_FILE_ERROR   2*/
 "Error code 3: Bitstream Error",        /* BPE_STREAM_ERROR  3 */
 "Error code 4: Data ErrorMsg",          /* BPE_DATA_ERROR   4 */
-"Error code 5:  Memory allocation error", /* BPE_MEM_ERROR     5*/
+"Error code 5: Memory allocation error", /* BPE_MEM_ERROR     5*/
 "Error code 6: Decoding ErrorMsg",        /* BPE_BUF_ERROR     6 */
 "Error code 7: Dynamical range ErrorMsg",/* BPE_VERSION_ERROR7*/
 "Error code 8: Invalid Rate",         /* BPE_RATE_ERROR    8  */
@@ -40,18 +39,18 @@ const char *BpeErrorMsg[] = {
 "Error code 16: Rice Coding Error.", /*Coding Parameters  BPE_RICING_CODING_ERROR 16 */
 "Error code 17: Stage Coding Error." /*Coding Parameters  BPE_STAGE_CODING_ERROR 17 */};
 
-
 void DebugInfo(char *m)
 {
 #ifdef DEBUG
-	fprintf(stderr, m);
+	fprintf(stderr, "%s\n", m);
 #endif
 	return;
 }
+
 void ErrorMsg(int err)
 {
 	fprintf(stderr," %s\n", ERR_MSG(err)); 
-	// fprintf(F_CodingInfo, "Failed %s\n ", ERR_MSG(err));
-	// fclose (F_CodingInfo);
+	//fprintf(F_CodingInfo, "Failed %s\n ", ERR_MSG(err));
+	//fclose(F_CodingInfo);
 	exit(err);
 }

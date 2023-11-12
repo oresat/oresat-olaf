@@ -15,8 +15,6 @@ Your comment and suggestions are welcome. Please report bugs to me via email and
 Nov. 3, 2006
 */ 
 
-#include <stdlib.h>
-#include <stdio.h>
 #include "global.h"
 
 
@@ -644,8 +642,4 @@ void RiceDecoding(DWORD32 *decoded,
 	}
 	return  ;
 }
-
-
-
-
 

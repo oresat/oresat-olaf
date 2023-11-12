@@ -9,14 +9,8 @@ Author:
 Hongqiang Wang
 Department of Electrical Engineering
 University of Nebraska-Lincoln
-Email: hqwang@bigred.unl.edu, hqwang@eecomm.unl.edu
-
-Your comment and suggestions are welcome. Please report bugs to me via email and I would greatly appreciate it. 
 Nov. 3, 2006
 */ 
-
-#include <stdlib.h>
-#include <math.h>
 #include "global.h"
 
 
@@ -33,7 +27,6 @@ void AdjustOutPut(StructCodingPara * PtrCoding, BitPlaneBits * BlockCodingInfo)/
 	int TotalBlocks = (int)PtrCoding->PtrHeader->Header.Part3.S_20Bits;
 
 	// determine the stages to do the decoding process. 
-	
 
 	if (PtrCoding->PtrHeader->Header.Part4.DWTType != INTEGER_WAVELET)
 	{

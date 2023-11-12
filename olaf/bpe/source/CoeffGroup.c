@@ -15,13 +15,9 @@ Your comment and suggestions are welcome. Please report bugs to me via email and
 Nov. 3, 2006
 */ 
 
-#include <stdlib.h>
-#include <stdio.h>
 #include "global.h"
 
-void CoeffDegroup(int **img_wav, 
-			 UINT32 rows,
-			 UINT32 cols)
+void CoeffDegroup(int **img_wav, UINT32 rows, UINT32 cols)
 {
 	long ** temp = NULL;
 	int i = 0; 
@@ -123,6 +119,10 @@ void CoeffDegroup(int **img_wav,
 	for (i = 0; i < rows; i++)
 		for(j = 0; j < cols; j++)
 			img_wav[i][j] = temp[i][j];
+
+    for(i = 0; i < rows; i++)
+        free(temp[i]);
+    free(temp);
 	return;
 }
 
@@ -232,11 +232,12 @@ void CoeffDegroupFloating(float **img_wav,
 	for (i = 0; i < rows; i++)
 		for(j = 0; j < cols; j++)
 			img_wav[i][j] = temp[i][j];
-	return;
+	
+    for(i = 0; i < rows; i++)
+        free(temp[i]);
+    free(temp);
+    return;
 }
-
-
-
 
 void CoeffRegroupF97(float **TransformedImage,
 				  UINT32 rows, 
@@ -342,11 +343,12 @@ void CoeffRegroupF97(float **TransformedImage,
 	for (i = 0; i < rows; i++)
 		for(j = 0; j < cols; j++)
 			TransformedImage[i][j] = temp[i][j];
+    
+    for(i = 0; i < rows; i++)
+        free(temp[i]);
+    free(temp);
 	return;
 }
-
-
-
 
 void CoeffRegroup(int **TransformedImage,
 				  UINT32 rows, 
@@ -360,7 +362,7 @@ void CoeffRegroup(int **TransformedImage,
 	int p; 
 	int k;
 
-	temp = (long **)calloc(rows,sizeof(long *));  
+	temp = (long **)calloc(rows, sizeof(long *));  
 	for(i = 0; i < rows; i++)
    		temp[i] = (long *)calloc(cols, sizeof(long));	/* Read the input image */
 // HH1 band. 
@@ -452,10 +454,10 @@ void CoeffRegroup(int **TransformedImage,
 	for (i = 0; i < rows; i++)
 		for(j = 0; j < cols; j++)
 			TransformedImage[i][j] = temp[i][j];
+    
+    for(i = 0; i < rows; i++)
+        free(temp[i]);
+    free(temp);
 	return;
 }
-
-
-
-
 

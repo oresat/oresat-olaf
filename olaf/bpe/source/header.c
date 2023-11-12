@@ -9,15 +9,12 @@ Author:
 Hongqiang Wang
 Department of Electrical Engineering
 University of Nebraska-Lincoln
-Email: hqwang@bigred.unl.edu, hqwang@eecomm.unl.edu
-
-Your comment and suggestions are welcome. Please report bugs to me via email and I would greatly appreciate it. 
 Nov. 3, 2006
 */ 
 
-#include <string.h>
-#include <stdlib.h>
 #include "global.h" 
+
+
 void HeaderInilization(StructCodingPara *Ptr)
 {	
 	// first part of the header. 
@@ -33,10 +30,14 @@ void HeaderInilization(StructCodingPara *Ptr)
 	Ptr->PtrHeader->Header.Part1.PadRows_3Bits = 0;	
 	Ptr->PtrHeader->Header.Part1.Reserved_5Bits = 0; 
 
-	Ptr->PtrHeader->Header.Part2.SegByteLimit_27Bits = 0;// 40963072 ;  //* 2; // in terms of byte
-	Ptr->PtrHeader->Header.Part2.DCstop = FALSE; //indicate whether the compressed output stops. 
-	Ptr->PtrHeader->Header.Part2.BitPlaneStop_5Bits = 0; // 5 bits
-	Ptr->PtrHeader->Header.Part2.StageStop_2Bits = 3; // 2 bits, transform input data quantization. 
+    // 40963072 ;  //* 2; // in terms of byte
+	Ptr->PtrHeader->Header.Part2.SegByteLimit_27Bits = 0;
+    //indicate whether the compressed output stops. 
+	Ptr->PtrHeader->Header.Part2.DCstop = FALSE; 
+    // 5 bits
+	Ptr->PtrHeader->Header.Part2.BitPlaneStop_5Bits = 0; 
+    // 2 bits, transform input data quantization. 
+	Ptr->PtrHeader->Header.Part2.StageStop_2Bits = 3; 
 	if (Ptr->PtrHeader->Header.Part2.SegByteLimit_27Bits == 0)
 		Ptr->PtrHeader->Header.Part2.UseFill = FALSE;
 	else
@@ -45,18 +46,26 @@ void HeaderInilization(StructCodingPara *Ptr)
 	
 	Ptr->PtrHeader->Header.Part3.S_20Bits = 256; // Segment size in blocks
 	Ptr->PtrHeader->Header.Part3.OptDCSelect = TRUE; // 1: optimum selection of k
-	Ptr->PtrHeader->Header.Part3.OptACSelect = TRUE;	// 1: optimum selection of k
+	Ptr->PtrHeader->Header.Part3.OptACSelect = TRUE; // 1: optimum selection of k
 	Ptr->PtrHeader->Header.Part3.Reserved_2Bits = 0;
 	
-	Ptr->PtrHeader->Header.Part4.DWTType = INTEGER_WAVELET;  // true is integer FLOAT_WAVELET; //
+    // true is integer FLOAT_WAVELET; //
+	Ptr->PtrHeader->Header.Part4.DWTType = INTEGER_WAVELET;  
+
 	Ptr->PtrHeader->Header.Part4.Reserved_2Bits = 0; //
-	Ptr->PtrHeader->Header.Part4.SignedPixels = FALSE;// 0: unsigned
-	Ptr->PtrHeader->Header.Part4.PixelBitDepth_4Bits = 8; //  if it is 0, pixel is of 16-bit. 
-	Ptr->PtrHeader->Header.Part4.ImageWidth_20Bits = 2048;  // image width
-	Ptr->PtrHeader->Header.Part4.TransposeImg = NOTRANSPOSE; // 1 do not transpose. 
-	Ptr->PtrHeader->Header.Part4.CodewordLength_2Bits = 00; // codedword lenggth
+    // 0: unsigned
+	Ptr->PtrHeader->Header.Part4.SignedPixels = FALSE;
+    //  if it is 0, pixel is of 16-bit. 
+	Ptr->PtrHeader->Header.Part4.PixelBitDepth_4Bits = 8; 
+    // image width
+	Ptr->PtrHeader->Header.Part4.ImageWidth_20Bits = 2048;  
+    // 1 do not transpose. 
+	Ptr->PtrHeader->Header.Part4.TransposeImg = NOTRANSPOSE; 
+    // codedword lenggth
+	Ptr->PtrHeader->Header.Part4.CodewordLength_2Bits = 00; 
 	Ptr->PtrHeader->Header.Part4.Reserved = 0;
-	Ptr->PtrHeader->Header.Part4.CustomWtFlag = FALSE; // 1, user defined weights used. TRUE; //
+    // 1, user defined weights used. TRUE; //
+	Ptr->PtrHeader->Header.Part4.CustomWtFlag = FALSE; 
 	Ptr->PtrHeader->Header.Part4.CustomWtHH1_2bits = 0;  
 	Ptr->PtrHeader->Header.Part4.CustomWtHL1_2bits = 1;
 	Ptr->PtrHeader->Header.Part4.CustomWtLH1_2bits = 1;
@@ -67,8 +76,7 @@ void HeaderInilization(StructCodingPara *Ptr)
 	Ptr->PtrHeader->Header.Part4.CustomWtHL3_2bits = 3;
 	Ptr->PtrHeader->Header.Part4.CustomWtLH3_2bits = 3;
 	Ptr->PtrHeader->Header.Part4.CustomWtLL3_2bits = 3;
-
-/* customsed test
+/* customized test
 	Ptr->PtrHeader->Header.Part4.CustomWtHH1_2bits = 0;
 	Ptr->PtrHeader->Header.Part4.CustomWtHL1_2bits = 0;
 	Ptr->PtrHeader->Header.Part4.CustomWtLH1_2bits = 0;
@@ -79,17 +87,18 @@ void HeaderInilization(StructCodingPara *Ptr)
 	Ptr->PtrHeader->Header.Part4.CustomWtHL3_2bits = 2;
 	Ptr->PtrHeader->Header.Part4.CustomWtLH3_2bits = 2;
 	Ptr->PtrHeader->Header.Part4.CustomWtLL3_2bits = 2;
-
 */ 
 	Ptr->PtrHeader->Header.Part4.Reserved_11Bits = 0;
-
-	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// initialize coding parameters to default values. 
+	////////////////////////////////////////////////////////////////////////////
+    // initialize coding parameters to default values. 
 	Ptr->ImageRows = 0; 
 	Ptr->ImageWidth = 0;
-	Ptr->BitsPerPixel = 0;      // default coding BitsPerPixel, bits per pixels
-	Ptr->PixelByteOrder = 0; // default byte order. little endian. For intel processor, don't change to 1. 	
-	Ptr->Bits = (BitStream *)calloc(sizeof(BitStream), 1);
+    // default coding BitsPerPixel, bits per pixels
+	Ptr->BitsPerPixel = 0;      
+    // default byte order. little endian. For intel processor, don't change to 1. 	
+	Ptr->PixelByteOrder = 0; 
+
+	Ptr->Bits = (BitStream*)calloc(sizeof(BitStream), 1);
 	Ptr->Bits->ByteBuffer_4Bytes = 0;
 	Ptr->Bits->CodeWordAlighmentBits = 0;
 	Ptr->Bits->SegBitCounter = 0;
@@ -99,7 +108,7 @@ void HeaderInilization(StructCodingPara *Ptr)
 	Ptr->RateReached = FALSE;
 	strcpy(Ptr->CodingOutputFile, "");
 	strcpy(Ptr->InputFile, "");
-	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
 	// these are to record the partial decoding positon.
 	Ptr->DecodingStopLocations.BitPlaneStopDecoding = -1; // for find adjustment. 
 	Ptr->DecodingStopLocations.BlockNoStopDecoding = -1;	
@@ -108,8 +117,7 @@ void HeaderInilization(StructCodingPara *Ptr)
 	Ptr->DecodingStopLocations.Y_LocationStopDecoding = -1;	
 	Ptr->DecodingStopLocations.stoppedstage = 10;
 	
-	
-	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////
 	if (Ptr->PtrHeader->Header.Part4.CodewordLength_2Bits == 0)
 		Ptr->Bits->CodeWord_Length = 8;
 	else if(Ptr->PtrHeader->Header.Part4.CodewordLength_2Bits == 1)
@@ -121,7 +129,6 @@ void HeaderInilization(StructCodingPara *Ptr)
 
 	return;
 }
-
 
 #define HEADER_INCLUDED
 void HeaderOutput(StructCodingPara *PtrCoding)
@@ -158,7 +165,6 @@ void HeaderOutput(StructCodingPara *PtrCoding)
 
 	if(PtrCoding->PtrHeader->Header.Part1.Part3Flag == TRUE)
 	{
-		
 		BitsOutput(PtrCoding, PtrCoding->PtrHeader->Header.Part3.S_20Bits, 20);
 		BitsOutput(PtrCoding, PtrCoding->PtrHeader->Header.Part3.OptDCSelect, 1);
 		BitsOutput(PtrCoding, PtrCoding->PtrHeader->Header.Part3.OptACSelect, 1);
@@ -198,12 +204,14 @@ void HeaderOutput(StructCodingPara *PtrCoding)
 		BitsOutput(PtrCoding, PtrCoding->PtrHeader->Header.Part4.Reserved_11Bits, 11);
 	}
 }
+
 void HeaderReadin(StructCodingPara *PtrCoding)
 {
 	DWORD32 Byte; 
 
 	BitsRead(PtrCoding, &Byte, 1);
 	PtrCoding->PtrHeader->Header.Part1.StartImgFlag = (BOOL)Byte;
+
 	BitsRead(PtrCoding, &Byte, 1);
 	PtrCoding->PtrHeader->Header.Part1.EngImgFlg = (BOOL)Byte;
 
@@ -259,23 +267,28 @@ void HeaderReadin(StructCodingPara *PtrCoding)
 
 	if((PtrCoding->PtrHeader->Header.Part1).Part3Flag == TRUE)
 	{
-		
 		BitsRead(PtrCoding, &Byte, 20);
 		PtrCoding->PtrHeader->Header.Part3.S_20Bits = Byte;
 		if(PtrCoding->BitsPerPixel != 0)
 		{
-			PtrCoding->DecodingAllowedBitsSizeInSegment = (DWORD32)(PtrCoding->BitsPerPixel * 
-					PtrCoding->PtrHeader->Header.Part3.S_20Bits * 64);
+			PtrCoding->DecodingAllowedBitsSizeInSegment = 
+                        (DWORD32)(PtrCoding->BitsPerPixel * 
+                        PtrCoding->PtrHeader->Header.Part3.S_20Bits * 64);
 
-			if (PtrCoding->DecodingAllowedBitsSizeInSegment > (PtrCoding->PtrHeader->Header.Part2.SegByteLimit_27Bits  << 3))
-				PtrCoding->DecodingAllowedBitsSizeInSegment = (PtrCoding->PtrHeader->Header.Part2.SegByteLimit_27Bits << 3);
+			if (PtrCoding->DecodingAllowedBitsSizeInSegment > 
+                    (PtrCoding->PtrHeader->Header.Part2.SegByteLimit_27Bits  << 3))
+				PtrCoding->DecodingAllowedBitsSizeInSegment = 
+                    (PtrCoding->PtrHeader->Header.Part2.SegByteLimit_27Bits << 3);
 		}
 		else
 		{
 			PtrCoding->DecodingAllowedBitsSizeInSegment = 0;
 			if(PtrCoding->PtrHeader->Header.Part2.SegByteLimit_27Bits  != 0)
-				PtrCoding->DecodingAllowedBitsSizeInSegment = (PtrCoding->PtrHeader->Header.Part2.SegByteLimit_27Bits << 3);
-		}
+            {
+				PtrCoding->DecodingAllowedBitsSizeInSegment = 
+                    (PtrCoding->PtrHeader->Header.Part2.SegByteLimit_27Bits << 3);
+            }
+        }
 
 		BitsRead(PtrCoding, &Byte, 1);
 		PtrCoding->PtrHeader->Header.Part3.OptDCSelect = (BOOL)Byte;
@@ -290,7 +303,6 @@ void HeaderReadin(StructCodingPara *PtrCoding)
 	{
 		PtrCoding->PtrHeader->Header.Part2.SegByteLimit_27Bits = 0;  //even user specify a rate, in this case, there is no rate control.
 	}
-
 
 	if((PtrCoding->PtrHeader->Header.Part1).Part4Flag == TRUE)
 	{
@@ -352,8 +364,6 @@ void HeaderReadin(StructCodingPara *PtrCoding)
 		BitsRead(PtrCoding, &Byte, 11);
 		PtrCoding->PtrHeader->Header.Part4.Reserved_11Bits  = (WORD16)Byte;
 	}
-
-
 	PtrCoding->DecodingStopLocations.BitPlaneStopDecoding = -1;
 	PtrCoding->DecodingStopLocations.BlockNoStopDecoding = -1;	
 	PtrCoding->DecodingStopLocations.LocationFind = FALSE;
@@ -361,16 +371,12 @@ void HeaderReadin(StructCodingPara *PtrCoding)
 	PtrCoding->DecodingStopLocations.Y_LocationStopDecoding  = -1;
 }
 
-
 void HeaderUpdate(HeaderStruct * HeaderStr)
 {
-	
-
 	if(HeaderStr->Header.Part1.StartImgFlag == TRUE)
 		HeaderStr->Header.Part1.StartImgFlag = FALSE;
 	HeaderStr->Header.Part1.BitDepthAC_5Bits = 0;	
 	HeaderStr->Header.Part1.BitDepthDC_5Bits = 0;
-
 	HeaderStr->Header.Part1.SegmentCount_8Bits ++;
 
 	//for test 4
@@ -380,7 +386,8 @@ void HeaderUpdate(HeaderStruct * HeaderStr)
 
 	if(HeaderStr->Header.Part1.Part2Flag == TRUE)  // it has part 2. 
 	{
-		HeaderStr->Header.Part2.SegByteLimit_27Bits = 1000000; // maxmimum number of bits, including the bytes used for the header. 
+        // maxmimum number of bits, including the bytes used for the header. 
+		HeaderStr->Header.Part2.SegByteLimit_27Bits = 1000000; 
 		HeaderStr->Header.Part2.BitPlaneStop_5Bits ++;
 		HeaderStr->Header.Part2.StageStop_2Bits ++;
 		HeaderStr->Header.Part2.UseFill ++;		

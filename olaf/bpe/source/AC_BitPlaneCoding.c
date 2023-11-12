@@ -9,15 +9,9 @@ Author:
 Hongqiang Wang
 Department of Electrical Engineering
 University of Nebraska-Lincoln
-Email: hqwang@bigred.unl.edu, hqwang@eecomm.unl.edu
-
-Your comment and suggestions are welcome. Please report bugs to me via email and I would greatly appreciate it. 
 Nov. 3, 2006
 */ 
 
-
-#include <stdlib.h>
-#include <math.h>
 #include "global.h"
 
 
@@ -40,11 +34,17 @@ void ACGaggleEncoding(StructCodingPara *PtrCoding,
 	DWORD32 total_bits = 0;
 
 	/* --- Begin bug fix (Kiely) --- */
-	UCHAR8 uncoded_flag = ~0;   // this is the flag indicating that uncoded option used
+    // this is the flag indicating that uncoded option used
+	UCHAR8 uncoded_flag = ~0;   
 	
-	// determine code choice min_k to use, either via brute-force optimum calculation, or heuristic approach
-	if(PtrCoding->PtrHeader->Header.Part3.OptDCSelect == TRUE) {  // brute-force optimum code selection
-		min_k = uncoded_flag;   // uncoded option used, unless we find a better option below
+	// determine code choice min_k to use, 
+    // either via brute-force optimum calculation, or heuristic approach
+	
+    
+    if(PtrCoding->PtrHeader->Header.Part3.OptDCSelect == TRUE) {  
+        // brute-force optimum code selection
+		min_k = uncoded_flag;   // uncoded option used, 
+                                // unless we find a better option below
 
 		for ( k = 0; k <= Max_k; k ++)
 		{
@@ -54,7 +54,8 @@ void ACGaggleEncoding(StructCodingPara *PtrCoding,
 				total_bits = 0;
 			
 			for (i = the_max(StartIndex,1); i < StartIndex + gaggles; i ++)
-				total_bits += ((BlockInfo[i].MappedAC >> k ) + 1) + k;  // coded sample cost
+                // coded sample cost
+				total_bits += ((BlockInfo[i].MappedAC >> k ) + 1) + k;  
 
 			if((total_bits < min_bits) && (total_bits < PtrCoding->N * gaggles)) {
 				min_bits = total_bits;
@@ -103,9 +104,6 @@ void ACGaggleEncoding(StructCodingPara *PtrCoding,
 
 }
 
-
-
-
 void DPCM_ACMapper(BitPlaneBits *BlockInfo,
 				   int size,
 				   short N)
@@ -135,10 +133,7 @@ void DPCM_ACMapper(BitPlaneBits *BlockInfo,
 	return;
 }
 
-
-
-void ACDepthEncoder(StructCodingPara *PtrCoding,
-					BitPlaneBits *BlockInfo)
+void ACDepthEncoder(StructCodingPara *PtrCoding, BitPlaneBits *BlockInfo)
 {
 	SINT GaggleStartIndex; 
 	UCHAR8 Max_k; 
@@ -184,13 +179,10 @@ void ACDepthEncoder(StructCodingPara *PtrCoding,
 	return;
 }
 
-
-
-void ACBpeEncoding(StructCodingPara *PtrCoding,    BitPlaneBits *BlockInfo)
+void ACBpeEncoding(StructCodingPara *PtrCoding, BitPlaneBits *BlockInfo)
 {
 	DWORD32 i = 0;
 	UCHAR8 BitPlane = 0;
-
 ////////////////////////////////////////////////////////////////////////////////////////
 	// The link nodes PlaneSym are used to coding of the bit planes. Contains a 
 	// Link data structure. It encodes more than 16 blocks at this time. 
@@ -243,7 +235,7 @@ void ACBpeEncoding(StructCodingPara *PtrCoding,    BitPlaneBits *BlockInfo)
 				return;
 
 			// ***************************  4. Stages coding *********************************//
-			StagesEnCoding(PtrCoding, BlockInfo);		
+			StagesEnCoding(PtrCoding, BlockInfo); //***debug
 
 			if(PtrCoding->SegmentFull == TRUE) 
 				return;
@@ -251,11 +243,8 @@ void ACBpeEncoding(StructCodingPara *PtrCoding,    BitPlaneBits *BlockInfo)
 	}
 }
 
-
-
 void CheckUsefill(StructCodingPara * PtrCoding)
 {
-
 	if(PtrCoding->PtrHeader->Header.Part2.SegByteLimit_27Bits != 0 
 		&& PtrCoding->PtrHeader->Header.Part2.UseFill == TRUE)
 	{
@@ -278,7 +267,6 @@ void CheckUsefill(StructCodingPara * PtrCoding)
 	return;
 
 }
-
 
 void ACGaggleDecoding(StructCodingPara *PtrCoding,						   
 						   BitPlaneBits *BlockInfo,  
@@ -344,10 +332,6 @@ void ACGaggleDecoding(StructCodingPara *PtrCoding,
 	return;
 }
 
-
-
-
-
 void DPCM_ACDeMapper(BitPlaneBits *BlockCodingInfo, //UCHAR8 *ACmax_blocks, 
 					 int size, 
 					 short N)
@@ -397,10 +381,7 @@ void DPCM_ACDeMapper(BitPlaneBits *BlockCodingInfo, //UCHAR8 *ACmax_blocks,
 	return;	
 }
 
-
-
-short ACDepthDecoder(StructCodingPara *PtrCoding,
-					 BitPlaneBits *BlockInfo)
+short ACDepthDecoder(StructCodingPara *PtrCoding, BitPlaneBits *BlockInfo)
 {
 	SINT Max_k = 0;
 	UINT32 GaggleStartIndex = 0;
@@ -426,7 +407,6 @@ short ACDepthDecoder(StructCodingPara *PtrCoding,
 	else
 		ErrorMsg(BPE_DATA_ERROR);	
 
-
 	/* --- Begin bug fix (Kiely) --- */
 	while( GaggleStartIndex < PtrCoding->PtrHeader->Header.Part3.S_20Bits ){
 		gaggles = the_min(GAGGLE_SIZE, PtrCoding->PtrHeader->Header.Part3.S_20Bits - GaggleStartIndex);
@@ -440,9 +420,7 @@ short ACDepthDecoder(StructCodingPara *PtrCoding,
 	return BPE_OK;
 }
 
-
-void  ACBpeDecoding(StructCodingPara *PtrCoding,
-					 BitPlaneBits *BlockCodingInfo)
+void  ACBpeDecoding(StructCodingPara *PtrCoding, BitPlaneBits *BlockCodingInfo)
 {	
 	UINT32 i = 0;
 	DWORD32 TempWord = 0;
@@ -492,14 +470,15 @@ void  ACBpeDecoding(StructCodingPara *PtrCoding,
 				if(PtrCoding->SegmentFull == TRUE)
 					break;
 				BitsRead(PtrCoding, &TempWord, 1);
-				BlockCodingInfo[i].DecodingDCRemainder += (WORD16)(TempWord << (BitPlane - 1)) ;
+				BlockCodingInfo[i].DecodingDCRemainder += 
+                                        (WORD16)(TempWord << (BitPlane - 1)) ;
 			} 
 		}
-		
-		if(PtrCoding->SegmentFull != TRUE)
+		if (PtrCoding->SegmentFull != TRUE)
+        {
 			StagesDeCoding(PtrCoding, BlockCodingInfo);
-	}	
+        }
+    }	
 	CheckUsefill(PtrCoding);
 	return;
 }
-

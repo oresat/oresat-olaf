@@ -9,15 +9,9 @@ Author:
 Hongqiang Wang
 Department of Electrical Engineering
 University of Nebraska-Lincoln
-Email: hqwang@bigred.unl.edu, hqwang@eecomm.unl.edu
-
-Your comment and suggestions are welcome. Please report bugs to me via email and I would greatly appreciate it. 
 Nov. 3, 2006
 */ 
-// braces have been added in an attempt to better guard if, for etc. (Sept/23)
 
-#include <stdio.h>
-#include <stdlib.h>
 #include "global.h"
 
 const int bit2_pattern[] = {0, 2, 1, 3};
@@ -322,9 +316,7 @@ void CodingOptions(StructCodingPara *PtrCoding,
 	return;
 }
 
-void RefBitsDe( StructCodingPara *PtrCoding,
-			   BitPlaneBits * BlockInfo)
-
+void RefBitsDe(StructCodingPara *PtrCoding, BitPlaneBits * BlockInfo)
 {
 	UINT32 BlockSeq;
 	UCHAR8 i;
@@ -501,6 +493,7 @@ void RefBitsDe( StructCodingPara *PtrCoding,
 		}
 	}
 } 
+
 void RefBitsEn(BitPlaneBits * BlockInfo,
 			   StructCodingPara *PtrCoding)
 {
@@ -545,8 +538,7 @@ void RefBitsEn(BitPlaneBits * BlockInfo,
 	return;
 }
 
-void StagesEnCoding(StructCodingPara *PtrCoding,
-				   BitPlaneBits *BlockInfo)
+void StagesEnCoding(StructCodingPara *PtrCoding, BitPlaneBits *BlockInfo)
 {
 	// try various options for the 2-bit, 3-bit, and 4 bit coding. 
 	UCHAR8 BlocksInLastGaggle = 0;
@@ -602,11 +594,19 @@ void StagesEnCoding(StructCodingPara *PtrCoding,
 			BlocksInGaggle, (CodeOptionsAllGaggles[GaggleIndex]), OptionHitFlag[GaggleIndex] );
 	}
 	RefBitsEn(BlockInfo, PtrCoding);		
-	return;
+
+    int i = 0;
+    for(i = 0; i < TotalGaggles; i++)                                   
+        free(CodeOptionsAllGaggles[i]);
+    free(CodeOptionsAllGaggles);
+    for(i = 0; i < TotalGaggles; i++)                                   
+        free(OptionHitFlag[i]);
+    free(OptionHitFlag);
+    
+    return;
 }
 
-void StagesDeCoding(StructCodingPara *PtrCoding,
-				   BitPlaneBits *BlockInfo)
+void StagesDeCoding(StructCodingPara *PtrCoding, BitPlaneBits *BlockInfo)
 {
 	// try various options for the 2-bit, 3-bit, and 4 bit coding. 
 	UCHAR8 BlocksInLastGaggle = 0;
@@ -617,21 +617,24 @@ void StagesDeCoding(StructCodingPara *PtrCoding,
 	UINT32 BlockStartIndex = 0;
 	BOOL **OptionHitFlag;
 
+    DWORD32 free_count = 0;
+
 	BlocksInLastGaggle = (UCHAR8) (PtrCoding->PtrHeader->Header.Part3.S_20Bits % GAGGLE_SIZE) ;
 	TotalGaggles = PtrCoding->PtrHeader->Header.Part3.S_20Bits / GAGGLE_SIZE;
 	// bit length is equal to 1, nk = 0;
 	if( BlocksInLastGaggle!= 0) 
 		TotalGaggles++;
-	CodeOptionsAllGaggles = (UCHAR8 **)calloc(TotalGaggles, sizeof(UCHAR8 *)) ;
-	OptionHitFlag = (BOOL **) calloc(TotalGaggles, sizeof(BOOL *)) ;
+	CodeOptionsAllGaggles = (UCHAR8 **)calloc(TotalGaggles, sizeof(UCHAR8 *)); //BUG
+	OptionHitFlag = (BOOL **) calloc(TotalGaggles, sizeof(BOOL *)); //BUG
 	PtrCoding->DecodingStopLocations.BlockNoStopDecoding = 0;
 
 	// 4.1 Pattern values.  
 	for (GaggleIndex = 0; GaggleIndex < TotalGaggles; GaggleIndex ++)	
 	{
 		BlockStartIndex = GaggleIndex * GAGGLE_SIZE;
-		CodeOptionsAllGaggles[GaggleIndex] = (UCHAR8 *)calloc(3, sizeof(UCHAR8)) ;
-		OptionHitFlag[GaggleIndex] =  (BOOL *)calloc(3, sizeof(BOOL)) ;
+		CodeOptionsAllGaggles[GaggleIndex] = (UCHAR8 *)calloc(3, sizeof(UCHAR8));//BUG
+		OptionHitFlag[GaggleIndex] =  (BOOL *)calloc(3, sizeof(BOOL));//BUG
+        free_count = GaggleIndex;
 		OptionHitFlag[GaggleIndex][0] = FALSE;		
 		OptionHitFlag[GaggleIndex][1] = FALSE;		
 		OptionHitFlag[GaggleIndex][2] = FALSE;
@@ -645,7 +648,17 @@ void StagesDeCoding(StructCodingPara *PtrCoding,
 		{
 			PtrCoding->DecodingStopLocations.BlockNoStopDecoding+=GaggleIndex * 16;
 			PtrCoding->DecodingStopLocations.stoppedstage = 1;	
-			return;
+
+            int i = 0;
+            for(i = 0; i <= free_count; i++)                                   
+            {
+                free(CodeOptionsAllGaggles[i]);
+                free(OptionHitFlag[i]);
+            }
+            free(CodeOptionsAllGaggles);
+            free(OptionHitFlag);
+			
+            return;
 		}
 	}
 	for (GaggleIndex = 0; GaggleIndex < TotalGaggles; GaggleIndex ++)	
@@ -661,6 +674,16 @@ void StagesDeCoding(StructCodingPara *PtrCoding,
 		{
 			PtrCoding->DecodingStopLocations.BlockNoStopDecoding += GaggleIndex * 16;			
 			PtrCoding->DecodingStopLocations.stoppedstage = 2;
+
+            int i = 0;
+            for(i = 0; i <= free_count; i++)                                   
+            {
+                free(CodeOptionsAllGaggles[i]);
+                free(OptionHitFlag[i]);
+            }
+            free(CodeOptionsAllGaggles);
+            free(OptionHitFlag);
+			
 			return;
 		}
 	}
@@ -668,6 +691,16 @@ void StagesDeCoding(StructCodingPara *PtrCoding,
 	if( PtrCoding->RateReached == TRUE)
 	{
 		PtrCoding->DecodingStopLocations.stoppedstage = 2;
+
+        int i = 0;
+        for(i = 0; i <= free_count; i++)                                   
+        {
+            free(CodeOptionsAllGaggles[i]);
+            free(OptionHitFlag[i]);
+        }
+        free(CodeOptionsAllGaggles);
+        free(OptionHitFlag);
+			
 		return;
 	}
 
@@ -677,21 +710,43 @@ void StagesDeCoding(StructCodingPara *PtrCoding,
 		BlocksInGaggle = (UCHAR8) ((BlockStartIndex + GAGGLE_SIZE < PtrCoding->PtrHeader->Header.Part3.S_20Bits) ? 
 							GAGGLE_SIZE : (PtrCoding->PtrHeader->Header.Part3.S_20Bits - BlockStartIndex)) ;
 
-		StagesDeCodingGaggles3(PtrCoding, &(BlockInfo[BlockStartIndex]) , 
-			BlocksInGaggle, (CodeOptionsAllGaggles[GaggleIndex]), OptionHitFlag[GaggleIndex] );
+        //
+		StagesDeCodingGaggles3(PtrCoding, &(BlockInfo[BlockStartIndex]), 
+                            BlocksInGaggle, (CodeOptionsAllGaggles[GaggleIndex]), 
+                                                OptionHitFlag[GaggleIndex] );
 		
 		if ((PtrCoding->DecodingStopLocations.BitPlaneStopDecoding != -1)
 			&& PtrCoding->RateReached == TRUE)
 		{
 			PtrCoding->DecodingStopLocations.BlockNoStopDecoding += GaggleIndex * 16;
 			PtrCoding->DecodingStopLocations.stoppedstage = 3;
+
+            int i = 0;
+            for(i = 0; i <= free_count; i++)                                   
+            {
+                free(CodeOptionsAllGaggles[i]);
+                free(OptionHitFlag[i]);
+            }
+            free(CodeOptionsAllGaggles);
+            free(OptionHitFlag);
+			
 			return;
 		}
 	}
-	
+
 	if( PtrCoding->RateReached == TRUE) 
 	{
 		PtrCoding->DecodingStopLocations.stoppedstage = 3;
+
+        int i = 0;
+        for(i = 0; i <= free_count; i++)                                   
+        {
+            free(CodeOptionsAllGaggles[i]);
+            free(OptionHitFlag[i]);
+        }
+        free(CodeOptionsAllGaggles);
+        free(OptionHitFlag);
+			
 		return;
 	}
 	RefBitsDe(PtrCoding, BlockInfo);
@@ -699,8 +754,27 @@ void StagesDeCoding(StructCodingPara *PtrCoding,
 	if( PtrCoding->RateReached == TRUE)
 	{		
 		PtrCoding->DecodingStopLocations.stoppedstage = 4;
+
+        int i = 0;
+        for(i = 0; i <= free_count; i++)                                   
+        {
+            free(CodeOptionsAllGaggles[i]);
+            free(OptionHitFlag[i]);
+        }
+        free(CodeOptionsAllGaggles);
+        free(OptionHitFlag);
+			
 		return;
 	}
+
+    int i = 0;
+    for(i = 0; i <= free_count; i++)                                   
+    {
+        free(CodeOptionsAllGaggles[i]);
+        free(OptionHitFlag[i]);
+    }
+    free(CodeOptionsAllGaggles);
+    free(OptionHitFlag);
 
 	return;
 }

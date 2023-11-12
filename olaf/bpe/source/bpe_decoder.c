@@ -14,9 +14,7 @@ Email: hqwang@bigred.unl.edu, hqwang@eecomm.unl.edu
 Your comment and suggestions are welcome. Please report bugs to me via email and I would greatly appreciate it. 
 Nov. 3, 2006
 */ 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
 #include "global.h"
 
 
@@ -177,11 +175,10 @@ short ImageWrite(StructCodingPara *StrPtr,  int **image)
 }
 
  
-
-void DecodingOutputInteger(StructCodingPara *PtrCP,
-					int **imgout_integercase)
+void DecodingOutputInteger(StructCodingPara *PtrCP, int **imgout_integercase)
 {	
-	CoeffDegroup(imgout_integercase, PtrCP->ImageRows, PtrCP->ImageWidth + PtrCP->PadCols_3Bits);
+	CoeffDegroup(imgout_integercase, PtrCP->ImageRows, 
+                    PtrCP->ImageWidth + PtrCP->PadCols_3Bits);
 
 	DWT_Reverse(imgout_integercase, PtrCP); 
 
@@ -194,25 +191,25 @@ void DecodingOutputInteger(StructCodingPara *PtrCP,
 		for(i = 0; i < PtrCP->ImageRows; i++)
 			transposedimg[i] = (int *)calloc((PtrCP->ImageWidth),sizeof(int));	
 
-		for( i = 0 ; i < PtrCP->ImageRows; i ++)
+		for( i = 0 ; i < PtrCP->ImageRows; i++)
 			for(j = 0; j < PtrCP->ImageWidth; j++)
 				transposedimg[j][i] = imgout_integercase[i][j];
 			
 		ImageWrite(PtrCP, transposedimg);
-	}		
+    }		
 	else
 		ImageWrite(PtrCP, imgout_integercase);
 	
 	return;	
 }
 
-short ImageWriteFloat(StructCodingPara *StrPtr,
-				 float **image)
+short ImageWriteFloat(StructCodingPara *StrPtr, float **image)
 {
 	UINT32 r = 0; 
 	UINT32 i = 0;
 	FILE *outfile;
-	UCHAR8 machineendianness;  // indicates endian-ness of the computer -- bug fix (Kiely)
+    // indicates endian-ness of the computer -- bug fix (Kiely)
+	UCHAR8 machineendianness;  
 	unsigned long int bigendtest = 1;  //  bug fix (Kiely)
 
 
@@ -226,7 +223,7 @@ short ImageWriteFloat(StructCodingPara *StrPtr,
 		{	
 			UCHAR8 *temp = (UCHAR8 *)calloc(sizeof(UCHAR8), StrPtr->ImageWidth);
 
-			for(r = 0; r< StrPtr->ImageRows; r++)
+			for(r = 0; r < StrPtr->ImageRows; r++)
 			{
 				for(i = 0; i < StrPtr->ImageWidth; i++)
 				{
@@ -242,7 +239,7 @@ short ImageWriteFloat(StructCodingPara *StrPtr,
 		{
 			char *temp = (char *)calloc(sizeof(char), StrPtr->ImageWidth);
 
-			for(r=0; r< StrPtr->ImageRows; r++)
+			for(r=0; r < StrPtr->ImageRows; r++)
 			{
 				for(i = 0; i < StrPtr->ImageWidth; i++)
 				{
@@ -280,7 +277,8 @@ short ImageWriteFloat(StructCodingPara *StrPtr,
 					{
 						image[r][i] = (image[r][i] > PixelMax) ? PixelMax : image[r][i];
 						image[r][i] = (image[r][i] < 0) ? 0 : image[r][i];
-						image[r][i] = (float)( ( ((int)(image[r][i])) << 8) & MSBmask ) + (((int)(image[r][i])) >> 8);  //  bug fix (Kiely)
+						image[r][i] = (float)((((int)(image[r][i])) << 8) & MSBmask) 
+                            + (((int)(image[r][i])) >> 8);  //  bug fix (Kiely)
 						temp_16[i] = (WORD16)image[r][i] ;
 					}
 					fwrite(temp_16, StrPtr->ImageWidth, sizeof(WORD16), outfile);
@@ -292,8 +290,8 @@ short ImageWriteFloat(StructCodingPara *StrPtr,
 					for(i = 0; i < StrPtr->ImageWidth; i++)
 					{
 						image[r][i] = (image[r][i] > PixelMax) ? PixelMax : image[r][i];
-						image[r][i] = (image[r][i] < 0) ? 0 : image[r][i];						
-						temp_16[i] =(WORD16)image[r][i] ;
+						image[r][i] = (image[r][i] < 0) ? 0 : image[r][i];
+						temp_16[i] = (WORD16)image[r][i];
 					}
 					fwrite(temp_16, StrPtr->ImageWidth, sizeof(WORD16), outfile);
 				}
@@ -352,10 +350,9 @@ short ImageWriteFloat(StructCodingPara *StrPtr,
 }
 
 
-void DecodingOutputFloating(StructCodingPara *PtrCP,
-					float **imgout_floatingcase)
+void DecodingOutputFloating(StructCodingPara *PtrCP, float **imgout_floatingcase)
 {	
-	CoeffDegroupFloating(imgout_floatingcase, PtrCP->ImageRows, PtrCP->ImageWidth + PtrCP->PadCols_3Bits );
+	CoeffDegroupFloating(imgout_floatingcase, PtrCP->ImageRows, PtrCP->ImageWidth + PtrCP->PadCols_3Bits);
 
 	DWT_ReverseFloating(imgout_floatingcase, PtrCP); 
 
@@ -373,10 +370,10 @@ void DecodingOutputFloating(StructCodingPara *PtrCP,
 				transposedimg[j][i] = imgout_floatingcase[i][j];
 			
 		ImageWriteFloat(PtrCP, transposedimg);
-	}		
+    }		
 	else
 		ImageWriteFloat(PtrCP, imgout_floatingcase);
-	
+
 	return;	
 }
 ///////////////////////////////////////////////////////////////////////////////
@@ -425,6 +422,8 @@ void SegmentBufferFlushDecoder(StructCodingPara *StrCoding) // flush codes and r
 	return;
 }
 
+
+// Main decode function
 void DecoderEngine(StructCodingPara * PtrCoding)
 {
 	UINT32 i = 0;
@@ -437,22 +436,27 @@ void DecoderEngine(StructCodingPara * PtrCoding)
 	float **imgout_floatingcase = NULL;
 	StructFreBlockString * StrFreBlockString = NULL;
 	StructFreBlockString *tempStr = NULL;
-
 	
-	PtrCoding->Bits = (BitStream *)calloc(sizeof(BitStream), 1);
-	
-	if((PtrCoding->Bits->F_Bits = fopen(PtrCoding->InputFile, "rb")) == NULL)  // default name
+    // default name
+	if((PtrCoding->Bits->F_Bits = fopen(PtrCoding->InputFile, "rb")) == NULL)  
+    {
 		ErrorMsg(BPE_FILE_ERROR);
+    }
 
 	HeaderReadin(PtrCoding); // read first header. 	
+                             
 	PtrCoding->ImageWidth = PtrCoding->PtrHeader->Header.Part4.ImageWidth_20Bits;	
 	
 	if(PtrCoding->ImageWidth % BLOCK_SIZE != 0)
-		PtrCoding->PadCols_3Bits = BLOCK_SIZE - (PtrCoding->ImageWidth % 8 );
-	else 
-		PtrCoding->PadCols_3Bits  =  0;
-	
-	StrFreBlockString = (StructFreBlockString *)calloc(sizeof(StructFreBlockString), 1);
+    {
+        PtrCoding->PadCols_3Bits = BLOCK_SIZE - (PtrCoding->ImageWidth % 8 );
+    }
+    else 
+    {
+        PtrCoding->PadCols_3Bits  =  0;
+    }
+
+	StrFreBlockString = (StructFreBlockString*)calloc(sizeof(StructFreBlockString), 1);
 	StrFreBlockString->next = NULL;
 	StrFreBlockString->previous = NULL;
 
@@ -460,68 +464,93 @@ void DecoderEngine(StructCodingPara * PtrCoding)
 	for(;;)
 	{		
 		BitPlaneBits * BlockCodingInfo;
-		BlockCodingInfo = (BitPlaneBits *)calloc(PtrCoding->PtrHeader->Header.Part3.S_20Bits,	sizeof(BitPlaneBits));
+		BlockCodingInfo = 
+            (BitPlaneBits *)calloc(PtrCoding->PtrHeader->Header.Part3.S_20Bits, 
+                                                            sizeof(BitPlaneBits));
 		TotalBlocks += PtrCoding->PtrHeader->Header.Part3.S_20Bits;
 
-		StrFreBlockString->FreqBlkString = (long **)calloc(PtrCoding->PtrHeader->Header.Part3.S_20Bits * BLOCK_SIZE,sizeof(long *));
+		StrFreBlockString->FreqBlkString = 
+            (long **)calloc(PtrCoding->PtrHeader->Header.Part3.S_20Bits * BLOCK_SIZE, sizeof(long *));
+		
+        for(i = 0; i < PtrCoding->PtrHeader->Header.Part3.S_20Bits * BLOCK_SIZE; i++)
+        {
+            StrFreBlockString->FreqBlkString[i] = 
+                (long *)calloc(BLOCK_SIZE, sizeof(long));
+        }
+		StrFreBlockString->FloatingFreqBlk = 
+            (float **)calloc(PtrCoding->PtrHeader->Header.Part3.S_20Bits * BLOCK_SIZE, sizeof(float *));
+
 		for(i = 0; i < PtrCoding->PtrHeader->Header.Part3.S_20Bits * BLOCK_SIZE; i++)
-			StrFreBlockString->FreqBlkString[i] = (long *)calloc(BLOCK_SIZE,sizeof(long));
-
-
-		StrFreBlockString->FloatingFreqBlk  = (float **)calloc(PtrCoding->PtrHeader->Header.Part3.S_20Bits * BLOCK_SIZE,sizeof(float *));
-		for(i = 0; i < PtrCoding->PtrHeader->Header.Part3.S_20Bits * BLOCK_SIZE; i++)
-			StrFreBlockString->FloatingFreqBlk[i] = (float *)calloc(BLOCK_SIZE,sizeof(float));
-
+        {
+            StrFreBlockString->FloatingFreqBlk[i] = 
+                (float *)calloc(BLOCK_SIZE, sizeof(float));
+        }
 		StrFreBlockString->Blocks = PtrCoding->PtrHeader->Header.Part3.S_20Bits;
-		DCDeCoding(PtrCoding, StrFreBlockString, BlockCodingInfo);
-		ACBpeDecoding(PtrCoding, BlockCodingInfo) ;	// This means the decoding process stops before segment limit. 
+		
+        DCDeCoding(PtrCoding, StrFreBlockString, BlockCodingInfo);
+        
+        // This means the decoding process stops before segment limit. 
+		ACBpeDecoding(PtrCoding, BlockCodingInfo) ;	
+
 		AdjustOutPut(PtrCoding, BlockCodingInfo);
 
 	//	TempCoeffOutput(fdc, fac, BlockCodingInfo, PtrCoding);
     	
-		free(BlockCodingInfo);			
-		SegmentBufferFlushDecoder(PtrCoding);
+        free(BlockCodingInfo);
+        SegmentBufferFlushDecoder(PtrCoding);
 		PtrCoding->SegmentFull = FALSE;
 		PtrCoding->RateReached = FALSE;
 		PtrCoding->DecodingStopLocations.BitPlaneStopDecoding = 0;
 		PtrCoding->BlockCounter += PtrCoding->PtrHeader->Header.Part3.S_20Bits;
-		if(PtrCoding->PtrHeader->Header.Part1.EngImgFlg == TRUE)
+		
+        if(PtrCoding->PtrHeader->Header.Part1.EngImgFlg == TRUE)
 			break;
-		if (PtrCoding->PtrHeader->Header.Part1.EngImgFlg != TRUE)
+	
+        if (PtrCoding->PtrHeader->Header.Part1.EngImgFlg != TRUE)
 			HeaderReadin(PtrCoding); // read second header. 
-		tempStr = (StructFreBlockString *)calloc(sizeof(StructFreBlockString), 1);			
+                                     
+		tempStr = (StructFreBlockString*)calloc(sizeof(StructFreBlockString), 1);			
 		(StrFreBlockString->next) = tempStr;
 		tempStr->previous = StrFreBlockString;
 		tempStr->next = NULL;
 		StrFreBlockString = StrFreBlockString->next;
 	}
-	// ***************************  5. header information  *****************************//
+	// ***********************  5. header information  **********************//
 
 	PtrCoding->ImageRows = TotalBlocks * 64 /  (PtrCoding->ImageWidth + PtrCoding->PadCols_3Bits ); 
 
 	imgout_integercase = (int **)calloc(PtrCoding->ImageRows,sizeof(int *)); 
 	for(i = 0; i < PtrCoding->ImageRows; i++)
-		imgout_integercase[i] = (int *)calloc((PtrCoding->ImageWidth + PtrCoding->PadCols_3Bits),sizeof(int));	
-
+    {	
+        imgout_integercase[i] = (int *)calloc((PtrCoding->ImageWidth + 
+                                        PtrCoding->PadCols_3Bits),sizeof(int));	
+    }
 	imgout_floatingcase = (float **)calloc(PtrCoding->ImageRows,sizeof(float *)); 
 	for(i = 0; i < PtrCoding->ImageRows; i++)
-		imgout_floatingcase[i] = (float *)calloc((PtrCoding->ImageWidth + PtrCoding->PadCols_3Bits),sizeof(float));	
-
+    {
+		imgout_floatingcase[i] = (float *)calloc((PtrCoding->ImageWidth + 
+                                        PtrCoding->PadCols_3Bits),sizeof(float));	
+    }
 	while(StrFreBlockString->previous != NULL)
-		StrFreBlockString = StrFreBlockString->previous;
-	do{
+    {
+        StrFreBlockString = StrFreBlockString->previous;
+    }
+
+    StructFreBlockString * tail = NULL;
+	do
+    {
 		UINT32 F_x = 0;
 		do
 		{
 			for( i = 0; i < BLOCK_SIZE; i++)
 				for( j = 0; j < BLOCK_SIZE; j++)
 				{
-					imgout_integercase[X + i][Y + j] = StrFreBlockString->FreqBlkString[F_x + i][j];
-					imgout_floatingcase[X + i][Y + j] =StrFreBlockString->FloatingFreqBlk[F_x + i][j];
+					imgout_integercase[X + i][Y + j] = 
+                        StrFreBlockString->FreqBlkString[F_x + i][j];
+					imgout_floatingcase[X + i][Y + j] = 
+                        StrFreBlockString->FloatingFreqBlk[F_x + i][j];
 				}
-				
 			Y += BLOCK_SIZE;
-
 			if( Y >= PtrCoding->ImageWidth)
 			{
 				Y = 0;
@@ -529,16 +558,67 @@ void DecoderEngine(StructCodingPara * PtrCoding)
 			}
 			F_x += BLOCK_SIZE;
 		}while (F_x <  StrFreBlockString->Blocks * BLOCK_SIZE);				
-			
-		StrFreBlockString = StrFreBlockString->next;
-	}while(StrFreBlockString != NULL);
-	
+
+        if (StrFreBlockString->next == NULL)                                    
+        {                                                                       
+            tail = StrFreBlockString;                                           
+        } 
+
+        StrFreBlockString = StrFreBlockString->next;
+
+    }while(StrFreBlockString != NULL);
+
 	if(PtrCoding->PtrHeader->Header.Part4.DWTType == INTEGER_WAVELET)
 		DecodingOutputInteger(PtrCoding, imgout_integercase);
 	else
 		DecodingOutputFloating(PtrCoding, imgout_floatingcase);
 	
-	fclose(PtrCoding->Bits->F_Bits);
-	free(imgout_integercase);
-	return; 
+/////////////////////////////////////////////////////    
+    for(i = 0; i < PtrCoding->ImageRows; i++)
+    {    
+        free(imgout_integercase[i]);
+    }
+    free(imgout_integercase);
+
+    for(i = 0; i < PtrCoding->ImageRows; i++)
+    {    
+        free(imgout_floatingcase[i]);
+    }
+    free(imgout_floatingcase);
+
+    StrFreBlockString = tail;
+
+    // free blockstring data structure memory
+	while(StrFreBlockString->previous != NULL)
+    {
+        for(i = 0; i < PtrCoding->PtrHeader->Header.Part3.S_20Bits * BLOCK_SIZE; i++)
+        {    
+            free(StrFreBlockString->FloatingFreqBlk[i]);
+        }
+        free(StrFreBlockString->FloatingFreqBlk);
+
+        for(i = 0; i < PtrCoding->PtrHeader->Header.Part3.S_20Bits * BLOCK_SIZE; i++)
+        {
+            free(StrFreBlockString->FreqBlkString[i]);
+        }
+        free(StrFreBlockString->FreqBlkString);
+        tempStr = StrFreBlockString->previous;
+        free(StrFreBlockString);
+		StrFreBlockString = tempStr; 
+    }
+
+    for(i = 0; i < PtrCoding->PtrHeader->Header.Part3.S_20Bits * BLOCK_SIZE; i++)
+    {    
+        free(StrFreBlockString->FloatingFreqBlk[i]);
+    }
+    free(StrFreBlockString->FloatingFreqBlk);
+
+    for(i = 0; i < PtrCoding->PtrHeader->Header.Part3.S_20Bits * BLOCK_SIZE; i++)
+    {
+        free(StrFreBlockString->FreqBlkString[i]);
+    }
+    free(StrFreBlockString->FreqBlkString);
+    free(StrFreBlockString);
+	
+    return; 
 }

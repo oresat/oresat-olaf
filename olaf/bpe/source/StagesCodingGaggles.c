@@ -14,12 +14,8 @@ Email: hqwang@bigred.unl.edu, hqwang@eecomm.unl.edu
 Your comment and suggestions are welcome. Please report bugs to me via email and I would greatly appreciate it. 
 Nov. 3, 2006
 */ 
-// braces have been added in an attempt to better guard if, for etc. (Sept/23)
 
 #include "global.h"
-#include <stdlib.h>
-#include <stdio.h>
-
 
 void StagesEnCodingGaggles1(StructCodingPara *PtrCoding, BitPlaneBits *BlockInfo, 
 			UCHAR8 BlocksInGaggles, UCHAR8 Option[], BOOL FlagCodeOptionOutput[])
@@ -166,6 +162,7 @@ void StagesEnCodingGaggles3(StructCodingPara *PtrCoding,
 			case ENUM_TRAN_HI:
 			case ENUM_TYPE_HIJ:
 				if (BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len > 1)
+                {
 					if(FlagCodeOptionOutput[BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len - 2] == FALSE)
 					{
 						FlagCodeOptionOutput[BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len - 2] = TRUE;
@@ -179,14 +176,18 @@ void StagesEnCodingGaggles3(StructCodingPara *PtrCoding,
 						else
 							ErrorMsg(BPE_STAGE_CODING_ERROR);
 					}
-					RiceCoding(BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_mapped_pattern , BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len, Option, PtrCoding);
+                }
+					RiceCoding(BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_mapped_pattern, 
+                            BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len, Option, PtrCoding);
 					if(BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].type == ENUM_TYPE_HIJ)
 					{
 						counter = 0;
 						for(i = 0; i < BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_len; i++)
+                        {
 							if ((BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sym_val & (1 << i)) >0)
 								counter ++;
-							BitsOutput(PtrCoding, BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sign, counter);
+                        }
+                            BitsOutput(PtrCoding, BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex].sign, counter);
                     } 					
 					BitPlaneSymbolReset(&(BlockInfo[BlockSeq].SymbolsBlock[SymbolIndex])) ; 
 					break;

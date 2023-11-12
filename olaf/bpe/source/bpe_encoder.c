@@ -14,9 +14,8 @@ Email: hqwang@bigred.unl.edu, hqwang@eecomm.unl.edu
 Your comment and suggestions are welcome. Please report bugs to me via email and I would greatly appreciate it. 
 Nov. 3, 2006
 */ 
+
 #include <sys/stat.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include "global.h"
 
 
@@ -64,7 +63,6 @@ Return values:
    UINT32 img_len;
    char buffer[BUFFER_LENGTH];
 
-
   // FILE *FF = fopen("spot.raw", "r");
 
    res = stat(PtrStructCodingPara->InputFile, &status);
@@ -74,16 +72,20 @@ Return values:
    }
    img_len = status.st_size;
 
-   if((PtrStructCodingPara->ImageRows > 0 ) && (PtrStructCodingPara->ImageWidth > 0)) // user did specify the image size.    
+   // user did specify the image size.    
+   if((PtrStructCodingPara->ImageRows > 0 ) && (PtrStructCodingPara->ImageWidth > 0)) 
    {
-	   short temp = PtrStructCodingPara->PtrHeader->Header.Part4.PixelBitDepth_4Bits;
+	   short temp = 
+           PtrStructCodingPara->PtrHeader->Header.Part4.PixelBitDepth_4Bits;
 	   if  ((temp == 0) || temp > 8) 
 		   temp = 16;
 	   else 
 		   temp = 8;
 	   
-	   if (img_len == ((PtrStructCodingPara->ImageRows) * (PtrStructCodingPara->ImageWidth) * temp / 8))   // user defined 
-		   return BPE_OK;
+	   if (img_len == ((PtrStructCodingPara->ImageRows) * 
+                   (PtrStructCodingPara->ImageWidth) * temp / 8)) // user defined 
+
+       return BPE_OK;
 	   else 
 		   ErrorMsg(BPE_FILE_ERROR);
    } 	
@@ -156,20 +158,21 @@ Return values:
    return (BPE_OK);
 }
 
-
-short ImageRead(StructCodingPara *StrPtr, 
-				int **image)
+short ImageRead(StructCodingPara *StrPtr, int **image)
 {
 	UINT32 r = 0;
 	UINT32 i = 0;
 	FILE *infile = NULL;
-	UCHAR8 machineendianness;  // indicates endian-ness of the computer -- bug fix (Kiely)
+    // indicates endian-ness of the computer -- bug fix (Kiely)
+	UCHAR8 machineendianness;  
 	unsigned long int bigendtest = 1;  //  bug fix (Kiely)
 
 	infile = fopen(StrPtr->InputFile,"rb");
 	if (infile == NULL)
 	{
-		DebugInfo("Error: Unable to read the image file!\n");			
+        char buf[40];
+        strcpy(buf, "Error: Unable to read the image file!\n\0");
+		DebugInfo(buf);			
 		ErrorMsg(BPE_FILE_ERROR);
 	}
 
@@ -214,7 +217,6 @@ short ImageRead(StructCodingPara *StrPtr,
 				for(i = 0; i <  StrPtr->ImageWidth; i++)
 				{
 					//image[r][i] = ((temp_16[i] & 0x00FF) << 8) + ((temp_16[i] & 0xFF00) >> 8);
-					
 					image[r][i] = temp_16[i];
 				}
 			}			
@@ -233,7 +235,6 @@ short ImageRead(StructCodingPara *StrPtr,
 			free(temp_16);
 		}
 
-
 		/* --- Begin bug fix (Kiely) --- */
 		// machineendianness will be 1 if computer is big-endian, or 0 if little-endian
 		machineendianness = (((char *)&bigendtest)[0]==0);
@@ -242,7 +243,6 @@ short ImageRead(StructCodingPara *StrPtr,
 		if ( StrPtr->PixelByteOrder != machineendianness)
 		{
 			const unsigned short MSBmask=0xFF00;
-			
 			for(r = 0; r <  StrPtr->ImageRows; r++)
 			{
 				for (i = 0; i <  StrPtr->ImageWidth; i ++)
@@ -250,7 +250,6 @@ short ImageRead(StructCodingPara *StrPtr,
 			}
 		}
 		/* --- End bug fix (Kiely) --- */
-
 	}
 	else
 		ErrorMsg(BPE_FILE_ERROR);
@@ -259,26 +258,24 @@ short ImageRead(StructCodingPara *StrPtr,
 	return BPE_OK;
 }
 
-
 void SegmentBufferFlushEncoder(StructCodingPara *StrCoding) // flush codes and reset
 {	
 	if(StrCoding->Bits->CodeWordAlighmentBits != 0)
 	{
 		int shift = 0;
-		shift = StrCoding->Bits->CodeWord_Length - StrCoding->Bits->CodeWordAlighmentBits;
+		shift = StrCoding->Bits->CodeWord_Length - 
+                            StrCoding->Bits->CodeWordAlighmentBits;
 		BitsOutput(StrCoding, 0, shift);
 	}
-
 	if((StrCoding->PtrHeader->Header.Part2.SegByteLimit_27Bits != 0)
-		&& (StrCoding->SegmentFull == FALSE) 
-		&& StrCoding->PtrHeader->Header.Part2.UseFill == TRUE)
+            && (StrCoding->SegmentFull == FALSE) 
+            && StrCoding->PtrHeader->Header.Part2.UseFill == TRUE)
 	{
 		while(StrCoding->SegmentFull == FALSE)
 		{
 			BitsOutput(StrCoding, 0, 8);
 		}
 	}
-	
 	StrCoding->Bits->SegBitCounter = 0;
 	StrCoding->Bits->ByteBuffer_4Bytes = 0;
 	StrCoding->Bits->CodeWordAlighmentBits = 0;
@@ -287,11 +284,8 @@ void SegmentBufferFlushEncoder(StructCodingPara *StrCoding) // flush codes and r
 // if it is 1, means LSB first, 0 means MSB first
 // extern char InputFile[BUFFER_LENGTH],  CodingOutputFile[BUFFER_LENGTH];
 
-
-void BuildBlockString(int **TransformedImage,
-					  int ImageRows, 
-					  int ImageWidth,
-					  long **BlockString)
+void BuildBlockString(int **TransformedImage, int ImageRows, int ImageWidth, 
+                                                            long **BlockString)
 {
 	int i = 0;
 	int j = 0; 
@@ -305,7 +299,7 @@ void BuildBlockString(int **TransformedImage,
 	BlockRow = ImageRows / BLOCK_SIZE;
 	BlockCol = ImageWidth / BLOCK_SIZE;
 
-///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 /* Allocate memory for coding of the input image */
 	TotalBlocks = BlockRow * BlockCol;
 	for(i = 0; i < BlockRow; i ++)
@@ -314,20 +308,23 @@ void BuildBlockString(int **TransformedImage,
 			for ( k= 0; k < BLOCK_SIZE; k ++)
 			{
 				for (p = 0; p < BLOCK_SIZE; p ++)
+                {
 					BlockString[counter][p] = 
 					TransformedImage[i*BLOCK_SIZE + k][j*BLOCK_SIZE + p];
-				counter ++;
+                }
+                counter ++;
 			}
 		}
-
 	return;
 }
 
-
+// Main encode function
 void EncoderEngine(StructCodingPara * PtrCoding)
 {
 	int  **OriginalImage = NULL;
 	int **TransformedImage = NULL;
+    int img_param = 0;
+    int array_param = 0;
 	long **BlockString = NULL;
 	UINT32 TotalBlocks = 0;
 	UINT32 i = 0;
@@ -341,7 +338,8 @@ void EncoderEngine(StructCodingPara * PtrCoding)
 
 	// determine the last rows we need to replicate.
 	if(PtrCoding->ImageRows % BLOCK_SIZE != 0)
-		PtrCoding->PtrHeader->Header.Part1.PadRows_3Bits = BLOCK_SIZE - (PtrCoding->ImageRows % BLOCK_SIZE);
+		PtrCoding->PtrHeader->Header.Part1.PadRows_3Bits = 
+                            BLOCK_SIZE - (PtrCoding->ImageRows % BLOCK_SIZE);
 
 	PtrCoding->PtrHeader->Header.Part4.ImageWidth_20Bits = PtrCoding->ImageWidth;
 	
@@ -349,11 +347,14 @@ void EncoderEngine(StructCodingPara * PtrCoding)
 		PtrCoding->PadCols_3Bits = BLOCK_SIZE - (PtrCoding->ImageWidth % BLOCK_SIZE );
 
 	// assign space for the original image
-
-	OriginalImage = (int **)calloc(PtrCoding->ImageRows +	PtrCoding->PtrHeader->Header.Part1.PadRows_3Bits, sizeof(int *));  
+    img_param = PtrCoding->ImageRows + PtrCoding->PtrHeader->Header.Part1.PadRows_3Bits;
+    array_param = PtrCoding->ImageWidth + PtrCoding->PadCols_3Bits;
 	
-	for(i = 0; i < PtrCoding->ImageRows + PtrCoding->PtrHeader->Header.Part1.PadRows_3Bits; i++)
-		OriginalImage[i] = (int *)calloc(PtrCoding->ImageWidth + PtrCoding->PadCols_3Bits,sizeof(int));
+    OriginalImage = (int**)calloc(img_param, sizeof(int *));  
+	for(i = 0; i < img_param; i++)
+    {
+        OriginalImage[i] = (int*)calloc(array_param, sizeof(int));
+    }
 		// assign memeory for the transformed image	
 		// The OriginalImage matrix is to store the original image and 
 	//TransformedImage stores the transformed values. 
@@ -367,20 +368,21 @@ void EncoderEngine(StructCodingPara * PtrCoding)
 
 	for(i = 0; i < PtrCoding->PtrHeader->Header.Part1.PadRows_3Bits ; i++)
 	{
-		for(j = 0; j < PtrCoding->ImageWidth + PtrCoding->PadCols_3Bits; j++)
+		for(j = 0; j < array_param; j++)
 			OriginalImage[i + PtrCoding->ImageRows][j] = OriginalImage[PtrCoding->ImageRows - 1][j];
 	}
 
 	for(i = 0; i < PtrCoding->PadCols_3Bits ; i++)
 	{
-		for(j = 0; j < PtrCoding->ImageRows + PtrCoding->PtrHeader->Header.Part1.PadRows_3Bits ; j++)
+		for(j = 0; j < img_param; j++)
 			OriginalImage[j][i + PtrCoding->ImageWidth] = OriginalImage[j][PtrCoding->ImageWidth - 1];
 	}
 
-	TransformedImage = (int **)calloc(PtrCoding->ImageRows +	PtrCoding->PtrHeader->Header.Part1.PadRows_3Bits,sizeof(int *));  
-	for(i = 0; i < PtrCoding->ImageRows+ PtrCoding->PtrHeader->Header.Part1.PadRows_3Bits; i++)
-   		TransformedImage[i] = (int *)calloc(PtrCoding->ImageWidth + PtrCoding->PadCols_3Bits, sizeof(int));	
-	
+	TransformedImage = (int **)calloc(img_param, sizeof(int *));  
+	for(i = 0; i < img_param; i++)
+    {
+   		TransformedImage[i] = (int *)calloc(array_param, sizeof(int));	
+    }
 	/* Read the input image */
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -394,18 +396,18 @@ void EncoderEngine(StructCodingPara * PtrCoding)
 
 ////////////////////////////////////////////////////////////////////////////////
 	// Output the coding information into the the output. 
+    //
 	if((PtrCoding->Bits->F_Bits = fopen(PtrCoding->CodingOutputFile, "wb")) == NULL)  // default name
 		ErrorMsg(BPE_FILE_ERROR);
 	
 	/****************************     1. Transform       *************************/
 	DWT_(PtrCoding, OriginalImage, TransformedImage);
-	
-		BuildBlockString(TransformedImage, PtrCoding->ImageRows + PtrCoding->PtrHeader->Header.Part1.PadRows_3Bits,
-		PtrCoding->ImageWidth + PtrCoding->PadCols_3Bits, BlockString);
-	for(i = 0; i < PtrCoding->ImageRows; i++)
-		free(TransformedImage[i]);
-	free(TransformedImage);
 
+    BuildBlockString(TransformedImage, PtrCoding->ImageRows + 
+            PtrCoding->PtrHeader->Header.Part1.PadRows_3Bits,
+            PtrCoding->ImageWidth + PtrCoding->PadCols_3Bits, 
+            BlockString);
+	
 	TempPaddedRows = PtrCoding->PtrHeader->Header.Part1.PadRows_3Bits;
 	PtrCoding->PtrHeader->Header.Part1.PadRows_3Bits = 0;
 	for(;PtrCoding->BlockCounter < TotalBlocks; )
@@ -430,23 +432,23 @@ void EncoderEngine(StructCodingPara * PtrCoding)
 			
 			PtrCoding->PtrHeader->Header.Part1.Part2Flag = TRUE; 
 			PtrCoding->PtrHeader->Header.Part2.SegByteLimit_27Bits = PtrCoding->BitsPerPixel * PtrCoding->PtrHeader->Header.Part3.S_20Bits * 64/8;
-
-
 		}
 
-///////////////////////////////////////////////////////////////////////////
 		BlockCodingInfo = (BitPlaneBits *)calloc(PtrCoding->PtrHeader->Header.Part3.S_20Bits,	sizeof(BitPlaneBits));
 //********************************* 2. DC and AC encoding   *************************/	
 		DCEncoding(PtrCoding, BlockString, BlockCodingInfo);
 
-		if((PtrCoding->SegmentFull == FALSE) &&  // if (1) the segment is not full and (2) the DCstop is not true, continue AC coding. 
-			// Otherwise jump to the codeline that update the header information, block counters, etc. 
-			 ( !((PtrCoding->PtrHeader->Header.Part2.DCstop == TRUE) && (PtrCoding->PtrHeader->Header.Part1.Part2Flag == TRUE))))		
+        // if (1) the segment is not full and (2) the DCstop is not true, continue AC coding. 
+        // Otherwise jump to the codeline that update the header information, block counters, etc. 
+		if((PtrCoding->SegmentFull == FALSE) &&  
+			 ( !((PtrCoding->PtrHeader->Header.Part2.DCstop == TRUE) && 
+                 (PtrCoding->PtrHeader->Header.Part1.Part2Flag == TRUE))))		
 		{
 			ACBpeEncoding(PtrCoding, BlockCodingInfo);	
-			free(BlockCodingInfo) ;
 	        // Update the bitstream struct. 	
 		}
+
+		free(BlockCodingInfo) ;
 
 		if(PtrCoding->PtrHeader->Header.Part1.EngImgFlg == TRUE)
 			break;	
@@ -456,12 +458,24 @@ void EncoderEngine(StructCodingPara * PtrCoding)
 
 		SegmentBufferFlushEncoder(PtrCoding);
 		PtrCoding->SegmentFull = FALSE;
-		
 	}
-	// ***************************  5. header information  *****************************//
+    // free allocated memory
     SegmentBufferFlushEncoder(PtrCoding);	
-	for(i = 0; i < TotalBlocks * BLOCK_SIZE; i++)
+    for(i = 0; i < TotalBlocks * BLOCK_SIZE; i++)
+    {
 		free(BlockString[i]);
-	free(BlockString);
-	return ; 
+    }
+    free(BlockString);
+    for(i = 0; i < img_param; i++)
+    {
+		free(TransformedImage[i]);
+    }
+    free(TransformedImage);
+	for(i = 0; i < img_param; i++)
+    {
+        free(OriginalImage[i]);
+    }
+    free(OriginalImage);
+	
+	return; 
 }

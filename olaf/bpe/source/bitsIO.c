@@ -9,12 +9,9 @@ Author:
 Hongqiang Wang
 Department of Electrical Engineering
 University of Nebraska-Lincoln
-Email: hqwang@bigred.unl.edu, hqwang@eecomm.unl.edu
-
-Your comment and suggestions are welcome. Please report bugs to me via email and I would greatly appreciate it. 
 Nov. 3, 2006
 */ 
-#include <stdlib.h>
+
 #include "global.h"
 
 void OutputCodeWord(StructCodingPara * Ptr)
@@ -40,7 +37,7 @@ void OutputCodeWord(StructCodingPara * Ptr)
 		{
 			WORD16 temp;					
 			temp = (WORD16)Ptr->Bits->ByteBuffer_4Bytes;
-			fwrite(&temp, 1, sizeof(WORD16), Ptr->Bits->F_Bits);
+			fwrite(&temp, 1, sizeof(WORD16), Ptr->Bits->F_Bits);  //Bug?
 		}
 		else if(Ptr->Bits->CodeWord_Length == 24)
 		{
@@ -58,17 +55,13 @@ void OutputCodeWord(StructCodingPara * Ptr)
 		{
 			UINT32 temp;					
 			temp = (UINT32)Ptr->Bits->ByteBuffer_4Bytes;
-			fwrite(&temp, 1, sizeof(UINT32), Ptr->Bits->F_Bits);
+			fwrite(&temp, 1, sizeof(UINT32), Ptr->Bits->F_Bits); //Bug?
 		}				
 		Ptr->Bits->CodeWordAlighmentBits = 0;
 	}
 }
 
-
-
-void BitsOutput(StructCodingPara *Ptr, 
-				DWORD32 bit, 
-				int length)
+void BitsOutput(StructCodingPara *Ptr, DWORD32 bit, int length)
 {
 	short i;
 //	short CodeWord_Length; 
@@ -84,12 +77,12 @@ void BitsOutput(StructCodingPara *Ptr,
 	if((Ptr->PtrHeader->Header.Part2.SegByteLimit_27Bits != 0))
 	{
 		// means that there might be a limitation on the total number of bits.
-		if(Ptr->Bits->SegBitCounter + (UINT32)length  >= 	Ptr->PtrHeader->Header.Part2.SegByteLimit_27Bits * 8)  
+		if(Ptr->Bits->SegBitCounter + (UINT32)length >= Ptr->PtrHeader->Header.Part2.SegByteLimit_27Bits * 8)  
 		{
 			short RemainderBits = 0;
 			Ptr->SegmentFull = TRUE;
-			RemainderBits = (short)(Ptr->PtrHeader->Header.Part2.SegByteLimit_27Bits * 8 - 
-				Ptr->Bits->SegBitCounter);
+			RemainderBits = (short)(Ptr->PtrHeader->Header.Part2.SegByteLimit_27Bits 
+                                                * 8 - Ptr->Bits->SegBitCounter);
 
 			for (i = RemainderBits - 1; i >= 0; i --)
 			{
@@ -101,7 +94,6 @@ void BitsOutput(StructCodingPara *Ptr,
 				Ptr->Bits->ByteBuffer_4Bytes += temp_bits;
 				OutputCodeWord(Ptr);	
 			}		
-
 			return;
 		}
 	}
@@ -127,10 +119,7 @@ void BitsOutput(StructCodingPara *Ptr,
 	return;
 }
 
-
-short BitsRead(StructCodingPara *Ptr,
-			   DWORD32 *bit,
-			   short length)
+short BitsRead(StructCodingPara *Ptr, DWORD32 *bit, short length)
 {
 	UCHAR8 i; 
 	*bit = 0;
@@ -151,7 +140,7 @@ short BitsRead(StructCodingPara *Ptr,
 	{
 		for (i = 0; i < length; i ++)
 		{
-			if ( Ptr->Bits->CodeWordAlighmentBits == 0)
+			if (Ptr->Bits->CodeWordAlighmentBits == 0)
 			{
 				Ptr->Bits->ByteBuffer_4Bytes = getc(Ptr->Bits->F_Bits) ; 
 				Ptr->Bits->CodeWordAlighmentBits = 8;
@@ -164,7 +153,7 @@ short BitsRead(StructCodingPara *Ptr,
 
 			// for embedded decoding rate control
 			if((Ptr->Bits->SegBitCounter >= Ptr->DecodingAllowedBitsSizeInSegment)
-				&& Ptr->DecodingAllowedBitsSizeInSegment != 0)
+                    && Ptr->DecodingAllowedBitsSizeInSegment != 0)
 			{
 				UINT32 CurrentTotalBytes =  (Ptr->Bits->SegBitCounter + 
 					Ptr->Bits->CodeWordAlighmentBits) / 8;
@@ -212,5 +201,3 @@ short BitsRead(StructCodingPara *Ptr,
 //	StrCoding->Bits->CodeWordAlighmentBits = 0;
 //	return;
 //}
-
-

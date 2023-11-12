@@ -6,18 +6,24 @@
 //      instead of using externs
 // -function declarations for pybind have been included at EOF 
 
+#pragma once
+
+#ifndef _INCL_GUARD
+#define _INCL_GUARD
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-
 #include <stdio.h>
-#include <string.h>                                                             
-#include <stdlib.h>                                                             
-#include <time.h>                                                               
-#include <ctype.h>                                                              
+#include <stdlib.h>   
+#include <time.h>     
+#include <ctype.h>        
 #include <unistd.h>
+#include <string.h>      
+#include <math.h>     
+
 
 #define BUFFER_LENGTH 150
 #define TRUE 1
@@ -42,10 +48,8 @@ typedef signed char SCHAR;
 typedef signed long SLONG;
 typedef double DOUBLE4;
 
-
 #define ERR_MSG(err) BpeErrorMsg[err]
 #define AMPLITUDE(a) ((a) >=0 ? (a): -(a))
-
 
 #define BPE_OK            0
 #define BPE_STREAM_END    1
@@ -83,7 +87,6 @@ typedef double DOUBLE4;
 #define the_min(a,b) (((a) < (b)) ? (a) : (b))
 
 #define SIGN(var) ((var < 0) ? NEGATIVE_SIGN : POSITIVE_SIGN)
-
 
 // restrictions on the coding parameters
 #define IMAGE_WIDTH_MAX (1 << 20)
@@ -225,7 +228,6 @@ typedef struct HEADER_STRUCTURE_PART2
 	UCHAR8 Reserved_4Bits; // 4 bits	
 }HeaderPart2;
 
-
 typedef struct HEADER_STRUCTURE_PART3
 {
 	DWORD32 S_20Bits; //max number of blocks in a segment is limited to 2^20
@@ -271,7 +273,6 @@ typedef union HEADERUNION {
 	long Field[5];
 }HeaderStruct;
 
-
 typedef struct STR_STOPLOCATION { 
 	char BitPlaneStopDecoding; // for find adjustment. 
 	long BlockNoStopDecoding;
@@ -281,7 +282,6 @@ typedef struct STR_STOPLOCATION {
 	char Y_LocationStopDecoding;
 	unsigned char stoppedstage;
 }StrStopLocation;
-
 
 typedef struct CODINGPARAMETERS
 {
@@ -307,26 +307,24 @@ typedef struct CODINGPARAMETERS
 
 typedef struct BLOCKSTRING
 {
-	long **FreqBlkString;
-	float ** FloatingFreqBlk;
+	long **FreqBlkString = NULL;
+	float ** FloatingFreqBlk = NULL;
 	UINT32 Blocks;
 	struct BLOCKSTRING *next;
 	struct BLOCKSTRING *previous;
 }StructFreBlockString;
 
-
 void ErrorMsg(int err);
 void BitsOutput(StructCodingPara *, 	DWORD32 ,  int );
 short BitsRead(StructCodingPara *,   DWORD32 *,  short );
 
-//FILE *F_CodingInfo;
-
+// included (optional) file from source code; most likely buggy if used 
+//FILE * F_CodingInfo = NULL;
 
 // extern functions
 void BlockScanEncode(StructCodingPara *PtrCoding, BitPlaneBits *BlockInfo);
 void StagesEnCoding(StructCodingPara *PtrCoding, BitPlaneBits *BlockInfo);
 void StagesDeCoding(StructCodingPara *PtrCoding, BitPlaneBits *BlockInfo);
-// adjusted params below and in source file (9/26/2023)
 long DeConvTwosComp(DWORD32 complement, UCHAR8 leftmost);
 void AdjustOutPut(StructCodingPara * PtrCoding, BitPlaneBits * BlockCodingInfo);
 void CoeffDegroup(int **img_wav, UINT32 rows, UINT32 cols);
@@ -335,7 +333,7 @@ void HeaderReadin(StructCodingPara *PtrCoding);
 void DWT_Reverse(int **block,  StructCodingPara *PtrCoding);
 void DWT_ReverseFloating(float **block, StructCodingPara *PtrCoding);
 short DCDeCoding(StructCodingPara *PtrCoding, StructFreBlockString *StrBlocks,
-        BitPlaneBits *BlockInfo);
+                                            BitPlaneBits *BlockInfo);
 void ACBpeDecoding(StructCodingPara *PtrCoding, BitPlaneBits *BlockCodingInfo);
 void DWT_(StructCodingPara *, int **, int **);
 void HeaderUpdate(HeaderStruct * );
@@ -357,42 +355,57 @@ void StagesEnCodingGaggles3(StructCodingPara *PtrCoding, BitPlaneBits *BlockInfo
         UCHAR8 BlocksInGaggles, UCHAR8 Option[], BOOL FlagCodeOptionOutput[]);
 
 void StagesDeCodingGaggles1(StructCodingPara *PtrCoding, BitPlaneBits *BlockCodingInfo,
-        UCHAR8 BlocksInGaggles, UCHAR8 *CodeOptionsAllGaggles, BOOL *FlagCodeOptionOutput);
+        UCHAR8 BlocksInGaggles, UCHAR8 *CodeOptionsAllGaggles, 
+        BOOL *FlagCodeOptionOutput);
                                                                                 
 void StagesDeCodingGaggles2(StructCodingPara *PtrCoding, BitPlaneBits *BlockCodingInfo,
-        UCHAR8 BlocksInGaggles, UCHAR8 *CodeOptionsAllGaggles, BOOL *FlagCodeOptionOutput);
+        UCHAR8 BlocksInGaggles, UCHAR8 *CodeOptionsAllGaggles, 
+        BOOL *FlagCodeOptionOutput);
                                                                                 
 void StagesDeCodingGaggles3(StructCodingPara *PtrCoding, BitPlaneBits *BlockCodingInfo, 
-        UCHAR8 BlocksInGaggles, UCHAR8 *CodeOptionsAllGaggles, BOOL *FlagCodeOptionOutput);
+        UCHAR8 BlocksInGaggles, UCHAR8 *CodeOptionsAllGaggles, 
+        BOOL *FlagCodeOptionOutput);
 
-void RiceCoding(short InputVal,short BitLength, UCHAR8 *Option, StructCodingPara *PtrCoding); 
+void RiceCoding(short InputVal,short BitLength, UCHAR8 *Option, 
+                                                StructCodingPara *PtrCoding); 
 void BitPlaneSymbolReset(StrSymbolDetails *SymbolStr);
-void RiceDecoding(DWORD32 *decoded, short BitLength, UCHAR8 *splitOption, StructCodingPara *Ptr);
+void RiceDecoding(DWORD32 *decoded, short BitLength, UCHAR8 *splitOption, 
+                                                        StructCodingPara *Ptr);
 void DeMappingPattern(StrSymbolDetails *StrSymbol);
-// edited here and Coeff source file
 void CoeffRegroupF97(float **TransformedImage, UINT32 rows, UINT32 cols);   
 void CoeffRegroup(int **TransformedImage, UINT32 rows, UINT32 cols);
-void DWT_f97_2D(float **rows, UINT32 ImgCols, UINT32 ImgRows, UINT32 levels, BOOL inverse);     
-// edtied here and lifting source files
-void lifting_M97_2D(int **rows, UINT32 ImgCols, UINT32 ImgRows, UINT32 levels, BOOL inverse);
-void lifting_f97_2D(float **rows, UINT32 ImgCols, UINT32 ImgRows, UINT32 levels, BOOL inverse); 
+void DWT_f97_2D(float **rows, UINT32 ImgCols, UINT32 ImgRows, 
+                                                    UINT32 levels, BOOL inverse);     
+void lifting_M97_2D(int **rows, UINT32 ImgCols, UINT32 ImgRows, 
+                                                    UINT32 levels, BOOL inverse);
+void lifting_f97_2D(float **rows, UINT32 ImgCols, UINT32 ImgRows, 
+                                                    UINT32 levels, BOOL inverse); 
 
-
-// pybind
 // for bpe_encoder.c
 void EncoderEngine(StructCodingPara * PtrCoding);
 // for bpe_decoder.c
 void DecoderEngine(StructCodingPara * PtrCoding);
 // for header.c
-void HeaderInilization(StructCodingPara *Ptr);
+void HeaderInilization(StructCodingPara * Ptr);
 
-// adapted from bpe_main.c
+// adapted from source_main.c
 void Usage();
 BOOL ParameterValidCheck(StructCodingPara *PtrCoding);
+
+// pybind functions
 void command_menu();
-//void main_encode();
-//void main_decode();
+void encode_basearg(char * c_infile, char * c_outfile, const UINT32 w, 
+                        const UINT32 l, const float bpp, const UINT32 bit_depth);
+
+void encode_fullarg(char * c_infile, char* c_outfile, const UINT32 w, 
+                        const UINT32 l, const float bpp, const UINT32 bit_depth,
+                        const UINT32 blocks_per_seg, const BOOL is_big_endian, 
+                        const BOOL is_lossless);
+
+void decode(char* c_infile, char* c_outfile);
 
 #ifdef __cplusplus
 }
 #endif
+
+#endif // _INCL_GUARD
