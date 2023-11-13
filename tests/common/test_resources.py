@@ -10,10 +10,10 @@ class BadResource(Resource):
     """Bad Resource for testing."""
 
     def on_start(self):
-        raise Exception("a random exception")
+        raise Exception("a random exception")  # pylint: disable=W0719
 
     def on_end(self):
-        raise Exception("a random exception")
+        raise Exception("a random exception")  # pylint: disable=W0719
 
 
 class TestResource(unittest.TestCase):

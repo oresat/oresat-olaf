@@ -1,3 +1,5 @@
+"""OLAF (OreSat Linux App Framework)"""
+
 import os
 import sys
 from argparse import ArgumentParser, Namespace
@@ -27,7 +29,7 @@ from .common.timer_loop import TimerLoop
 __version__ = "3.0.0"
 
 
-def olaf_setup(node_id: NodeId) -> (Namespace, dict):
+def olaf_setup(node_id: NodeId) -> tuple[Namespace, dict]:
     """
     Parse runtime args and setup the app and REST API.
 

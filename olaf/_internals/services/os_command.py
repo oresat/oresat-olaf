@@ -43,7 +43,7 @@ class OsCommandService(Service):
         if self.state_obj.value == OsCommandState.EXECUTING:
             logger.info("running os command: " + self.command)
 
-            out = subprocess.run(self.command, capture_output=True, shell=True)
+            out = subprocess.run(self.command, capture_output=True, shell=True, check=False)
             if out.returncode != 0:  # error
                 self.reply_obj.value = out.stderr[: self.reply_obj_max_len]
                 if self.reply_obj.value:
@@ -61,17 +61,21 @@ class OsCommandService(Service):
 
         self.sleep(0.1)
 
-    def on_loop_error(self, exc: Exception):
+    def on_loop_error(self, error: Exception):
+        """On loop error set obj back to default."""
+
         self.failed = True
         self.command = b""
         self.state_obj.value = OsCommandState.ERROR_NO_REPLY
         self.reply_obj.value = b""
-        logger.exception(exc)
+        logger.exception(error)
 
     def on_command_read(self) -> bytes:
+        """SDO read callback for command read."""
         return self.command.encode()
 
     def on_command_write(self, command: bytes):
+        """SDO write callback for command write."""
         if self.state_obj.value == OsCommandState.EXECUTING:
             logger.error("cannot start another os command when one is running")
             return

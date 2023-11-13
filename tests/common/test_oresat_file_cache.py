@@ -124,6 +124,8 @@ class TestOreSatFileCache(unittest.TestCase):
         rmtree(abspath(dir_name), ignore_errors=True)
 
     def test_oresat_file_cache_peek(self):
+        """Peak method works."""
+
         # TEST: Get the oldest file name or returns empty string if none
         dir_name = "peek_cache"
         result = OreSatFileCache(dir_name)

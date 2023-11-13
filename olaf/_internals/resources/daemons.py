@@ -1,14 +1,20 @@
+"""Resource for getting daemons info"""
+
 from ...common.daemon import DaemonState
 from ...common.resource import Resource
 
 
 class DaemonsResource(Resource):
-    """Resource for getting daemons"""
+    """Resource for getting daemons info"""
 
     def __init__(self):
         super().__init__()
 
         self.index = 0x3005
+        self._total_daemons_obj = None
+        self._select_daemon_obj = None
+        self._daemon_name_obj = None
+        self._daemon_state_obj = None
 
     def on_start(self):
         daemon_manager_obj = self.node.od[self.index]

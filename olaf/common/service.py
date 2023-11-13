@@ -38,7 +38,7 @@ class Service:
         try:
             self.on_start()
             self._thread.start()
-        except Exception as e:
+        except Exception as e:  # pylint: disable=W0718
             logger.exception(f"{self.__class__.__name__}'s on_start raised: {e}")
             logger.critical(f"{self.__class__.__name__}'s thread is being skipped")
 
@@ -59,7 +59,7 @@ class Service:
         while not self._event.is_set():
             try:
                 self.on_loop()
-            except Exception as e:
+            except Exception as e:  # pylint: disable=W0718
                 logger.error("unexpected exception raised by on_loop, stopping service")
                 self.on_loop_error(e)
                 self._event.set()
@@ -89,7 +89,7 @@ class Service:
 
         try:
             self.on_stop_before()
-        except Exception as e:
+        except Exception as e:  # pylint: disable=W0718
             logger.exception(f"{self.__class__.__name__}'s on_stop_before raised: {e}")
 
         if not self._event.is_set():
@@ -100,7 +100,7 @@ class Service:
 
         try:
             self.on_stop()
-        except Exception as e:
+        except Exception as e:  # pylint: disable=W0718
             logger.exception(f"{self.__class__.__name__}'s on_stop raised: {e}")
 
     def on_stop_before(self):

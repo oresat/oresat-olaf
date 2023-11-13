@@ -1,3 +1,5 @@
+"""Tests for Resources."""
+
 import canopen
 from oresat_configs import NodeId, OreSatConfig, OreSatId
 
@@ -47,14 +49,16 @@ class MockApp:
 
         if subindex is None:
             if co_node.object_dictionary[index].data_type == domain:
-                return co_node.sdo[index].raw
+                ret = co_node.sdo[index].raw
             else:
-                return co_node.sdo[index].phys
+                ret = co_node.sdo[index].phys
         else:
             if co_node.object_dictionary[index][subindex].data_type == domain:
-                return co_node.sdo[index][subindex].raw
+                ret = co_node.sdo[index][subindex].raw
             else:
-                return co_node.sdo[index][subindex].phys
+                ret = co_node.sdo[index][subindex].phys
+
+        return ret
 
     def sdo_write(self, index: [int, str], subindex: [None, int, str], value):
         """Call a internal SDO write for testing"""
@@ -74,9 +78,11 @@ class MockApp:
                 co_node.sdo[index][subindex].phys = value
 
     def start(self):
+        """Start the mocked app."""
         self.resource.start(self.node)
 
     def stop(self):
+        """Stop the mocked app."""
         self.resource.end()
         self.node._destroy_node()
         self.node.stop()

@@ -3,7 +3,6 @@
 import os
 import tarfile
 
-import canopen
 from loguru import logger
 
 from ...common.oresat_file import new_oresat_file
@@ -28,7 +27,7 @@ class LogsService(Service):
         super().__init__()
 
         self.logs_dir_path = "/var/log/journal/"
-        self.make_file_obj: canopen.objectdictionary.Variable = None
+        self.make_file_obj = None
 
     def on_start(self):
         self.make_file_obj = self.node.od["logs"]["make_file"]

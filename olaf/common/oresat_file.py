@@ -85,7 +85,7 @@ class OreSatFile:
             self._extension = ""
 
     def __repr__(self):
-        return "{} {}".format(self.__class__.__name__, self._name)
+        return f"{self.__class__.__name__} {self._name}"
 
     def __str__(self):
         return self._name

@@ -138,7 +138,7 @@ class Pru:
 
     @firmware.setter
     def firmware(self, fw_path: str):
-        if self._state != PruState.OFFLINE:
+        if self.state != PruState.OFFLINE:
             raise PruError(f"PRU{self._pru_num} must be in OFFLINE state to set firmware")
 
         if not (isfile(fw_path) or isfile("/lib/firmware/" + fw_path)):

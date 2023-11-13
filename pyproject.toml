@@ -6,14 +6,12 @@ build-backend = "setuptools.build_meta"
 name = "oresat-olaf"
 description = "Application framework for all OreSat Linux boards"
 readme = "README.rst"
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 license = {text = "GPL-3.0"}
 classifiers = [
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -62,7 +60,9 @@ linters = "pycodestyle,pyflakes,pylint,mccabe,mypy,radon"
 # R0902:    Too many instance attributes
 # R0913:    Too many arguments
 # W0707:    Consider explicitly re-raising
-ignore = "E402,C901,C0103,E203,R0912,R0915,R901,R901,R0914,C0413,C0206,R1716,W1514,R0902,R0913,W0707"
+# W0102:    Dangerous default value as argument
+# W0107:    Unnecessary pass statement
+ignore = "E402,C901,C0103,E203,R0912,R0915,R901,R901,R0914,C0413,C0206,R1716,W1514,R0902,R0913,W0707,W0102,W0107"
 max_line_length = 100
 
 [[tool.pylama.files]]

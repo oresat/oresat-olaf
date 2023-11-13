@@ -1,3 +1,5 @@
+"""Test the updater."""
+
 import shutil
 import tempfile
 import unittest
@@ -10,23 +12,27 @@ PATH = dirname(abspath(__file__)) + "/test_files"
 
 
 class TestUpdater(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        """generate temp dirs for tests"""
-        self._work_dir = tempfile.mkdtemp()
-        self._cache_dir = tempfile.mkdtemp()
+    """Test the updater."""
 
     @classmethod
-    def tearDownClass(self):
+    def setUpClass(cls):
+        """generate temp dirs for tests"""
+        cls._work_dir = tempfile.mkdtemp()
+        cls._cache_dir = tempfile.mkdtemp()
+
+    @classmethod
+    def tearDownClass(cls):
         """clean up temp dirs after tests"""
-        shutil.rmtree(self._work_dir)
-        shutil.rmtree(self._cache_dir)
+        shutil.rmtree(cls._work_dir)
+        shutil.rmtree(cls._cache_dir)
 
     def setUp(self):
         """clean up cache dir before tests"""
         shutil.rmtree(self._cache_dir, ignore_errors=True)
 
     def test_is_update_archive(self):
+        """Test the is_update_archive method works."""
+
         self.assertTrue(is_update_archive("gps_update_12346789.tar.xz"))
         self.assertTrue(is_update_archive("star-tracker_update_12346789.tar.xz"))
 
@@ -35,6 +41,7 @@ class TestUpdater(unittest.TestCase):
         self.assertFalse(is_update_archive("star-tracker_capture_12346789.tar.xz"))
 
     def test_updater_default(self):
+        """Test updater class defaults when no updates are cached."""
         updater = Updater(self._work_dir, self._cache_dir)
 
         # properties defaults
@@ -48,6 +55,8 @@ class TestUpdater(unittest.TestCase):
         self.assertEqual(updater.instruction_command, "")
 
     def test_add_update_archive(self):
+        """Test adding an update archive to the updater."""
+
         updater = Updater(self._work_dir, self._cache_dir)
         updates_cached = len(updater.updates_cached)
 
@@ -68,6 +77,8 @@ class TestUpdater(unittest.TestCase):
 
     @unittest.skipUnless(isfile("/usr/bin/dpkg"), "requires dpkg")
     def test_make_status_file(self):
+        """Test making in a status file."""
+
         updater = Updater(self._work_dir, self._cache_dir)
 
         status_archive = updater.make_status_archive()
@@ -77,16 +88,22 @@ class TestUpdater(unittest.TestCase):
         remove(status_archive)
 
     def test_archive_extraction(self):
+        """Test archive exxtraction."""
+
         updater = Updater(self._work_dir, self._cache_dir)
         updater._extract_update_archive(PATH + "/test_update_1611940000.tar.xz")
 
     def test_read_instructions(self):
+        """Test reading the instructions file."""
+
         updater = Updater(self._work_dir, self._cache_dir)
         updater._extract_update_archive(PATH + "/test_update_1611940000.tar.xz")
         updater._read_instructions()
 
     @unittest.skipUnless(isfile("/usr/bin/dpkg") and geteuid() == 0, "requires dpkg and root")
     def test_run_instructions(self):
+        """Test running the instructions."""
+
         updater = Updater(self._work_dir, self._cache_dir)
         updater._extract_update_archive(PATH + "/test_update_1611940000.tar.xz")
         commands = updater._read_instructions()
@@ -94,6 +111,8 @@ class TestUpdater(unittest.TestCase):
 
     @unittest.skipUnless(isfile("/usr/bin/dpkg") and geteuid() == 0, "requires dpkg and root")
     def test_update(self):
+        """Test running updates."""
+
         updater = Updater(self._work_dir, self._cache_dir)
         updates_cached = updater.updates_cached
         self.assertEqual(updater.status, UpdaterState.UPDATE_SUCCESSFUL)

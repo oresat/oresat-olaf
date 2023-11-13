@@ -25,7 +25,7 @@ class Resource:
 
         try:
             self.on_start()
-        except Exception as e:
+        except Exception as e:  # pylint: disable=W0718
             logger.exception(
                 f"{self.__class__.__name__}'s on_start raised an uncaught exception:" f"{e}"
             )
@@ -39,7 +39,7 @@ class Resource:
 
         try:
             self.on_end()
-        except Exception as e:
+        except Exception as e:  # pylint: disable=W0718
             logger.exception(
                 f"{self.__class__.__name__}'s on_end raised an uncaught exception:" f"{e}"
             )

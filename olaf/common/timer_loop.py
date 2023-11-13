@@ -2,7 +2,7 @@
 
 from threading import Event, Thread
 
-from canopen.objectdictionary import Variable
+import canopen
 
 from .. import logger
 
@@ -14,8 +14,8 @@ class TimerLoop:
         self,
         name: str,
         loop_func,
-        delay: [int, float, Variable],
-        start_delay: [int, float, Variable] = 0,
+        delay: [int, float, canopen.objectdictionary.Variable],
+        start_delay: [int, float, canopen.objectdictionary.Variable] = 0,
         args: tuple = (),
         exc_func=None,
     ):
@@ -39,10 +39,10 @@ class TimerLoop:
             the function as a argument.
         """
 
-        if not isinstance(delay, (int, float, Variable)):
+        if not isinstance(delay, (int, float, canopen.objectdictionary.Variable)):
             raise ValueError(f"delay of {delay} is not a int, float, Variable")
 
-        if not isinstance(start_delay, (int, float, Variable)):
+        if not isinstance(start_delay, (int, float, canopen.objectdictionary.Variable)):
             raise ValueError(f"start_delay of {start_delay} is not a int, float, or Variable")
 
         self._name = name
@@ -68,25 +68,26 @@ class TimerLoop:
         self._thread.start()
 
     def _loop(self):
-        if isinstance(self._start_delay, Variable) and self._start_delay.value > 0:
+        is_var = isinstance(self._start_delay, canopen.objectdictionary.Variable)
+        if is_var and self._start_delay.value > 0:
             self._event.wait(self._start_delay.value / 1000)
-        elif not isinstance(self._start_delay, Variable) and self._start_delay > 0:
+        elif not is_var and self._start_delay > 0:
             self._event.wait(self._start_delay / 1000)
 
         ret = True
         while ret is True and not self._event.is_set():
             try:
                 ret = self._loop_func(*self._args)
-            except Exception as e:
+            except Exception as e:  # pylint: disable=W0718
                 self._event.set()
                 logger.exception(f"{self._name} timer loop loop_func raise: {e}")
                 if self._exc_func:
                     try:
                         self._exc_func(e)
-                    except Exception as e:
-                        logger.exception(f"{self._name} timer loop exc_func raise: {e}")
+                    except Exception as e2:  # pylint: disable=W0718
+                        logger.exception(f"{self._name} timer loop exc_func raise: {e2}")
 
-            if isinstance(self._delay, Variable):
+            if isinstance(self._delay, canopen.objectdictionary.Variable):
                 self._event.wait(self._delay.value / 1000)
             else:
                 self._event.wait(self._delay / 1000)
@@ -102,17 +103,17 @@ class TimerLoop:
             self._thread.join()
 
     @property
-    def delay(self) -> [int, float, Variable]:
+    def delay(self) -> [int, float, canopen.objectdictionary.Variable]:
         """int, float, Variable: The delay between loops"""
 
         return self._delay
 
     @delay.setter
-    def delay(self, value: [int, float, Variable]):
+    def delay(self, value: [int, float, canopen.objectdictionary.Variable]):
         if (
             not isinstance(value, int)
             or not isinstance(value, float)
-            or not isinstance(value, Variable)
+            or not isinstance(value, canopen.objectdictionary.Variable)
         ):
             raise ValueError(f"{value} is not a int, float, or Variable")
 

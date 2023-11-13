@@ -1,7 +1,7 @@
 """OreSat CANopen Master Node class to support the C3"""
 
 from time import time
-from typing import Any
+from typing import Any, Union
 
 import canopen
 from loguru import logger
@@ -54,7 +54,7 @@ class MasterNode(Node):
         status = int.from_bytes(data, "little")
         self.node_status[NodeId(node_id)] = (status, timestamp)
 
-    def _on_emergency(self, cob_id: int, data: bytes, timestamp: float):
+    def _on_emergency(self, cob_id: int, data: bytes, timestamp: float):  # pylint: disable=W0613
         """Callback on node emergency messages."""
 
         node_id = cob_id - 0x700
@@ -76,7 +76,7 @@ class MasterNode(Node):
 
         self._network.sync.transmit()
 
-    def sdo_read(self, node_id: NodeId, index: int or str, subindex: int or str) -> Any:
+    def sdo_read(self, node_id: NodeId, index: Union[int, str], subindex: Union[int, str]) -> Any:
         """
         Read a value from a remote node's object dictionary using an SDO.
 

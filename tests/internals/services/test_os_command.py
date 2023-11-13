@@ -1,4 +1,5 @@
 """Unit tests for the os command (aka bash) service."""
+
 import unittest
 from time import sleep
 

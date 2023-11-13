@@ -1,3 +1,4 @@
+"""Test the REST API."""
 import unittest
 
 from oresat_configs import NodeId
@@ -6,6 +7,8 @@ from olaf import app, olaf_setup, rest_api
 
 
 class TestRestApi(unittest.TestCase):
+    """Test the REST API."""
+
     @classmethod
     def setUpClass(cls):
         olaf_setup(NodeId.GPS)
@@ -25,6 +28,8 @@ class TestRestApi(unittest.TestCase):
         app.stop()
 
     def test_read(self):
+        """Test reading a value from an object."""
+
         # valid
         self.assertNotIn("error", self.client.get("/od/0x1000").json)  # 0x1000 is manditory
         self.assertNotIn("error", self.client.get("/od/4096").json)  # aka 0x1000
@@ -38,6 +43,8 @@ class TestRestApi(unittest.TestCase):
         self.assertIn("error", self.client.get("/od/0xFFFFFF").json)  # invalid index
 
     def test_write(self):
+        """Test writing a value to an object."""
+
         # valid
         self.client.put("/od/0x1000", json={"value": 1})
         res = self.client.get("/od/0x1000")

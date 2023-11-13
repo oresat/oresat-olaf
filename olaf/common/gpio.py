@@ -32,8 +32,7 @@ class Gpio:
             if i.startswith("gpiochip") or i in ["export", "unexport"]:
                 continue
             with open(f"{_GPIO_DIR_PATH}/{i}/label", "r") as f:
-                name = f.read()[:-1]  # remove the trailing '\n'
-                _LABELS[name] = int(i[4:])
+                _LABELS[f.read()[:-1]] = int(i[4:])  # remove the trailing '\n'
 
     def __init__(self, pin: str, mock: bool = False):
         """
@@ -106,7 +105,7 @@ class Gpio:
     @value.setter
     def value(self, new_value: int):
         if self._mode == "in":
-            raise GpioError(f"Cannot set GPIO {self._pin.name} value, it is in input mode")
+            raise GpioError(f"Cannot set GPIO {self.number} value, it is in input mode")
 
         if self._mock:
             self._mock_value = new_value

@@ -121,6 +121,7 @@ class App:
         self._services.append(service)
 
     def run(self):
+        """Run the app."""
         logger.info(f"{self._node.name} app is starting")
 
         for service in self._services:
@@ -132,7 +133,7 @@ class App:
         if self._node:
             try:
                 reset = self._node.run()
-            except Exception as e:
+            except Exception as e:  # pylint: disable=W0718
                 logger.exception(f"unexpected error was raised by app node: {e}")
                 reset = NodeStop.SOFT_RESET
 
@@ -148,7 +149,7 @@ class App:
             logger.info("hard reseting the system")
 
             if os.geteuid() == 0:  # running as root
-                subprocess.run("reboot", shell=True)
+                subprocess.run("reboot", shell=True, check=False)
             else:
                 logger.error("not running as root, cannot reboot the system")
         elif reset == NodeStop.FACTORY_RESET:
@@ -163,18 +164,18 @@ class App:
             try:
                 if self._factory_reset_cb:
                     self._factory_reset_cb()
-            except Exception as e:
+            except Exception as e:  # pylint: disable=W0718
                 logger.exception(f"custom factory reset function raised: {e}")
 
             if os.geteuid() == 0:  # running as root
-                subprocess.run("reboot", shell=True)
+                subprocess.run("reboot", shell=True, check=False)
             else:
                 logger.error("not running as root, cannot reboot the system")
         elif reset == NodeStop.POWER_OFF:
             logger.info("powering off the system")
 
             if os.geteuid() == 0:  # running as root
-                subprocess.run("poweroff", shell=True)
+                subprocess.run("poweroff", shell=True, check=False)
             else:
                 logger.error("not running as root, cannot power off the system")
 
@@ -185,7 +186,7 @@ class App:
             self._node.stop()
 
     @property
-    def node(self) -> Node or MasterNode:
+    def node(self) -> Node:
         """Node: The CANopen node."""
 
         return self._node

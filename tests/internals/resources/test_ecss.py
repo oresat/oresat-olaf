@@ -21,5 +21,5 @@ class TestEcssResource(unittest.TestCase):
     def test_ecss(self):
         """Test the scet and utc objects callbacks."""
 
-        self.assertIsNot(self.app.sdo_read("scet", None), 0)
-        self.assertIsNot(self.app.sdo_read("utc", None), 0)
+        self.assertNotEqual(self.app.sdo_read("scet", None), 0)
+        self.assertNotEqual(self.app.sdo_read("utc", None), 0)

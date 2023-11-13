@@ -6,7 +6,7 @@ from enum import IntEnum, auto
 from os import geteuid
 from pathlib import Path
 from threading import Event
-from typing import Any, Callable
+from typing import Any, Callable, Dict, Union
 
 import canopen
 import psutil
@@ -78,12 +78,12 @@ class Node:
         self._node: canopen.LocalNode = None
         self._network: canopen.Network = None
         self._event = Event()
-        self._read_cbs = {}
-        self._write_cbs = {}
+        self._read_cbs = {}  # type: ignore
+        self._write_cbs = {}  # type: ignore
         self._syncs = 0
         self._reset = NodeStop.SOFT_RESET
-        self._tpdo_timers = []
-        self._daemons = {}
+        self._tpdo_timers = []  # type: ignore
+        self._daemons = {}  # type: ignore
         self.first_bus_reset = False
 
         if geteuid() == 0:  # running as root
@@ -111,10 +111,10 @@ class Node:
         if self._network:
             try:
                 self._network.disconnect()
-            except Exception:
+            except Exception:  # pylint: disable=W0718
                 pass
 
-    def _on_sync(self, cob_id: int, data: bytes, timestamp: float):
+    def _on_sync(self, cob_id: int, data: bytes, timestamp: float):  # pylint: disable=W0613
         """On SYNC message send TPDOs configured to be SYNC-based"""
 
         self._syncs += 1
@@ -185,7 +185,7 @@ class Node:
 
         try:
             self._network.send_message(cob_id, data)
-        except Exception as e:
+        except Exception as e:  # pylint: disable=W0718
             logger.exception(f"TPDO{tpdo} failed with: {e}")
 
     def _tpdo_timer_loop(self, tpdo: int) -> bool:
@@ -266,7 +266,7 @@ class Node:
                 f"ip link set {self._bus} type can bitrate 1000000;"
                 f"ip link set {self._bus} up"
             )
-            out = subprocess.run(cmd, shell=True, check=True)
+            out = subprocess.run(cmd, shell=True, check=False)
             if out.returncode != 0:
                 logger.error(out)
 
@@ -285,7 +285,7 @@ class Node:
         try:
             self._node.nmt.start_heartbeat(self.od[0x1017].default)
             self._node.nmt.state = "OPERATIONAL"
-        except Exception as e:
+        except Exception as e:  # pylint: disable=W0718
             logger.exception(f"failed to (re)start CANopen network with {e}")
 
         self._network.subscribe(0x80, self._on_sync)
@@ -303,7 +303,7 @@ class Node:
             if self._network:
                 self._network.disconnect()
             self._destroy_node()
-        except Exception:
+        except Exception:  # pylint: disable=W0718
             self._network = None  # make sure the canopen network is down
             self._node = None
 
@@ -353,7 +353,7 @@ class Node:
 
         try:
             self._monitor_can()
-        except Exception as e:
+        except Exception as e:  # pylint: disable=W0718
             logger.exception(e)
 
         # stop the node and TPDO timers
@@ -362,7 +362,7 @@ class Node:
         logger.info(f"{self.name} node has ended")
         return self._reset
 
-    def stop(self, reset: NodeStop = None):
+    def stop(self, reset: Union[NodeStop, None] = None):
         """End the run loop"""
 
         if reset is not None:
@@ -454,9 +454,9 @@ class Node:
 
         Parameters
         ----------
-        index: int or str
+        index: int
             The index the SDO is reading to.
-        subindex: int or str
+        subindex: int
             The subindex the SDO is reading to.
         od: canopen.objectdictionary.Variable
             The variable object being read to. Badly named. And not appart of the actual OD.
@@ -472,7 +472,7 @@ class Node:
         # convert any ints to strs
         if isinstance(self.od[index], canopen.objectdictionary.Variable) and od == self.od[index]:
             index = od.name
-            subindex = None
+            subindex = None  # type: ignore
         else:
             index = self.od[index].name
             subindex = od.name
@@ -517,7 +517,7 @@ class Node:
         # convert any ints to strs
         if isinstance(self.od[index], canopen.objectdictionary.Variable) and od == self.od[index]:
             index = od.name
-            subindex = None
+            subindex = None  # type: ignore
         else:
             index = self.od[index].name
             subindex = od.name
@@ -568,7 +568,7 @@ class Node:
         return not self._event.is_set()
 
     @property
-    def daemons(self) -> dict:
+    def daemons(self) -> Dict[str, Daemon]:
         """dict: The dictionary of external daemons that are monitored and/or controllable"""
 
         return self._daemons

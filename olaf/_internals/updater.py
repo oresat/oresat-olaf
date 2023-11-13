@@ -193,7 +193,7 @@ class Updater:
         logger.info("extracting files from update")
         try:
             self._extract_update_archive(update_archive_file_path)
-        except Exception as e:
+        except Exception as e:  # pylint: disable=W0718
             logger.exception(e)
             self._clear_work_dir()
             self._state = UpdaterState.PRE_UPDATE_FAILED
@@ -202,7 +202,7 @@ class Updater:
         logger.info("reading instructions file")
         try:
             commands = self._read_instructions()
-        except Exception as e:
+        except Exception as e:  # pylint: disable=W0718
             logger.exception(e)
             self._clear_work_dir()
             self._state = UpdaterState.PRE_UPDATE_FAILED
@@ -214,7 +214,7 @@ class Updater:
             # If anything fails/errors the board's software could break.
             # All errors are log at critical level.
             self._run_instructions(commands)
-        except Exception as e:
+        except Exception as e:  # pylint: disable=W0718
             logger.exception(e)
             self._clear_work_dir()
             self._cache.clear()
@@ -309,7 +309,7 @@ class Updater:
                 # make sure all file exist
                 for j in i_items:
                     if not isfile(self._work_dir + "/" + j):
-                        UpdaterError(f"{i_type} is missing file {j}")
+                        raise UpdaterError(f"{i_type} is missing file {j}")
 
                 i_items_with_paths = [self._work_dir + "/" + i for i in i_items]
                 command = INSTRUCTIONS[i_type] + " " + " ".join(i_items_with_paths)
@@ -343,7 +343,7 @@ class Updater:
             self._command = command
             self._instruction_index = commands.index(command)
 
-            out = subprocess.run(command, capture_output=True, shell=True)
+            out = subprocess.run(command, capture_output=True, shell=True, check=False)
 
             if out.returncode != 0:
                 for line in out.stderr.decode("utf-8").split("\n"):
@@ -377,7 +377,7 @@ class Updater:
             dpkg_file = new_oresat_file(keyword=DPKG_STATUS_KEYWORD)
         pip_file = "/tmp/" + new_oresat_file(keyword=PIP_STATUS_KEYWORD)
 
-        out = subprocess.run("pip freeze", capture_output=True, shell=True)
+        out = subprocess.run("pip freeze", capture_output=True, shell=True, check=False)
         if out.returncode != 0:
             with open(pip_file, "w") as f:
                 f.write(out.stdout.decode("utf-8"))
@@ -477,7 +477,7 @@ def is_update_archive(file_path: str) -> bool:
 
     try:
         oresat_file = OreSatFile(file_path)
-    except Exception:
+    except Exception:  # pylint: disable=W0718
         return False
 
     if oresat_file.keyword == "update" and oresat_file.extension == ".tar.xz":

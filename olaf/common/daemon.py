@@ -35,23 +35,24 @@ class Daemon:
     def start(self):
         """Start the daemon."""
 
-        subprocess.run(f"systemctl start {self._name}", shell=True)
+        subprocess.run(f"systemctl start {self._name}", shell=True, check=False)
 
     def stop(self):
         """Stop the daemon."""
 
-        subprocess.run(f"systemctl stop {self._name}", shell=True)
+        subprocess.run(f"systemctl stop {self._name}", shell=True, check=False)
 
     def restart(self):
         """Restart the daemon."""
 
-        subprocess.run(f"systemctl restart {self._name}", shell=True)
+        subprocess.run(f"systemctl restart {self._name}", shell=True, check=False)
 
     @property
     def status(self) -> DaemonState:
         """DaemonState: The state of the daemon."""
 
-        out = subprocess.run(f"systemctl status {self._name}", capture_output=True, shell=True)
+        cmd = f"systemctl status {self._name}"
+        out = subprocess.run(cmd, capture_output=True, shell=True, check=False)
         reply = out.stdout.decode()
         line = reply.split("\n")[2].strip()
         state = line.split(" ")[1]

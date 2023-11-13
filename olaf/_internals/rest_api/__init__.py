@@ -6,6 +6,7 @@ import os
 import shutil
 from pathlib import Path
 from threading import Thread
+from typing import Union
 
 import canopen
 from flask import Flask, jsonify, render_template, request, send_from_directory
@@ -119,13 +120,13 @@ def render_olaf_template(template: str, name: str):
     return render_template(template, title=title, name=name)
 
 
-def make_error_json(error: str) -> str:
+def make_error_json(error: Union[str, Exception]) -> str:
     """
     Make the stand error json message for the REST API
 
     Parameters
     ----------
-    error: str
+    error: str, Exception
         The error message
 
     Returns
@@ -134,7 +135,7 @@ def make_error_json(error: str) -> str:
         The JSON error message
     """
 
-    return jsonify({"error": error})
+    return jsonify({"error": str(error)})
 
 
 rest_api = RestAPI()
@@ -224,9 +225,9 @@ def od_index(index: str):
 
     try:
         if index.startswith("0x"):
-            index = int(index, 16)
+            index = int(index, 16)  # type: ignore
         elif index[0] in "0123456789":
-            index = int(index)
+            index = int(index)  # type: ignore
     except ValueError:
         return make_error_json(f"invalid index {index}")
 
@@ -246,8 +247,8 @@ def od_index(index: str):
             value = _json_value_to_value(obj.data_type, json_value)
             raw = obj.encode_raw(value)
 
-            app.node._on_sdo_write(index, None, obj, raw)
-        except Exception as e:
+            app.node._on_sdo_write(index, None, obj, raw)  # pylint: disable=W0212
+        except Exception as e:  # pylint: disable=W0718
             logger.error(f"REST API error: {e}")
             return make_error_json(str(e))
 
@@ -260,14 +261,14 @@ def od_subindex(index: str, subindex: str):
 
     try:
         if index.startswith("0x"):
-            index = int(index, 16)
+            index = int(index, 16)  # type: ignore
         elif index[0] in "0123456789":
-            index = int(index)
+            index = int(index)  # type: ignore
 
         if subindex.startswith("0x"):
-            subindex = int(subindex, 16)
+            subindex = int(subindex, 16)  # type: ignore
         elif subindex[0] in "0123456789":
-            subindex = int(subindex)
+            subindex = int(subindex)  # type: ignore
     except ValueError:
         return make_error_json(f"invalid index {index} or subindex {subindex}")
 
@@ -291,23 +292,23 @@ def od_subindex(index: str, subindex: str):
             else:
                 raw = obj.encode_raw(value)
 
-            app.node._on_sdo_write(index, subindex, obj, raw)
-        except Exception as e:
+            app.node._on_sdo_write(index, subindex, obj, raw)  # pylint: disable=W0212
+        except Exception as e:  # pylint: disable=W0718
             logger.exception(f"REST API error: {e}")
             return make_error_json(str(e))
 
     return jsonify(_object_to_dict(index, subindex))
 
 
-def _object_to_dict(index: int, subindex: int = None) -> dict:
+def _object_to_dict(index: Union[str, int], subindex: Union[str, int, None] = None) -> dict:
     """
     Convert a OD object to a dictionary.
 
     Parameters
     ----------
-    index: int
+    index: str, int
         The index of the object to convert.
-    subindex: int
+    subindex: str, int
         Optional subindex of the object to convert.
 
     Returns
@@ -322,17 +323,17 @@ def _object_to_dict(index: int, subindex: int = None) -> dict:
         except KeyError:
             msg = f"0x{index:04X} is not a valid index"
             logger.debug("REST API error: " + msg)
-            return make_error_json(msg)
+            raise KeyError(msg)
     else:
         try:
             obj = app.node.od[index][subindex]
         except KeyError:
             msg = f"0x{subindex:02X} not a valid subindex for index 0x{index:04X}"
             logger.debug("REST API error: " + msg)
-            return make_error_json(msg)
+            raise KeyError(msg)
 
     if isinstance(obj, canopen.objectdictionary.Variable):
-        value = app.node._on_sdo_read(index, subindex, obj)
+        value = app.node._on_sdo_read(index, subindex, obj)  # pylint: disable=W0212
         if obj.data_type in BYTES_TYPES and value is not None:
             # encode bytes data types for JSON
             try:

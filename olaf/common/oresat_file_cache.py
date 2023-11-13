@@ -28,7 +28,7 @@ class OreSatFileCache:
         self._lock = Lock()
 
         if isfile(abspath(self._dir)):
-            raise Exception("Cannot create new directory with an existing file name.")
+            raise FileExistsError("Cannot create new directory with an existing file name.")
 
         Path(self._dir).mkdir(parents=True, exist_ok=True)
 
@@ -36,7 +36,7 @@ class OreSatFileCache:
             try:
                 oresat_file = OreSatFile(self._dir + f)
                 self._data.append(oresat_file)
-            except Exception:
+            except Exception:  # pylint: disable=W0718
                 remove(self._dir + f)  # invalid file name
         self._data = natsorted(self._data)
 

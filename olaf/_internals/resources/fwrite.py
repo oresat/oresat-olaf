@@ -71,7 +71,7 @@ class FwriteResource(Resource):
                 f.write(data)
             logger.info(f"receive new file: {basename(self.file_path)}")
             self.node.fwrite_cache.add(self.file_path, consume=True)
-        except Exception as e:
+        except Exception as e:  # pylint: disable=W0718
             logger.exception(e)
 
         # clear file data OD obj value to not waste memory
