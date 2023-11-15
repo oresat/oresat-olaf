@@ -355,7 +355,13 @@ def _object_to_dict(index: Union[str, int], subindex: Union[str, int, None] = No
             data["value"] = ""
         else:
             data["value"] = value
+            if obj.data_type in canopen.objectdictionary.INTEGER_TYPES:
+                data["bit_definitions"] = obj.bit_definitions
+                data["value_descriptions"] = obj.value_descriptions
+                data["scale_factor"] = obj.factor
+                data["eng_value"] = obj.factor * obj.value
         data["subindex"] = obj.subindex
+        data["unit"] = obj.unit
     elif isinstance(obj, canopen.objectdictionary.Array):
         data["object_type"] = "ARRAY"
         data["subindexes"] = {subindex: _object_to_dict(index, subindex) for subindex in obj}

@@ -52,6 +52,18 @@
         <td>Value</td>
         <td><span id="varValue"></span></td>
       </tr>
+      <tr>
+        <td>Scale Factor</td>
+        <td><span id="varScaling"></span></td>
+      </tr>
+      <tr>
+        <td>Engineering Value</td>
+        <td><span id="varEngValue"></span></td>
+      </tr>
+      <tr>
+        <td>Unit</td>
+        <td><span id="varUnit"></span></td>
+      </tr>
     </table>
     <br/>
     <label for="objNewValue">New Value:</label>
@@ -103,10 +115,32 @@
         document.getElementById("arrayRecordObj").style.display = "none";
 
         document.getElementById("varName").textContent = obj.name;
-        document.getElementById("varDesc").textContent = obj.description;
+        let desc = obj.description;
+        if (obj.value_descriptions &&  Object.keys(obj.value_descriptions).length > 0) {
+          if (desc.length > 0) {
+            desc += "\n\n"
+          }
+          desc += "Values:\n";
+          for (const val in obj.value_descriptions) {
+            desc += `- ${val}: ${obj.value_descriptions[val]}\n`;
+          }
+        }
+        if (obj.bit_definitions &&  Object.keys(obj.bit_definitions).length > 0) {
+          if (desc.length > 0) {
+            desc += "\n\n"
+          }
+          desc += "Bitfield:\n";
+          for (const val in obj.bit_definitions) {
+            desc += `- ${val}: ${obj.bit_definitions[val]}\n`;
+          }
+        }
+        document.getElementById("varDesc").textContent = desc;
         document.getElementById("varDataType").textContent = obj.data_type;
         document.getElementById("varAccessType").textContent = obj.access_type;
         document.getElementById("varValue").textContent = obj.value;
+        document.getElementById("varScaling").textContent = obj.scale_factor;
+        document.getElementById("varEngValue").textContent = obj.eng_value;
+        document.getElementById("varUnit").textContent = obj.unit;
         document.getElementById("objNewValue").value = obj.value;
       } else {
         document.getElementById("variableObj").style.display = "none";
