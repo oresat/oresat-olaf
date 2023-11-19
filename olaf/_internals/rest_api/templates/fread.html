@@ -2,7 +2,7 @@
 
 {% block content %}
   <label for="files">Select a File</label>  
-  <select id="files">
+  <select id="files" onclick="getFileList()">
     <option value="1">NONE</option>  
   </select>
   <br/>
@@ -11,11 +11,13 @@
   <button id="deleteFileButton" onclick="deleteFile()" disabled>Delete</button>
   <script>
     async function getFileList() {
-      const fileName = document.getElementById("files").value;
-      const files = await readValue("0x3002","0x01");
       const select = document.getElementById("files");
+      const fileName = select.value;
 
-      if (files.value === 0) {
+      const filesJsonObj = await readValue("fread_cache", "files_json");
+      const files = JSON.parse(filesJsonObj.value);
+
+      if (files.length === 0) {
           document.getElementById("downloadFileButton").disabled = true;
           document.getElementById("deleteFileButton").disabled = true;
       } else {
@@ -30,25 +32,23 @@
       }
 
       // add all files
-      for (let i = 0; i < files.value; i++) {
+      for (const file of files) {
         let opt = document.createElement("option");
-        const iterObj = await writeValue("0x3002", "0x06", i)
-        const nameObj = await readValue("0x3002", "0x07")
-        opt.value = nameObj.value;
-        opt.innerHTML = nameObj.value;
+        opt.value = file;
+        opt.innerHTML = file;
         select.appendChild(opt);
       }
 
       // reselect previous option
       if (fileName !== "") {
-        select.value = fileName;
+        select.value = files[0];
       }
     }
 
     async function downloadFile() {
       const fileName = document.getElementById("files").value;
-      const fileNameObj = await writeValue("0x3003", "0x01", fileName);
-      const fileDataObj = await readValue("0x3003", "0x02");
+      const fileNameObj = await writeValue("fread_cache", "file_name", fileName);
+      const fileDataObj = await readValue("fread_cache", "file_data");
 
       const byteCharacters = atob(fileDataObj.value);
       const byteArrays = [];
@@ -78,14 +78,14 @@
 
     async function deleteFile() {
       const fileName = document.getElementById("files").value;
-      const fileNameObj = await writeValue("0x3003", "0x01", fileName);
-      const fileDeleteObj = await writeValue("0x3003", "0x04", true);
+      const fileNameObj = await writeValue("fread_cache", "file_name", fileName);
+      const fileDeleteObj = await writeValue("fread_cache", "remove", true);
+      getFileList();
     }
-
 
     getFileList();
     const interval = setInterval(function() {
       getFileList();
-    }, 60000);
+    }, 1000);
   </script>
 {% endblock %}

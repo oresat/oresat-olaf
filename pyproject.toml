@@ -6,14 +6,12 @@ build-backend = "setuptools.build_meta"
 name = "oresat-olaf"
 description = "Application framework for all OreSat Linux boards"
 readme = "README.rst"
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 license = {text = "GPL-3.0"}
 classifiers = [
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -26,22 +24,61 @@ dependencies = [
     "loguru",
     "natsort",
     "psutil",
+    "oresat-configs",
 ]
 dynamic = ["version"]
-
-[project.scripts]
-olaf-sdo-transfer = "olaf.scripts.sdo_transfer:main"
-olaf-file-transfer = "olaf.scripts.file_transfer:main"
-olaf-os-command = "olaf.scripts.os_command:main"
-olaf-system-info = "olaf.scripts.system_info:main"
-olaf-new-eds = "olaf.scripts.new_eds:main"
-olaf-sync = "olaf.scripts.sync:main"
 
 [tool.setuptools.dynamic]
 version = {attr = "olaf.__version__"}
 
 [tool.setuptools.packages.find]
-exclude = ["docs*"]
+exclude = ["docs*", "tests*"]
 
 [tool.setuptools.package-data]
-"*" = ["*.eds", "*.html", "*.ico"]
+"*" = ["*.html", "*.ico"]
+
+[tool.black]
+line_length = 100
+
+[tool.pylama]
+format = "pylint"
+skip = "*/.tox/*,*/.env/,*/.git/*,*/.github/*,*/build/*"
+linters = "pycodestyle,pyflakes,pylint,mccabe,mypy,radon"
+# E402:     Module level import not at top of file
+# C901:     Function is too complex
+# C0103:    Arguments are not snake_case naming style or too short
+# E203:     Whitespace before ':' (black does this)
+# R0912:    Too many branches
+# R0915:    Too many statements
+# R0901:    Function is too complex
+# R0914:    Too many local variables
+# R1716:    Simplify chained comparison between the operands
+# C0413:    Imports not at top of module
+# C0206:    Consider iterating dictionaries with .items()
+# R1716:    Simplify chained comparison between the operands
+# W1514:    Using open without explicitly specifying an encoding
+# R0902:    Too many instance attributes
+# R0913:    Too many arguments
+# W0707:    Consider explicitly re-raising
+# W0102:    Dangerous default value as argument
+# W0107:    Unnecessary pass statement
+ignore = "E402,C901,C0103,E203,R0912,R0915,R901,R901,R0914,C0413,C0206,R1716,W1514,R0902,R0913,W0707,W0102,W0107"
+max_line_length = 100
+
+[[tool.pylama.files]]
+path = "*/__init__.py"
+# W0611:    Imported but unused
+ignore = "W0611"
+
+[[tool.pylama.files]]
+path = "tests/*"
+# W0212:    Access to a protected member of a class
+ignore = "W0212"
+
+[[tool.mypy.overrides]]
+module = "canopen,oresat_configs,psutil"
+ignore_missing_imports = true
+
+[tool.isort]
+profile = "black"
+line_length = 100

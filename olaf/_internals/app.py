@@ -1,3 +1,5 @@
+"""OLAF App."""
+
 import os
 import signal
 import subprocess
@@ -8,36 +10,33 @@ from loguru import logger
 
 from ..common.resource import Resource
 from ..common.service import Service
-from .node import Node, NodeStop
 from .master_node import MasterNode
-from .updater import Updater
-from .resources.system_info import SystemInfoResource
-from .resources.file_caches import FileCachesResource
+from .node import Node, NodeStop
+from .resources.ecss import EcssResource
 from .resources.fread import FreadResource
 from .resources.fwrite import FwriteResource
-from .resources.ecss import ECSSResource
-from .resources.store_eds import StoreEdsResource
-from .resources.power_control import PowerControlResource
-from .resources.daemons import DaemonsResource
-from .services.os_command import OSCommandService
-from .services.updater import UpdaterService
+from .resources.system import SystemResource
 from .services.logs import LogsService
+
+# from .resources.daemons import DaemonsResource
+from .services.os_command import OsCommandService
+from .services.updater import UpdaterService
+from .updater import Updater
 
 
 class App:
-    '''
+    """
     The application class that manages the CAN bus and resources.
 
     Use the global ``olaf.app`` obect.
-    '''
+    """
 
-    _BACKUP_EDS = abspath(dirname(__file__)) + '/data/oresat_app.eds'
-    '''Internal eds file incase app's is misformatted or missing.'''
+    _BACKUP_EDS = abspath(dirname(__file__)) + "/data/oresat_app.eds"
+    """Internal eds file incase app's is misformatted or missing."""
 
     def __init__(self):
-
         self._od = None
-        self._bus = None
+        self._bus = ""
         self._resources = []
         self._services = []
         self._node = None
@@ -45,130 +44,85 @@ class App:
         self._factory_reset_cb = None
 
         # setup event
-        for sig in ['SIGTERM', 'SIGHUP', 'SIGINT']:
+        for sig in ["SIGTERM", "SIGHUP", "SIGINT"]:
             signal.signal(getattr(signal, sig), self._quit)
 
     def __del__(self):
-
         self.stop()
 
     def _quit(self, signo, _frame):
-        '''Called when signals are caught'''
+        """Called when signals are caught"""
 
-        logger.debug(f'signal {signal.Signals(signo).name} was caught')
+        logger.debug(f"signal {signal.Signals(signo).name} was caught")
         self.stop()
 
-    def _load_od(self, node_id: int, eds: str):
-
-        self._od = canopen.objectdictionary.eds.import_eds(eds, node_id)
-
-        dcf_node_id = self._od.node_id
-        if node_id != 0:
-            self._node_id = node_id
-        elif dcf_node_id:
-            self._node_id = dcf_node_id
-        else:
-            self._node_id = 0x7C
-
-        # make sure these are set
-        self._od.node_id = self._node_id
-        self._od.bitrate = 1_000_000  # oresat node will always have 1 Mbps
-
-    def setup(self, eds: str, bus: str, node_id: int or str = 0, master_node: bool = False):
-        '''
+    def setup(self, od, bus: str, master_od_db: dict = {}):
+        """
         Setup the app. Will be called by ``olaf_setup`` automatically.
 
         Parameters
         ----------
-        eds: str
-            File path to EDS or DCF file.
-        bus: str
-            Which CAN bus to use.
-        node_id: int, str
-            The node ID. If set to 0 and DCF was used for the eds arg, the value will be pulled
-            from the DCF, otherwise, it will be set to 0x7C.
-        master_node: bool
-            Node is a master node.
+        node: Node
+            The node for the app.
 
         Raises
         ------
         ValueError
             Invalid parameter(s)
-        '''
+        """
 
-        if isinstance(node_id, str):
-            if node_id.startswith('0x'):
-                node_id = int(node_id, 16)
-            else:
-                node_id = int(node_id)
-        elif not isinstance(node_id, int):
-            raise ValueError('node_id is not a int/hex str or a int')
+        self._od = od
+        self._bus = bus
 
-        if eds is not None:
-            try:
-                self._load_od(node_id, eds)
-            except Exception as e:
-                logger.exception(f'{e.__class__.__name__}: {e}')
-                logger.warning(f'failed to read in {eds}, using OLAF\'s internal eds as backup')
-                eds = self._BACKUP_EDS
-                self._load_od(node_id, eds)
+        if master_od_db:
+            self._node = MasterNode(self._od, self._bus, master_od_db)
         else:
-            logger.warning('No eds or dcf was supplied, using OLAF\'s internal eds')
-            eds = self._BACKUP_EDS
-            self._load_od(node_id, eds)
-
-        self._name = self._od.device_information.product_name
-
-        if master_node:
-            self._node = MasterNode(self._od, bus)
-        else:
-            self._node = Node(self._od, bus)
+            self._node = Node(self._od, self._bus)
 
         # setup updater
-        self._updater = Updater(f'{self._node.work_base_dir}/updater',
-                                f'{self._node.cache_base_dir}/updates')
+        self._updater = Updater(
+            f"{self._node.work_base_dir}/updater", f"{self._node.cache_base_dir}/updates"
+        )
 
         # default core services
         self.add_service(UpdaterService(self._updater))
         self.add_service(LogsService())
-        self.add_service(OSCommandService())
+        self.add_service(OsCommandService())
 
         # default core resources
-        self.add_resource(ECSSResource())
-        self.add_resource(SystemInfoResource())
-        self.add_resource(FileCachesResource())
+        self.add_resource(EcssResource())
+        self.add_resource(SystemResource())
         self.add_resource(FreadResource())
         self.add_resource(FwriteResource())
-        self.add_resource(StoreEdsResource(eds))
-        self.add_resource(PowerControlResource())
-        self.add_resource(DaemonsResource())
+        # self.add_resource(DaemonsResource())
 
     def add_resource(self, resource: Resource):
-        '''
+        """
         Add a resource for the app
 
         Parameters
         ----------
         resource: Resource
             The resource to add.
-        '''
+        """
 
         self._resources.append(resource)
 
     def add_service(self, service: Service):
-        '''
+        """
         Add a resource for the app
 
         Parameters
         ----------
         service: Service
             The service to add.
-        '''
+        """
 
         self._services.append(service)
 
     def run(self):
-        logger.info(f'{self._node.name} app is starting')
+        """Run the app."""
+        logger.info(f"{self._node.name} app is starting")
 
         for service in self._services:
             service.start(self._node)
@@ -179,8 +133,8 @@ class App:
         if self._node:
             try:
                 reset = self._node.run()
-            except Exception as e:
-                logger.exception(f'unexpected error was raised by app node: {e}')
+            except Exception as e:  # pylint: disable=W0718
+                logger.exception(f"unexpected error was raised by app node: {e}")
                 reset = NodeStop.SOFT_RESET
 
         for service in self._services:
@@ -189,17 +143,17 @@ class App:
         for resource in self._resources:
             resource.end()
 
-        logger.info(f'{self._node.name} app has ended')
+        logger.info(f"{self._node.name} app has ended")
 
         if reset == NodeStop.HARD_RESET:
-            logger.info('hard reseting the system')
+            logger.info("hard reseting the system")
 
             if os.geteuid() == 0:  # running as root
-                subprocess.run('reboot', shell=True)
+                subprocess.run("reboot", shell=True, check=False)
             else:
-                logger.error('not running as root, cannot reboot the system')
+                logger.error("not running as root, cannot reboot the system")
         elif reset == NodeStop.FACTORY_RESET:
-            logger.info('factory reseting the system')
+            logger.info("factory reseting the system")
 
             # clear caches
             self._node.fread_cache.clear()
@@ -210,40 +164,44 @@ class App:
             try:
                 if self._factory_reset_cb:
                     self._factory_reset_cb()
-            except Exception as e:
-                logger.exception(f'custom factory reset function raised: {e}')
+            except Exception as e:  # pylint: disable=W0718
+                logger.exception(f"custom factory reset function raised: {e}")
 
             if os.geteuid() == 0:  # running as root
-                subprocess.run('reboot', shell=True)
+                subprocess.run("reboot", shell=True, check=False)
             else:
-                logger.error('not running as root, cannot reboot the system')
+                logger.error("not running as root, cannot reboot the system")
         elif reset == NodeStop.POWER_OFF:
-            logger.info('powering off the system')
+            logger.info("powering off the system")
 
             if os.geteuid() == 0:  # running as root
-                subprocess.run('poweroff', shell=True)
+                subprocess.run("poweroff", shell=True, check=False)
             else:
-                logger.error('not running as root, cannot power off the system')
+                logger.error("not running as root, cannot power off the system")
 
     def stop(self):
-        '''End the run loop'''
+        """End the run loop"""
 
         if self._node:
             self._node.stop()
 
     @property
-    def node(self) -> Node or MasterNode:
+    def node(self) -> Node:
+        """Node: The CANopen node."""
+
         return self._node
 
     def set_factory_reset_callback(self, cb_func):
-        '''Set a custom factory reset callback function.'''
+        """Set a custom factory reset callback function."""
 
         self._factory_reset_cb = cb_func
 
     @property
     def od(self) -> canopen.ObjectDictionary:
+        """canopen.ObjectDictionary: The node's Object Dictionary."""
+
         return self._od
 
 
 app = App()
-'''The global instance of the OLAF app.'''
+"""The global instance of the OLAF app."""

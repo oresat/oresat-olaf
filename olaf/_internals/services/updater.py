@@ -1,45 +1,39 @@
-from enum import IntEnum, auto
+"""Service for interacting with the updater"""
 
+import canopen
 from loguru import logger
 
 from ...common.service import Service
 from ..updater import Updater, UpdaterError
 
 
-class Subindex(IntEnum):
-    STATUS = auto()
-    UPDATES_CACHED = auto()
-    LIST_AVAILABLE = auto()
-    UPDATE = auto()
-    MAKE_STATUS_FILE = auto()
-
-
 class UpdaterService(Service):
-    '''Service for interacting with the updater'''
+    """Service for interacting with the updater"""
 
     def __init__(self, updater: Updater):
         super().__init__()
 
         self._updater = updater
-        self.index = 0x3100
+        self.update_obj: canopen.objectdictionary.Variable = None
+        self.make_status_obj: canopen.objectdictionary.Variable = None
 
     def on_start(self):
+        record = self.node.od["updater"]
+        self.update_obj = record["update"]
+        self.make_status_obj = record["make_status_file"]
 
-        record = self.node.od[self.index]
-        self.update_obj = record[Subindex.UPDATE.value]
-        self.make_status_obj = record[Subindex.MAKE_STATUS_FILE.value]
-
-        # make sure defaults are set correctly (override the values from eds/dcf)
+        # make sure defaults are set correctly
         self.update_obj.value = False
         self.make_status_obj.value = False
 
-        self.node.add_sdo_read_callback(self.index, self.on_read)
+        self.node.add_sdo_callbacks("updater", "status", self.on_read_status, None)
+        self.node.add_sdo_callbacks("updater", "cache_files_json", self.on_read_cache_json, None)
+        self.node.add_sdo_callbacks("updater", "cache_length", self.on_read_cache_len, None)
 
     def on_loop(self):
-
         # check for update files in fwrite cache
-        for i in self.node.fwrite_cache.files('update'):
-            self._updater.add_update(self.node.fwrite_cache.dir + '/' + i)
+        for i in self.node.fwrite_cache.files("update"):
+            self._updater.add_update(self.node.fwrite_cache.dir + "/" + i)
 
         # check for flag to start a update
         if self.update_obj.value:
@@ -55,18 +49,16 @@ class UpdaterService(Service):
             self.node.fread_cache.add(status_archive_file_path, consume=True)
             self.make_status_obj.value = False
 
-        self.sleep(0.5)
+        self.sleep(0.1)
 
-    def on_read(self, index: int, subindex: int):
+    def on_read_status(self) -> int:
+        """SDO read callback to get the status of update"""
+        return self._updater.status.value
 
-        ret = None
+    def on_read_cache_len(self) -> int:
+        """SDO read callback to get the number of updates cached"""
+        return len(self._updater.updates_cached)
 
-        if index == self.index:
-            if subindex == Subindex.STATUS:
-                ret = self._updater.status.value
-            elif subindex == Subindex.UPDATES_CACHED:
-                ret = len(self._updater.updates_cached)
-            elif subindex == Subindex.LIST_AVAILABLE:
-                ret = ' '.join(self._updater.updates_cached)
-
-        return ret
+    def on_read_cache_json(self) -> str:
+        """SDO read callback to get list of updates cached as str"""
+        return " ".join(self._updater.updates_cached)

@@ -8,15 +8,21 @@ GPIO
 
 .. autoclass:: olaf.GpioError
 
-.. autodata:: olaf.common.gpio.GPIO_HIGH
-.. autodata:: olaf.common.gpio.GPIO_LOW
-.. autodata:: olaf.common.gpio.GPIO_IN
-.. autodata:: olaf.common.gpio.GPIO_OUT
+.. autodata:: olaf.GPIO_HIGH
+.. autodata:: olaf.GPIO_LOW
+.. autodata:: olaf.GPIO_IN
+.. autodata:: olaf.GPIO_OUT
+
+.. autoclass:: olaf.GpioPin
+   :members:
+   :undoc-members:
+   :member-order: bysource
 
 Backward Compatibility
 ----------------------
 
-These alias should be avoid. Only for backward compatibility with previous versions of OLAF.
+These alias should be avoided. Theses are only for backward compatibility with previous versions
+of OLAF.
 
 .. autoclass:: olaf.GPIO
    :class-doc-from: both

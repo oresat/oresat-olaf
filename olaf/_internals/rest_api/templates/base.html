@@ -1,7 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <title>{{title}}</title>
+{% extends "_base.html" %}
+
+{% block baseContent %}
   <style>
     #headerGrid {
       display: grid;
@@ -9,6 +8,9 @@
     }
     #headerCenter {
       text-align: center;
+    }
+    #headerRight {
+      text-align: right;
     }
   </style>
   <div id="headerGrid">
@@ -19,104 +21,24 @@
       <h2>{{name}}</h2>
     </div>
     <div id="headerRight">
+      <text><b><span id="busChannel">vcan0</span></b>: <span id="busStatus">BUS_DOWN</span> | </text>
+      <label for="flightMode"><b>Flight Mode</b>: </label>
+      <input type="checkbox" id="flightMode" onclick="toggleFlightMode()"></input>
     </div>
   </div>
-</head>
-<body>
-  <style>
-    #content {
-      text-align: center;
-    }
-  </style>
-  <script>
-    /**
-     * Read a value from OD.
-     *
-     * @param {String} index The index of the object to write to.
-     * @param {String} subindex The eubndex of the object to write to. Set to
-     * null if subindex is not needed. 
-     *
-     * @return {Object} The object from the OD.
-     */
-    async function readValue(index, subindex) {
-      let url = `http://${window.location.host}/od/${index}`;
-      if (subindex !== null && subindex !== "") {
-        url = `http://${window.location.host}/od/${index}/${subindex}`;
-      }
-
-      return await fetch(url)
-        .then(response => response.json())
-        .then(data => {
-          if (data.error !== undefined) {
-            console.log(data);
-          }
-          return data;
-        });
-    }
-
-    /**
-     * Write a value to OD.
-     *
-     * @param {String} index The index of the object to write to.
-     * @param {String} subindex The eubndex of the object to write to. Set to
-     * an emoty sring or null if subindex is not needed. 
-     * @param {Any} value The value to write to OD.
-     *
-     * @return {Object} The object after the new value was written to it.
-     */
-    async function writeValue(index, subindex, value) {
-      let options = {
-        "method": "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        "body": JSON.stringify({
-          "value": value,
-        }),
-      };
-      
-      let url = `http://${window.location.host}/od/${index}`;
-      if (subindex !== null && subindex !== "") {
-        url = `http://${window.location.host}/od/${index}/${subindex}`;
-      }
-
-      return await fetch(url, options)
-        .then(response => response.json())
-        .then(data => {
-          if (data.error !== undefined) {
-            console.log(data);
-          }
-          return data;
-        });
-    }
-
-    /**
-     * Convert a SCET value to a data object.
-     *
-     * @param {Number} scet The SCET value.
-     *
-     * @return {Date} The date object.
-     */
-    function scetToDate(scet) {
-      // convert to binary
-      let base2 = scet.toString(2);
-      const leadingZeros = "0".repeat(64 - base2.length);
-      base2 = leadingZeros + base2;
-
-      const coarseStr = base2.substring(32);
-      const fineStr = base2.substring(8, 32);
-
-      const coarse = parseInt(coarseStr, 2);
-      const fine = parseInt(fineStr, 2);
-
-      // make unix time in ms
-      const time = coarse * 1000 + fine / 1000;
-
-      return new Date(time);
-    }
-  </script>
   <div id="content">
     {% block content %}{% endblock %}
   </div>
-</body>
-</html>
+  <script>
+    async function updateBusStatus() {
+      const status = await getBusStatus();
+      document.getElementById("busChannel").textContent = status.channel;
+      document.getElementById("busStatus").textContent = status.status;
+    }
+
+    updateBusStatus();
+    const busInterval = setInterval(function() {
+      updateBusStatus();
+    }, 1000);
+  </script>
+{% endblock %}

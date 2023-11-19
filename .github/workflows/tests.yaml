@@ -2,21 +2,9 @@ name: tests
 
 on:
   push:
-    paths:
-      - 'requirements-dev.txt'
-      - 'setup.*'
-      - 'docs/**'
-      - 'olaf/**'
-      - 'tests/**'
     branches:
       - master
   pull_request:
-    paths:
-      - 'requirements-dev.txt'
-      - 'setup.*'
-      - 'docs/**'
-      - 'olaf/**'
-      - 'tests/**'
     branches:
       - master
 
@@ -27,20 +15,44 @@ jobs:
     timeout-minutes: 10
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Clone oresat-c3 repository
+      uses: actions/checkout@v2
+
+    - name: Clone oresat-configs repository
+      uses: actions/checkout@v2
+      with:
+        repository: oresat/oresat-configs
+        path: resources/oresat-configs
 
     - name: Set up Python 3.9
       uses: actions/setup-python@v2
       with:
         python-version: "3.9"
 
+    - name: Build and install oresat-configs
+      working-directory: resources/oresat-configs
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        python -m build
+        pip install dist/*.whl
+
+    - name: Clean up oresat-configs
+      run: rm -rf resources/oresat-configs
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Lint with flake8
-      run: flake8 . --count --show-source --statistics
+    - name: Lint with Pylama
+      run: pylama
+
+    - name: Check format with Black
+      run: black --check --diff .
+
+    - name: Check format with isort
+      run: isort --check --diff .
 
     - name: Test with Python's unittest
       run: python -m unittest

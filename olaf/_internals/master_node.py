@@ -1,82 +1,92 @@
+"""OreSat CANopen Master Node class to support the C3"""
+
 from time import time
+from typing import Any, Union
 
 import canopen
 from loguru import logger
+from oresat_configs import NodeId
 
-from .node import Node, NetworkError
+from .node import NetworkError, Node
 
 
 class MasterNode(Node):
-    '''OreSat CANopen Master Node'''
+    """OreSat CANopen Master Node (only used by the C3)"""
 
-    def __init__(self, od: canopen.ObjectDictionary, bus: str):
-        '''
+    def __init__(self, od: canopen.ObjectDictionary, bus: str, od_db: dict):
+        """
         Parameters
         ----------
         od: canopen.ObjectDictionary
             The CANopen ObjectDictionary
         bus: str
             Which CAN bus to use.
-        '''
+        od_db: dict
+            Database of other nodes's ODs.
+        """
 
         super().__init__(od, bus)
 
+        self._od_db = od_db
+
+        self._remote_nodes = {}
         self.node_status = {}
-        for i in range(0x01, 0x80):
-            if i == self._od.node_id:
+        for node_id in od_db:
+            if node_id == self._od.node_id:
                 continue  # skip itself
-            self.node_status[i] = (0xFF, time())  # 0xFF is a flag, not a CANopen standard
+            self._remote_nodes[node_id] = canopen.RemoteNode(node_id.value, od_db[node_id])
+            self.node_status[node_id] = (0xFF, time())  # 0xFF is a flag, not a CANopen standard
 
     def _restart_network(self):
-        '''Restart the CANopen network'''
+        """Restart the CANopen network"""
         super()._restart_network()
 
-        for i in range(0x01, 0x80):
-            if i == self._od.node_id:
+        for node_id in self._od_db:
+            if node_id == self._od.node_id:
                 continue  # skip itself
-            self._network.subscribe(0x80 + i, self._on_emergency)
-            self._network.subscribe(0x700 + i, self._on_heartbeat)
+            self._network.subscribe(0x80 + node_id, self._on_emergency)
+            self._network.subscribe(0x700 + node_id, self._on_heartbeat)
 
     def _on_heartbeat(self, cob_id: int, data: bytes, timestamp: float):
-        '''Callback on node hearbeat messages.'''
+        """Callback on node hearbeat messages."""
 
         node_id = cob_id - 0x700
-        status = int.from_bytes(data, 'little')
-        self.node_status[node_id] = (status, timestamp)
+        status = int.from_bytes(data, "little")
+        self.node_status[NodeId(node_id)] = (status, timestamp)
 
-    def _on_emergency(self, cob_id: int, data: bytes, timestamp: float):
-        '''Callback on node emergency messages.'''
+    def _on_emergency(self, cob_id: int, data: bytes, timestamp: float):  # pylint: disable=W0613
+        """Callback on node emergency messages."""
 
         node_id = cob_id - 0x700
-        value_str = data.hex(sep=' ')
-        logger.error(f'Node 0x{node_id:02X} raised emergency: {value_str}')
+        value_str = data.hex(sep=" ")
+        logger.error(f"{NodeId(node_id).name} raised emergency: {value_str}")
 
     def send_sync(self):
-        '''
+        """
         Send a CANopen SYNC message.
 
         Raises
         ------
         NetworkError
             Cannot send a SYNC message when the network is down.
-        '''
+        """
 
         if self._network is None:
-            raise NetworkError('network is down cannot send an SYNC message')
+            raise NetworkError("network is down cannot send an SYNC message")
 
         self._network.sync.transmit()
 
-    def sdo_read(self, node_id: int, index: int, subindex: int) -> bytes:
-        '''
+    def sdo_read(self, node_id: NodeId, index: Union[int, str], subindex: Union[int, str]) -> Any:
+        """
         Read a value from a remote node's object dictionary using an SDO.
 
         Parameters
         ----------
-        node_id: int
+        node_id: NodeId
             The id of the node to read from.
-        index: int
+        index: int or str
             The index to read from.
-        subindex: int
+        subindex: int or str
             The subindex to read from.
 
         Raises
@@ -88,35 +98,29 @@ class MasterNode(Node):
 
         Returns
         -------
-        bytes
-            The raw value read.
-        '''
+        Any
+            The value read.
+        """
 
         if self._network is None:
-            raise NetworkError('network is down cannot send an SDO read message')
+            raise NetworkError("network is down cannot send an SDO read message")
 
-        if node_id in self._network:
-            node = self._network[node_id]
-        else:
-            node = canopen.RemoteNode(node_id, canopen.ObjectDictionary())
-            self._network.add_node(node)
+        return self._remote_nodes[node_id].sdo[index][subindex].phys
 
-        return node.sdo.upload(index, subindex)
-
-    def sdo_write(self, node_id: int, index: int, subindex: int, value: bytes):
-        '''
+    def sdo_write(self, node_id: NodeId, index: int, subindex: int, value: Any):
+        """
         Write a value to a remote node's object dictionary using an SDO.
 
         Parameters
         ----------
-        node_id: int
+        node_id: NodeId
             The id of the node to write to.
         index: int
             The index to write to.
         subindex: int
             The subindex to write to.
-        value: bytes
-            The raw value to write.
+        value: Any
+            The value to write.
 
         Raises
         ------
@@ -124,15 +128,9 @@ class MasterNode(Node):
             Cannot send a SDO write message when the network is down.
         canopen.SdoError
             Error with the SDO.
-        '''
+        """
 
         if self._network is None:
-            raise NetworkError('network is down cannot send an SDO write message')
+            raise NetworkError("network is down cannot send an SDO write message")
 
-        if node_id in self._network:
-            node = self._network[node_id]
-        else:
-            node = canopen.RemoteNode(node_id, canopen.ObjectDictionary())
-            self._network.add_node(node)
-
-        node.sdo.download(index, subindex, value)
+        self._remote_nodes[node_id].sdo[index][subindex].phys = value

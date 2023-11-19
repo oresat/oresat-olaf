@@ -13,11 +13,11 @@
       text-align: left;
       padding: 8px;
     }
-    label {
-      font-weight: bold;
-    }
-    #variableObj, #arrayRecordObj, #varNewValueInput {
+    #variableObj, #arrayRecordObj {
       display: none;
+    }
+    label, .boldText {
+      font-weight: bold;
     }
   </style>
   <label for="indexSelect">Index:</label>
@@ -37,24 +37,41 @@
         <td><span id="varName"></span></td>
       </tr>
       <tr>
+        <td>Description</td>
+        <td><pre id="varDesc"></pre></td>
+      </tr>
+      <tr>
         <td>Data Type</td>
         <td><span id="varDataType"></span></td>
       </tr>
       <tr>
-        <td>Access Type</td>
+        <td>Access Type *</td>
         <td><span id="varAccessType"></span></td>
       </tr>
       <tr>
         <td>Value</td>
         <td><span id="varValue"></span></td>
       </tr>
+      <tr>
+        <td>Scale Factor</td>
+        <td><span id="varScaling"></span></td>
+      </tr>
+      <tr>
+        <td>Engineering Value</td>
+        <td><span id="varEngValue"></span></td>
+      </tr>
+      <tr>
+        <td>Unit</td>
+        <td><span id="varUnit"></span></td>
+      </tr>
     </table>
     <br/>
-    <div id="varNewValueInput">
-      <label for="objNewValue">New Value:</label>
-      <input type="text" id="objNewValue" name="objNewValue"/>
-      <button id="setObjectValueButton" onclick="setObjectValue()">Change</button>
-    </div>
+    <label for="objNewValue">New Value:</label>
+    <input type="text" id="objNewValue" name="objNewValue"/>
+    <button id="setObjectValueButton" onclick="setObjectValue()">Change</button>
+    <br/>
+    <br/>
+    <small>* Access premissions are be bypassed by REST API for testing/integration purposes. They are inforce over the CAN bus.</small>
   </div>
   <div id="arrayRecordObj">
     <table>
@@ -65,6 +82,10 @@
       <tr>
         <td>Name</td>
         <td><span id="objName"></span></td>
+      </tr>
+      <tr>
+        <td>Description</td>
+        <td><pre id="objDesc"></pre></td>
       </tr>
       <tr>
         <td>Subindexes</td>
@@ -94,22 +115,40 @@
         document.getElementById("arrayRecordObj").style.display = "none";
 
         document.getElementById("varName").textContent = obj.name;
+        let desc = obj.description;
+        if (obj.value_descriptions &&  Object.keys(obj.value_descriptions).length > 0) {
+          if (desc.length > 0) {
+            desc += "\n\n"
+          }
+          desc += "Values:\n";
+          for (const val in obj.value_descriptions) {
+            desc += `- ${val}: ${obj.value_descriptions[val]}\n`;
+          }
+        }
+        if (obj.bit_definitions &&  Object.keys(obj.bit_definitions).length > 0) {
+          if (desc.length > 0) {
+            desc += "\n\n"
+          }
+          desc += "Bitfield:\n";
+          for (const val in obj.bit_definitions) {
+            desc += `- ${val}: ${obj.bit_definitions[val]}\n`;
+          }
+        }
+        document.getElementById("varDesc").textContent = desc;
         document.getElementById("varDataType").textContent = obj.data_type;
         document.getElementById("varAccessType").textContent = obj.access_type;
         document.getElementById("varValue").textContent = obj.value;
+        document.getElementById("varScaling").textContent = obj.scale_factor;
+        document.getElementById("varEngValue").textContent = obj.eng_value;
+        document.getElementById("varUnit").textContent = obj.unit;
         document.getElementById("objNewValue").value = obj.value;
-
-        if (obj.access_type === "ro" || obj.access_type === "const") {
-          document.getElementById("varNewValueInput").style.display = "none";
-        } else {
-          document.getElementById("varNewValueInput").style.display = "inline";
-        }
       } else {
         document.getElementById("variableObj").style.display = "none";
         document.getElementById("arrayRecordObj").style.display = "inline";
 
         document.getElementById("objType").textContent = obj.object_type;
         document.getElementById("objName").textContent = obj.name;
+        document.getElementById("objDesc").textContent = obj.description;
         document.getElementById("objSubindexes").textContent = Object.keys(obj.subindexes).length;
       }
     }

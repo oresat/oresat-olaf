@@ -28,7 +28,7 @@
      */
     async function fwrite(fileName, fileData) {
      // Write the file name to OD.
-      const obj = await writeValue("0x3004","0x01", fileName);
+      const obj = await writeValue("fwrite_cache", "file_name", fileName);
 
       // Validate the file name was set to new value in OD, if it wasn"t it was not a
       // valid file name.
@@ -38,7 +38,7 @@
       }
 
      // Write the file data to OD.
-      await writeValue("0x3004","0x02", btoa(fileData));
+      await writeValue("fwrite_cache","file_data", btoa(fileData));
       
       alert("fwrite was successful");
     }

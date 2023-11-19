@@ -1,27 +1,29 @@
+"""Test the Resource class."""
 import unittest
 
-import canopen
+from oresat_configs import NodeId, OreSatConfig, OreSatId
+
 from olaf import Node, Resource
 
 
 class BadResource(Resource):
+    """Bad Resource for testing."""
 
     def on_start(self):
-
-        raise Exception('a random exception')
+        raise Exception("a random exception")  # pylint: disable=W0719
 
     def on_end(self):
-
-        raise Exception('a random exception')
+        raise Exception("a random exception")  # pylint: disable=W0719
 
 
 class TestResource(unittest.TestCase):
+    """Test the Resource class."""
 
     def test_start_stop(self):
-        '''All exception should be caught'''
+        """All exception should be caught"""
 
-        od = canopen.objectdictionary.eds.import_eds('olaf/_internals/data/oresat_app.eds', 0x10)
-        node = Node(od, 'vcan0')
+        od = OreSatConfig(OreSatId.ORESAT0).od_db[NodeId.GPS]
+        node = Node(od, "vcan0")
 
         good_res = Resource()
         bad_res = BadResource()
