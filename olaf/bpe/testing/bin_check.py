@@ -1,9 +1,10 @@
-# binary compare between in/out files
+""" binary compare between in/out files"""
 
 import sys
+import argparse
 
 
-def bin_check(file1, file2):
+def bin_check(file1: str, file2: str):
     with open(file1,'rb') as f:
         data_in = f.read()
 
@@ -20,13 +21,15 @@ def bin_check(file1, file2):
             if dataI != dataO:
                 count += 1
 
-    print("Data In Size; Data Out Size; Total of Nonidentical Data Instances:")
+    print("\nData In Size; Data Out Size; Total of Nonidentical Data Instances:")
     print(len(data_in))
     print(len(data_out))
     print(count)
 
-# if calling from command line: python bin_check.py <file1> <file2>
 if __name__ == '__main__':
-    file1 = sys.argv[1]
-    file2 = sys.argv[2]
-    bin_check(file1, file2)   
+    """ if calling from command line: python bin_check.py <file1> <file2>"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument('file1')
+    parser.add_argument('file2')
+    args = parser.parse_args()
+    bin_check(args.file1, args.file2)   
