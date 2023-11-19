@@ -1,11 +1,11 @@
-""" binary compare between in/out files"""
-
-import sys
+"""simple binary compare program"""
 import argparse
 
 
 def bin_check(file1: str, file2: str):
-    with open(file1,'rb') as f:
+    """binary compare between in/out files"""
+
+    with open(file1, 'rb') as f:
         data_in = f.read()
 
     with open(file2, 'rb') as f:
@@ -28,8 +28,9 @@ def bin_check(file1: str, file2: str):
 
 if __name__ == '__main__':
     """ if calling from command line: python bin_check.py <file1> <file2>"""
+
     parser = argparse.ArgumentParser()
     parser.add_argument('file1')
     parser.add_argument('file2')
     args = parser.parse_args()
-    bin_check(args.file1, args.file2)   
+    bin_check(args.file1, args.file2)

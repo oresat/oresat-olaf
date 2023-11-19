@@ -1,12 +1,7 @@
-""" testing suite for bpe python module"""
+"""testing suite for bpe python module"""
 
-import importlib
 import os
-import sys
 import unittest
-
-import cv2
-import numpy as np
 
 import bpe
 from bin_check import bin_check
@@ -15,6 +10,8 @@ from pixel_check import pixel_check
 
 
 class Test_bpe(unittest.TestCase):
+    """main module for bpe test suite"""
+
     def setUp(self):
         """
         BEGIN user defined specs
@@ -77,20 +74,27 @@ class Test_bpe(unittest.TestCase):
         self._dec_data = bpe.decode(self._compr_file, self._outfile)
 
     def test_bin_check(self):
+        """test bin_check module"""
+
         self.assertEqual(self._enc_data, self._dec_data)
         bin_check(self._infile, self._outfile)
 
     def test_cfc(self):
+        """test bin_check module"""
+        
         cfc(self._infile, self._width, self._height)
         cfc(self._outfile, self._width, self._height)
 
     def test_pixel_check(self):
+        """test bin_check module"""
+
         cfc(self._infile, self._width, self._height)
         cfc(self._outfile, self._width, self._height)
         pixel_check(self._png_infile, self._png_outfile)
 
     def tearDown(self):
         """comment out if interested in keeping created files"""
+
         if os.path.isfile(self._compr_file):
             os.remove(self._compr_file)
         if os.path.isfile(self._outfile):
@@ -102,5 +106,5 @@ class Test_bpe(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    # unittest.main()
+    #unittest.main()
     unittest.main(verbosity=2)
