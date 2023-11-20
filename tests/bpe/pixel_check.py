@@ -13,7 +13,7 @@ import numpy as np
 from PIL import Image
 
 
-def pixel_check(file1, file2):
+def pixel_check(file1: str, file2: str):
     """main pixel_check function"""
 
     image1 = Image.open(file1)

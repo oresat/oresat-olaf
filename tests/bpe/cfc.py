@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 
 
-def cfc(infile, columns, rows):
+def cfc(infile: str, columns: int, rows: int):
     """main cfc function"""
 
     path = os.path.split(infile)

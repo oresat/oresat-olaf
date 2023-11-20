@@ -10,9 +10,9 @@ from pixel_check import pixel_check
 
 
 class Test_bpe(unittest.TestCase):
+    """main module for BPE unittest"""
     def setUp(self):
         """
-        BEGIN user defined specs
         min encode params = (name of file to be encoded, name of newly encoded file,
                                        width of image, height of image)
         min decode params = (name of encoded file to decode, name for the outfile)
@@ -46,7 +46,7 @@ class Test_bpe(unittest.TestCase):
         # indicates byte order of a pixel - either 1 or 0 (yes or no); default is 1"""
         self._is_lossless = 1
         # indicates type of transform - either 1 or 0 (yes or no); default is 1"""
-        """END user-defined specs"""
+        # END user-defined specs"""
 
         self._enc_data = bpe.encode_basearg(
             self._infile,
