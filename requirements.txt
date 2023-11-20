@@ -1,8 +1,10 @@
+Pillow
 build
 canopen
 flask
 loguru
 natsort
+numpy
 oresat-configs
 psutil
 setuptools

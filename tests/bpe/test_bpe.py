@@ -1,10 +1,9 @@
-""" testing suite for bpe python module"""
+"""testing suite for bpe python module"""
 
 import os
 import unittest
 
 import bpe
-
 from bin_check import bin_check
 from cfc import cfc
 from pixel_check import pixel_check
@@ -31,24 +30,23 @@ class Test_bpe(unittest.TestCase):
 
         self._width = 1024
         self._height = 1280
-        """ w and h (for encoding only - required)"""
+        # w and h (for encoding only - required)
 
         self._bpp = 14
-        """for embbedded decoding (uncommon)
-        desired compression ratio (bits per pixel); default is 0
-        """
+        # for embbedded decoding (uncommon)
+        # desired compression ratio (bits per pixel); default is 0
 
         self._bit_depth = 16
-        """ less common specs (for encoding only)
-        original # of bits of each pixel (encoding only) - must be <= 16; default is 8"""
+        # less common specs (for encoding only)
+        # original # of bits of each pixel (encoding only) - must be <= 16; default is 8"""
         self._blocks_per_seg = 256
-        """ number of blocks in each segment - default is 256;
-        Required: 16 <= blocks_per_seg <= (max number of blocks of the image)"""
+        # number of blocks in each segment - default is 256;
+        # Required: 16 <= blocks_per_seg <= (max number of blocks of the image)"""
         self._is_big_endian = 1
-        """ indicates byte order of a pixel - either 1 or 0 (yes or no); default is 1"""
+        # indicates byte order of a pixel - either 1 or 0 (yes or no); default is 1"""
         self._is_lossless = 1
-        """ indicates type of transform - either 1 or 0 (yes or no); default is 1"""
-        """ END user-defined specs"""
+        # indicates type of transform - either 1 or 0 (yes or no); default is 1"""
+        """END user-defined specs"""
 
         self._enc_data = bpe.encode_basearg(
             self._infile,
@@ -73,14 +71,17 @@ class Test_bpe(unittest.TestCase):
         self._dec_data = bpe.decode(self._compr_file, self._outfile)
 
     def test_bin_check(self):
+        """binary check files"""
         self.assertEqual(self._enc_data, self._dec_data)
         bin_check(self._infile, self._outfile)
 
     def test_cfc(self):
+        """create human readable files"""
         cfc(self._infile, self._width, self._height)
         cfc(self._outfile, self._width, self._height)
 
     def test_pixel_check(self):
+        """pixel check human readable files"""
         cfc(self._infile, self._width, self._height)
         cfc(self._outfile, self._width, self._height)
         pixel_check(self._png_infile, self._png_outfile)

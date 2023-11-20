@@ -26,7 +26,6 @@ def bin_check(file1: str, file2: str):
 
 
 if __name__ == "__main__":
-    """if calling from command line: python bin_check.py <file1> <file2>"""
 
     parser = argparse.ArgumentParser()
     parser.add_argument("file1")

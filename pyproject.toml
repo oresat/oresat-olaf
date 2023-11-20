@@ -76,7 +76,7 @@ path = "tests/*"
 ignore = "W0212"
 
 [[tool.mypy.overrides]]
-module = "canopen,oresat_configs,psutil"
+module = "canopen,oresat_configs,psutil,Pillow,numpy"
 ignore_missing_imports = true
 
 [tool.isort]
