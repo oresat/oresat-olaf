@@ -4,9 +4,9 @@ import os
 import unittest
 
 import olaf.bpe
-from bin_check import bin_check
-from cfc import cfc
-from pixel_check import pixel_check
+from .bin_check import bin_check
+from .cfc import cfc
+from .pixel_check import pixel_check
 
 
 class Test_bpe(unittest.TestCase):
