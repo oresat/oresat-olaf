@@ -23,7 +23,7 @@ def pixel_check(file1: str, file2: str):
     im2 = (image2).load()
 
     height, width = np.shape(image1)
-    #height, width, _ = np.shape(image1)
+    # height, width, _ = np.shape(image1)
     # as alternative, previous line can help with: 'ValueError: too many values to unpack'
 
     for i in range(width):

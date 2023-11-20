@@ -31,7 +31,9 @@ def cfc(infile: str, columns: int, rows: int):
 
 
 if __name__ == "__main__":
-    infile = sys.argv[1]
-    columns = sys.argv[2]
-    rows = sys.argv[3]
-    cfc(infile, columns, rows)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("infile")
+    parser.add_argument(colmuns)
+    parser.add_argument(rows)
+    args = parser.parse_args()
+    cfc(args.infile, args.columns, args.rows)

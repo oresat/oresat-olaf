@@ -1,3 +1,5 @@
+"""simple file check by binary comparison"""
+
 import argparse
 
 
