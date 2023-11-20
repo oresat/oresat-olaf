@@ -1,6 +1,7 @@
 Pillow
 build
 canopen
+cv2
 flask
 loguru
 natsort
