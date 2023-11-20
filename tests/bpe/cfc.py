@@ -2,6 +2,7 @@
 
 import os
 import sys
+import argparse
 
 import cv2
 import numpy as np
@@ -33,7 +34,7 @@ def cfc(infile: str, columns: int, rows: int):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("infile")
-    parser.add_argument(colmuns)
-    parser.add_argument(rows)
+    parser.add_argument("colmuns")
+    parser.add_argument("rows")
     args = parser.parse_args()
     cfc(args.infile, args.columns, args.rows)
