@@ -1,11 +1,11 @@
 Pillow
 build
 canopen
-cv2
 flask
 loguru
 natsort
 numpy
+opencv-python
 oresat-configs
 psutil
 setuptools
