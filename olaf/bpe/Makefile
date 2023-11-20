@@ -4,8 +4,6 @@
 # There are also CXX flags to ignore certain warnings stemming from the source
 # 	code that may be commented out.
 
-# select compiler for C and C++
-CXX = g++
 
 PYLIB_SRC = .
 
@@ -48,10 +46,11 @@ CXXFLAGS = \
 		   -Wno-unused-parameter -Wno-sign-compare
 # above -Wno flags are to ignore certain warnings during testing
 
-LDFLAGS = -lm $(shell python3-config --ldflags)
-#-Wl,-ld_classic -undefined dynamic_lookup
-# above line is for succesful compilation on Mac M1+ architecture as of: 9/23/23
-
+LDFLAGS = -lm $(shell python3-config --ldflags)                                 
+ifeq ($(shell uname),Darwin)                                                    
+LDFLAGS += -Wl,-ld_classic -undefined dynamic_lookup                            
+endif 
+		  
 OBJS = $(PYLIB_SOURCES:%.cpp=$(BUILD_DIR)/%.o) $(BPE_SOURCES:%.c=$(BUILD_DIR)/%.o)
 
 .PHONY: all clean
