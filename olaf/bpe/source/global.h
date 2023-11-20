@@ -307,8 +307,8 @@ typedef struct CODINGPARAMETERS
 
 typedef struct BLOCKSTRING
 {
-	long **FreqBlkString = NULL;
-	float ** FloatingFreqBlk = NULL;
+	long **FreqBlkString;
+	float ** FloatingFreqBlk;
 	UINT32 Blocks;
 	struct BLOCKSTRING *next;
 	struct BLOCKSTRING *previous;
