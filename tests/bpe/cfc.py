@@ -1,7 +1,6 @@
 """simple program to convert raw cfc images to viewable file types"""
 
 import os
-import sys
 import argparse
 
 import cv2

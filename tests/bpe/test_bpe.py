@@ -3,7 +3,7 @@
 import os
 import unittest
 
-import bpe
+import olaf.bpe
 from bin_check import bin_check
 from cfc import cfc
 from pixel_check import pixel_check
