@@ -2,6 +2,7 @@
 
 import os
 import unittest
+from pathlib import Path
 
 import olaf.bpe
 from .bin_check import bin_check
