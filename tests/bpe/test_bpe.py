@@ -17,7 +17,12 @@ class Test_bpe(unittest.TestCase):
                                        width of image, height of image)
         min decode params = (name of encoded file to decode, name for the outfile)
         """
-
+        
+        Path("img_files/raw/").mkdir(parents=True, exist_ok=True)
+        Path("img_files/encoded/").mkdir(parents=True, exist_ok=True)
+        Path("img_files/decoded/").mkdir(parents=True, exist_ok=True)
+        Path("img_files/converted/").mkdir(parents=True, exist_ok=True)
+        
         source_file = "RR.raw"
         encoded_file = "RRencoded"
         decoded_file = "RR.out"
