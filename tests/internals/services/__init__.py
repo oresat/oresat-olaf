@@ -1,7 +1,7 @@
 """Mock node for testing services."""
 
 import canopen
-from oresat_configs import NodeId, OreSatConfig, OreSatId
+from oresat_configs import OreSatConfig, OreSatId
 
 from olaf import OreSatFileCache, Service, logger
 from olaf._internals.node import Node
@@ -13,7 +13,7 @@ class MockNode(Node):
     """Mock node for testing services."""
 
     def __init__(self):
-        od = OreSatConfig(OreSatId.ORESAT0).od_db[NodeId.GPS]
+        od = OreSatConfig(OreSatId.ORESAT0).od_db["gps"]
         super().__init__(od, None)
 
         self._fread_cache = OreSatFileCache("/tmp/fread")

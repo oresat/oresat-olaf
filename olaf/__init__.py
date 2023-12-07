@@ -29,14 +29,14 @@ from .common.timer_loop import TimerLoop
 __version__ = "3.0.0"
 
 
-def olaf_setup(node_id: NodeId) -> tuple[Namespace, dict]:
+def olaf_setup(name: str) -> tuple[Namespace, dict]:
     """
     Parse runtime args and setup the app and REST API.
 
     Parameters
     ----------
-    node: Node
-        The card's node
+    name: str
+        The card's node name.
 
     Returns
     -------
@@ -45,6 +45,10 @@ def olaf_setup(node_id: NodeId) -> tuple[Namespace, dict]:
     dict
         The OreSat configs.
     """
+
+    # for backwards support
+    if isinstance(name, NodeId):
+        name = name.name.lower()
 
     parser = ArgumentParser(prog="OLAF")
     parser.add_argument("-b", "--bus", default="vcan0", help="CAN bus to use, defaults to vcan0")
@@ -99,14 +103,14 @@ def olaf_setup(node_id: NodeId) -> tuple[Namespace, dict]:
         raise ValueError(f"invalid oresat mission {args.oresat}")
 
     config = OreSatConfig(oresat_id)
-    od = config.od_db[node_id]
+    od = config.od_db[name]
 
     if args.disable_flight_mode:
         od["flight_mode"].value = False
 
     od["versions"]["olaf_version"].value = __version__
 
-    if node_id == NodeId.C3:
+    if name == "c3":
         app.setup(od, args.bus, config.od_db)
     else:
         app.setup(od, args.bus)

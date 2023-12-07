@@ -1,7 +1,7 @@
 """Test the Resource class."""
 import unittest
 
-from oresat_configs import NodeId, OreSatConfig, OreSatId
+from oresat_configs import OreSatConfig, OreSatId
 
 from olaf import Node, Resource
 
@@ -22,7 +22,7 @@ class TestResource(unittest.TestCase):
     def test_start_stop(self):
         """All exception should be caught"""
 
-        od = OreSatConfig(OreSatId.ORESAT0).od_db[NodeId.GPS]
+        od = OreSatConfig(OreSatId.ORESAT0).od_db["gps"]
         node = Node(od, "vcan0")
 
         good_res = Resource()

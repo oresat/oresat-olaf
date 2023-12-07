@@ -1,8 +1,6 @@
 """Test the REST API."""
 import unittest
 
-from oresat_configs import NodeId
-
 from olaf import app, olaf_setup, rest_api
 
 
@@ -11,7 +9,7 @@ class TestRestApi(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        olaf_setup(NodeId.GPS)
+        olaf_setup("gps")
         cls.client = rest_api.app.test_client()
 
         app.node._setup_node()

@@ -359,7 +359,7 @@ def _object_to_dict(index: Union[str, int], subindex: Union[str, int, None] = No
                 data["bit_definitions"] = obj.bit_definitions
                 data["value_descriptions"] = obj.value_descriptions
                 data["scale_factor"] = obj.factor
-                data["eng_value"] = obj.factor * obj.value
+                data["eng_value"] = obj.factor * value
         data["subindex"] = obj.subindex
         data["unit"] = obj.unit
     elif isinstance(obj, canopen.objectdictionary.Array):
