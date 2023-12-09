@@ -23,7 +23,7 @@ from .common.oresat_file import OreSatFile, new_oresat_file
 from .common.oresat_file_cache import OreSatFileCache
 from .common.pru import Pru, PruError, PruState
 from .common.resource import Resource
-from .common.service import Service
+from .common.service import Service, ServiceState
 from .common.timer_loop import TimerLoop
 
 __version__ = "3.0.0"
