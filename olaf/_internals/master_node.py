@@ -61,7 +61,7 @@ class MasterNode(Node):
         node_id = cob_id - 0x700
         status = int.from_bytes(data, "little")
         key = self._node_id_to_key[node_id]
-        self.node_status[key] = (status, timestamp)
+        self.node_status[key] = NodeHeartbeatInfo(status, timestamp)
 
     def _on_emergency(self, cob_id: int, data: bytes, timestamp: float):  # pylint: disable=W0613
         """Callback on node emergency messages."""

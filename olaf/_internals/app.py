@@ -31,9 +31,6 @@ class App:
     Use the global ``olaf.app`` obect.
     """
 
-    _BACKUP_EDS = abspath(dirname(__file__)) + "/data/oresat_app.eds"
-    """Internal eds file incase app's is misformatted or missing."""
-
     def __init__(self):
         self._od = None
         self._bus = ""
