@@ -3,7 +3,6 @@
 import os
 import signal
 import subprocess
-from os.path import abspath, dirname
 
 import canopen
 from loguru import logger
