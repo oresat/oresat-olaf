@@ -14,6 +14,7 @@ class Resource:
 
     def __init__(self):
         self.node = None
+        """Node or MasterNode: The app's CANopen node. Set to None until start() is called."""
 
     def start(self, node: Node):
         """

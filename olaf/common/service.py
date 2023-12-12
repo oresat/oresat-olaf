@@ -32,6 +32,8 @@ class Service:
 
     def __init__(self):
         self.node = None
+        """Node or MasterNode: The app's CANopen node. Set to None until start() is called."""
+
         self._event = Event()
         self._thread = Thread(target=self._loop)
         self._status = ServiceState.STOPPED
