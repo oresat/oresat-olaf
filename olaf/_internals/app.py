@@ -3,6 +3,7 @@
 import os
 import signal
 import subprocess
+from typing import Union
 
 import canopen
 from loguru import logger
@@ -52,7 +53,7 @@ class App:
         logger.debug(f"signal {signal.Signals(signo).name} was caught")
         self.stop()
 
-    def setup(self, od, bus: str, master_od_db: dict = {}):
+    def setup(self, od, bus: str, master_od_db: Union[dict, None] = None, load_core: bool = True):
         """
         Setup the app. Will be called by ``olaf_setup`` automatically.
 
@@ -60,6 +61,12 @@ class App:
         ----------
         node: Node
             The node for the app.
+        bus: str
+            The name of CAN bus/interface to connect to.
+        master_od_db: dict
+            Master node od database. Only for the C3.
+        load_core: bool
+            Load the core olaf services and resources
 
         Raises
         ------
@@ -80,17 +87,18 @@ class App:
             f"{self._node.work_base_dir}/updater", f"{self._node.cache_base_dir}/updates"
         )
 
-        # default core services
-        self.add_service(UpdaterService(self._updater))
-        self.add_service(LogsService())
-        self.add_service(OsCommandService())
+        if load_core:
+            # default core services
+            self.add_service(UpdaterService(self._updater))
+            self.add_service(LogsService())
+            self.add_service(OsCommandService())
 
-        # default core resources
-        self.add_resource(EcssResource())
-        self.add_resource(SystemResource())
-        self.add_resource(FreadResource())
-        self.add_resource(FwriteResource())
-        # self.add_resource(DaemonsResource())
+            # default core resources
+            self.add_resource(EcssResource())
+            self.add_resource(SystemResource())
+            self.add_resource(FreadResource())
+            self.add_resource(FwriteResource())
+            # self.add_resource(DaemonsResource())
 
     def add_resource(self, resource: Resource):
         """

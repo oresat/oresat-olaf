@@ -47,7 +47,9 @@ def olaf_setup(name: str) -> tuple[Namespace, dict]:
     """
 
     # for backwards support
-    if isinstance(name, NodeId):
+    if name == NodeId.CFC:
+        name = "cfc_processor"
+    elif isinstance(name, NodeId):
         name = name.name.lower()
 
     parser = ArgumentParser(prog="OLAF")
@@ -77,6 +79,7 @@ def olaf_setup(name: str) -> tuple[Namespace, dict]:
     parser.add_argument(
         "-o", "--oresat", default="oresat0.5", help="oresat mission; oresat0, oresat0.5, etc"
     )
+    parser.add_argument("-n", "--number", type=int, default=1, help="card number")
     args = parser.parse_args()
 
     if args.verbose:
@@ -97,12 +100,18 @@ def olaf_setup(name: str) -> tuple[Namespace, dict]:
         oresat_id = OreSatId.ORESAT0
     elif arg_oresat in ["oresat0.5", "oresat0_5", "0.5"]:
         oresat_id = OreSatId.ORESAT0_5
-    elif arg_oresat in ["oresat", "1"]:
+    elif arg_oresat in ["oresat", "oresat1", "1"]:
         oresat_id = OreSatId.ORESAT1
     else:
         raise ValueError(f"invalid oresat mission {args.oresat}")
 
     config = OreSatConfig(oresat_id)
+
+    if name not in config.cards:
+        name += f"_{args.number}"
+    if name not in config.cards:
+        raise ValueError(f"invalid card {name} for {args.oresat}")
+
     od = config.od_db[name]
 
     if args.disable_flight_mode:
@@ -110,10 +119,12 @@ def olaf_setup(name: str) -> tuple[Namespace, dict]:
 
     od["versions"]["olaf_version"].value = __version__
 
+    is_octavo = config.cards[name].processor == "octavo"
+
     if name == "c3":
-        app.setup(od, args.bus, config.od_db)
+        app.setup(od, args.bus, config.od_db, is_octavo)
     else:
-        app.setup(od, args.bus)
+        app.setup(od, args.bus, None, is_octavo)
 
     rest_api.setup(address=args.address, port=args.port)
 

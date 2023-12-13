@@ -28,6 +28,7 @@ if __name__ == "__main__":
         action="store_true",
         help="disable flight mode on start, defaults to flight mode enabled",
     )
+    parser.add_argument("-n", "--number", type=int, default=1, help="card number")
     args = parser.parse_args()
 
     if args.verbose:
@@ -46,11 +47,19 @@ if __name__ == "__main__":
 
     config = OreSatConfig(oresat_id)
 
+    if card_name not in config.cards:
+        card_name += f"_{args.number}"
+    if card_name not in config.cards:
+        print(f"invalid card {args.card} for {args.oresat}")
+        sys.exit(1)
+
+    is_octavo = config.cards[card_name].processor == "octavo"
+
     od = config.od_db[card_name]
     if card_name == "c3":
-        app.setup(od, args.bus, config.od_db)
+        app.setup(od, args.bus, config.od_db, is_octavo)
     else:
-        app.setup(od, args.bus)
+        app.setup(od, args.bus, None, is_octavo)
 
     rest_api.setup(address=args.address, port=args.port)
 
