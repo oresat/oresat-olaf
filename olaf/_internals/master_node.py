@@ -55,6 +55,9 @@ class MasterNode(Node):
             self._network.subscribe(0x80 + od.node_id, self._on_emergency)
             self._network.subscribe(0x700 + od.node_id, self._on_heartbeat)
 
+        for remote_node in self._remote_nodes.values():
+            self._network.add_node(remote_node)
+
     def _on_heartbeat(self, cob_id: int, data: bytes, timestamp: float):
         """Callback on node hearbeat messages."""
 
