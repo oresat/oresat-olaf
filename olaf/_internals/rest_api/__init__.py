@@ -300,7 +300,11 @@ def od_subindex(index: str, subindex: str):
     return jsonify(_object_to_dict(index, subindex))
 
 
-def _object_to_dict(index: Union[str, int], subindex: Union[str, int, None] = None) -> dict:
+def _object_to_dict(
+    index: Union[str, int],
+    subindex: Union[str, int, None] = None,
+    add_values: bool = True,
+) -> dict:
     """
     Convert a OD object to a dictionary.
 
@@ -310,6 +314,8 @@ def _object_to_dict(index: Union[str, int], subindex: Union[str, int, None] = No
         The index of the object to convert.
     subindex: str, int
         Optional subindex of the object to convert.
+    add_values: bool
+        Add values (current and engineering value) to dict.
 
     Returns
     -------
@@ -352,22 +358,24 @@ def _object_to_dict(index: Union[str, int], subindex: Union[str, int, None] = No
         data["access_type"] = obj.access_type
         data["data_type"] = DATA_TYPE_NAMES[obj.data_type]
         if obj.access_type == "wo":
-            data["value"] = ""
-        else:
+            value = ""
+        if add_values:
             data["value"] = value
-            if obj.data_type in canopen.objectdictionary.INTEGER_TYPES:
-                data["bit_definitions"] = obj.bit_definitions
-                data["value_descriptions"] = obj.value_descriptions
-                data["scale_factor"] = obj.factor
+            data["eng_value"] = value  # always include, even when the same as value
+        if obj.data_type in canopen.objectdictionary.INTEGER_TYPES:
+            data["bit_definitions"] = obj.bit_definitions
+            data["value_descriptions"] = obj.value_descriptions
+            data["scale_factor"] = obj.factor
+            if add_values:
                 data["eng_value"] = obj.factor * value
         data["subindex"] = obj.subindex
         data["unit"] = obj.unit
     elif isinstance(obj, canopen.objectdictionary.Array):
         data["object_type"] = "ARRAY"
-        data["subindexes"] = {subindex: _object_to_dict(index, subindex) for subindex in obj}
+        data["subindexes"] = {sub: _object_to_dict(index, sub, add_values) for sub in obj}
     else:
         data["object_type"] = "RECORD"
-        data["subindexes"] = {subindex: _object_to_dict(index, subindex) for subindex in obj}
+        data["subindexes"] = {sub: _object_to_dict(index, sub, add_values) for sub in obj}
 
     return data
 
@@ -379,7 +387,7 @@ def get_all_object():
     for index in app.od:
         if index < 0x3000:
             continue
-        data[index] = _object_to_dict(index)
+        data[index] = _object_to_dict(index, None, False)
     return data
 
 
