@@ -2,8 +2,12 @@
 
 from os import geteuid
 
+from loguru import logger
+
 A8_CPUFREQS = [300, 600, 720, 800, 1000]
 """list: CPU frequencies for the Cortex A8 in MHz"""
+
+_CPU0_PATH = "/sys/devices/system/cpu/cpufreq/policy0"
 
 
 def get_cpufreq() -> int:
@@ -16,7 +20,7 @@ def get_cpufreq() -> int:
         The current cpufreq in MHz.
     """
 
-    with open("/sys/devices/system/cpu/cpufreq/policy0/scaling_cur_freq", "r") as f:
+    with open(f"{_CPU0_PATH}/scaling_cur_freq", "r") as f:
         value = int(f.read()) // 1000
     return value
 
@@ -32,17 +36,19 @@ def set_cpufreq(value: int):
     """
 
     if geteuid() != 0:  # not running as root
-        raise PermissionError("cannot set cpufreq, not running at root")
+        logger.warning("cannot set cpufreq, not running at root")
+        return
     if value not in A8_CPUFREQS:
-        raise ValueError(f"invalid cpufreq of {value} MHz")
+        logger.warning(f"invalid cpufreq of {value} MHz")
+        return
 
-    with open("/sys/devices/system/cpu/cpufreq/policy0/scaling_setspeed", "w") as f:
+    with open(f"{_CPU0_PATH}/scaling_setspeed", "w") as f:
         f.write(str(value * 1000))
 
 
 def get_cpufreq_gov() -> str:
     """
-    Get the current cpu governor; ether ``'performace'`` or ``'powesave'``.
+    Get the current cpu governor; ether ``"performace"`` or ``"powesave"``.
 
     Returns
     -------
@@ -50,7 +56,7 @@ def get_cpufreq_gov() -> str:
         The current CPU governor.
     """
 
-    with open("/sys/devices/system/cpu/cpufreq/policy0/scaling_governor", "r") as f:
+    with open(f"{_CPU0_PATH}/scaling_governor", "r") as f:
         gov = f.read().strip()
 
     return gov
@@ -63,8 +69,15 @@ def set_cpufreq_gov(cpufreq_gov: str):
     Parameters
     -------
     cpufreq_gov: CpuGovenor
-        The CPU governor to change to. Must be ``'performace'`` or ``'powesave'``
+        The CPU governor to change to. Must be ``"performace"`` or ``"powesave"``
     """
 
-    with open("/sys/devices/system/cpu/cpufreq/policy0/scaling_governor", "w") as f:
+    if geteuid() != 0:  # not running as root
+        logger.warning("cannot set cpufreq governor, not running at root")
+        return
+    if cpufreq_gov not in ["performace", "powesave"]:
+        logger.warning(f"invalid cpufreq governor of {cpufreq_gov}")
+        return
+
+    with open(f"{_CPU0_PATH}/scaling_governor", "w") as f:
         f.write(cpufreq_gov)
