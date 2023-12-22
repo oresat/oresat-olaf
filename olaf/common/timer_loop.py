@@ -1,6 +1,8 @@
 """A quick timer-based class that calls a function in a loop"""
 
 from threading import Event, Thread
+from time import monotonic
+from typing import Union
 
 import canopen
 
@@ -14,8 +16,8 @@ class TimerLoop:
         self,
         name: str,
         loop_func,
-        delay: [int, float, canopen.objectdictionary.Variable],
-        start_delay: [int, float, canopen.objectdictionary.Variable] = 0,
+        delay: Union[int, float, canopen.objectdictionary.Variable],
+        start_delay: Union[int, float, canopen.objectdictionary.Variable] = 0,
         args: tuple = (),
         exc_func=None,
     ):
@@ -53,6 +55,7 @@ class TimerLoop:
         self._exc_func = exc_func
         self._thread = Thread(name=name, target=self._loop)
         self._event = Event()
+        self._start_time = monotonic()
 
     def __del__(self):
         self.stop()
@@ -65,14 +68,17 @@ class TimerLoop:
         if self._event.is_set():
             self._event = Event()
 
+        self._start_time = monotonic()
         self._thread.start()
 
     def _loop(self):
         is_var = isinstance(self._start_delay, canopen.objectdictionary.Variable)
         if is_var and self._start_delay.value > 0:
             self._event.wait(self._start_delay.value / 1000)
+            self._start_time = monotonic()
         elif not is_var and self._start_delay > 0:
             self._event.wait(self._start_delay / 1000)
+            self._start_time = monotonic()
 
         ret = True
         while ret is True and not self._event.is_set():
@@ -88,9 +94,10 @@ class TimerLoop:
                         logger.exception(f"{self._name} timer loop exc_func raise: {e2}")
 
             if isinstance(self._delay, canopen.objectdictionary.Variable):
-                self._event.wait(self._delay.value / 1000)
+                delay = self._delay.value / 1000
             else:
-                self._event.wait(self._delay / 1000)
+                delay = self._delay / 1000
+            self._event.wait(delay - ((monotonic() - self._start_time) % delay))
 
     def stop(self):
         """Stop the timer"""
@@ -109,14 +116,11 @@ class TimerLoop:
         return self._delay
 
     @delay.setter
-    def delay(self, value: [int, float, canopen.objectdictionary.Variable]):
-        if (
-            not isinstance(value, int)
-            or not isinstance(value, float)
-            or not isinstance(value, canopen.objectdictionary.Variable)
-        ):
+    def delay(self, value: Union[int, float, canopen.objectdictionary.Variable]):
+        if not isinstance(value, (int, float, canopen.objectdictionary.Variable)):
             raise ValueError(f"{value} is not a int, float, or Variable")
 
+        self._start_time = monotonic()
         self._delay = value
 
     @property
