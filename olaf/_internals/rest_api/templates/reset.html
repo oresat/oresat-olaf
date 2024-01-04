@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <style>
+    #page {
+      justify-content: center;
+      display: flex;
+    }
+  </style>
+  <button onclick="poweroff()">Poweroff</button>
+  <button onclick="softReset()">Soft Reset</button>
+  <button onclick="hardReset()">Hard Reset</button>
+  <button onclick="factoryReset()">Factory Reset</button>
+  <script>
+    function poweroff() { writeValue("system", "reset", 4); }
+    function softReset() { writeValue("system", "reset", 1); }
+    function hardReset() { writeValue("system", "reset", 2); }
+    function factoryReset() { writeValue("system", "reset", 3); }
+  </script>
+{% endblock %}

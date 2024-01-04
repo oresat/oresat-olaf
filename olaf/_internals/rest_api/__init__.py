@@ -425,3 +425,9 @@ def fread_template():
 def logs_template():
     """Render the logs template."""
     return render_olaf_template("logs.html", name="Logs")
+
+
+@rest_api.app.route("/reset")
+def reset_template():
+    """Render the reset template."""
+    return render_olaf_template("reset.html", name="Reset")
