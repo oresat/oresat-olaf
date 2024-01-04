@@ -40,10 +40,6 @@ class App:
         self._updater = None
         self._factory_reset_cb = None
 
-        # setup event
-        for sig in ["SIGTERM", "SIGHUP", "SIGINT"]:
-            signal.signal(getattr(signal, sig), self._quit)
-
     def __del__(self):
         self.stop()
 
@@ -126,6 +122,11 @@ class App:
 
     def run(self):
         """Run the app."""
+
+        # setup event
+        for sig in ["SIGTERM", "SIGHUP", "SIGINT"]:
+            signal.signal(getattr(signal, sig), self._quit)
+
         logger.info(f"{self._node.name} app is starting")
 
         for service in self._services:
