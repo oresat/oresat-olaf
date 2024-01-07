@@ -33,7 +33,9 @@ class UpdaterService(Service):
     def on_loop(self):
         # check for update files in fwrite cache
         for i in self.node.fwrite_cache.files("update"):
-            self._updater.add_update_archive(self.node.fwrite_cache.dir + "/" + i)
+            self._updater.add_update_archive(self.node.fwrite_cache.dir + "/" + i.name)
+            self.node.fwrite_cache.remove(i.name)
+            logger.info(f"updater moved {i.name} into update cache")
 
         # check for flag to start a update
         if self.update_obj.value:
