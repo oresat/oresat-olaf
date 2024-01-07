@@ -28,6 +28,7 @@ if __name__ == "__main__":
         action="store_true",
         help="disable flight mode on start, defaults to flight mode enabled",
     )
+    parser.add_argument("-w", "--hardware-version", default="0.0", help="set the hardware version")
     parser.add_argument("-n", "--number", type=int, default=1, help="card number")
     args = parser.parse_args()
 
@@ -53,9 +54,12 @@ if __name__ == "__main__":
         print(f"invalid card {args.card} for {args.oresat}")
         sys.exit(1)
 
+    od = config.od_db[card_name]
+
+    od["versions"]["hw_version"].value = args.hardware_version
+
     is_octavo = config.cards[card_name].processor == "octavo"
 
-    od = config.od_db[card_name]
     if card_name == "c3":
         app.setup(od, args.bus, config.od_db, is_octavo)
     else:

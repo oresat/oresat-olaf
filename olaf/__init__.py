@@ -79,6 +79,7 @@ def olaf_setup(name: str) -> tuple[Namespace, dict]:
     parser.add_argument(
         "-o", "--oresat", default="oresat0.5", help="oresat mission; oresat0, oresat0.5, etc"
     )
+    parser.add_argument("-w", "--hardware-version", default="0.0", help="set the hardware version")
     parser.add_argument("-n", "--number", type=int, default=1, help="card number")
     args = parser.parse_args()
 
@@ -118,6 +119,7 @@ def olaf_setup(name: str) -> tuple[Namespace, dict]:
         od["flight_mode"].value = False
 
     od["versions"]["olaf_version"].value = __version__
+    od["versions"]["hw_version"].value = args.hardware_version
 
     is_octavo = config.cards[name].processor == "octavo"
 
