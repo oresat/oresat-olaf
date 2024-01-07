@@ -357,8 +357,6 @@ def _object_to_dict(
         data["object_type"] = "VARIABLE"
         data["access_type"] = obj.access_type
         data["data_type"] = DATA_TYPE_NAMES[obj.data_type]
-        if obj.access_type == "wo":
-            value = ""
         if add_values:
             data["value"] = value
             data["eng_value"] = value  # always include, even when the same as value
