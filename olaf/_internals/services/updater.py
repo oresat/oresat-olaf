@@ -63,4 +63,4 @@ class UpdaterService(Service):
 
     def on_read_cache_json(self) -> str:
         """SDO read callback to get list of updates cached as str"""
-        return " ".join(self._updater.updates_cached)
+        return " ".join([i.name for i in self._updater.updates_cached])
