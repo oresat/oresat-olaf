@@ -1,11 +1,9 @@
 """OLAF (OreSat Linux App Framework)"""
 
-import os
 import sys
 from argparse import ArgumentParser, Namespace
 from logging.handlers import SysLogHandler
 
-import canopen
 from loguru import logger
 from oresat_configs import NodeId, OreSatConfig, OreSatId
 
@@ -14,6 +12,7 @@ from ._internals.master_node import MasterNode
 from ._internals.node import NetworkError, Node, NodeStop
 from ._internals.rest_api import RestAPI, render_olaf_template, rest_api
 from ._internals.services.logs import logger_tmp_file_setup
+from ._internals.updater import Updater, UpdaterState
 from .common.adc import Adc
 from .common.cpufreq import A8_CPUFREQS, get_cpufreq, get_cpufreq_gov, set_cpufreq, set_cpufreq_gov
 from .common.daemon import Daemon, DaemonState
