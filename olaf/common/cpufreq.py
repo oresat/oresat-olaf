@@ -48,7 +48,7 @@ def set_cpufreq(value: int):
 
 def get_cpufreq_gov() -> str:
     """
-    Get the current cpu governor; ether ``"performace"`` or ``"powesave"``.
+    Get the current cpu governor; ether ``"performance"`` or ``"powersave"``.
 
     Returns
     -------
@@ -69,13 +69,13 @@ def set_cpufreq_gov(cpufreq_gov: str):
     Parameters
     -------
     cpufreq_gov: CpuGovenor
-        The CPU governor to change to. Must be ``"performace"`` or ``"powesave"``
+        The CPU governor to change to. Must be ``"performance"`` or ``"powersave"``
     """
 
     if geteuid() != 0:  # not running as root
         logger.warning("cannot set cpufreq governor, not running at root")
         return
-    if cpufreq_gov not in ["performace", "powesave"]:
+    if cpufreq_gov not in ["performance", "powersave"]:
         logger.warning(f"invalid cpufreq governor of {cpufreq_gov}")
         return
 
