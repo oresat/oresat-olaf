@@ -117,7 +117,12 @@ class MasterNode(Node):
         if self._network is None:
             raise NetworkError("network is down cannot send an SDO read message")
 
-        return self._remote_nodes[key].sdo[index][subindex].phys
+        if subindex == 0 and isinstance(self._od_db[key][index], canopen.objectdictionary.Variable):
+            value = self._remote_nodes[key].sdo[index].raw
+        else:
+            value = self._remote_nodes[key].sdo[index][subindex].raw
+
+        return value
 
     def sdo_write(self, key: Any, index: int, subindex: int, value: Any):
         """
@@ -145,4 +150,17 @@ class MasterNode(Node):
         if self._network is None:
             raise NetworkError("network is down cannot send an SDO write message")
 
-        self._remote_nodes[key].sdo[index][subindex].phys = value
+        if subindex == 0 and isinstance(self._od_db[key][index], canopen.objectdictionary.Variable):
+            self._remote_nodes[key].sdo[index].raw = value
+        else:
+            self._remote_nodes[key].sdo[index][subindex].raw = value
+
+    @property
+    def remote_nodes(self) -> dict[Any, canopen.RemoteNode]:
+        """dict[Any, canopen.RemoteNode]: All other node as remote node."""
+        return self._remote_nodes
+
+    @property
+    def od_db(self) -> dict[Any, canopen.ObjectDictionary]:
+        """dict[Any, canopen.ObjectDictionary]: All other node ODs."""
+        return self._od_db
