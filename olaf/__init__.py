@@ -25,7 +25,7 @@ from .common.resource import Resource
 from .common.service import Service, ServiceState
 from .common.timer_loop import TimerLoop
 
-__version__ = "3.3.0"
+__version__ = "3.3.1"
 
 
 def olaf_setup(name: str) -> tuple[Namespace, dict]:
