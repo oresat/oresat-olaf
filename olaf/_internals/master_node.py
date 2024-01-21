@@ -29,7 +29,8 @@ class MasterNode(Node):
         bus: str
             Which CAN bus to use.
         bus_type: str
-            CAN bus type. See https://python-can.readthedocs.io/en/stable/configuration.html#interface-names
+            CAN bus type.
+            See https://python-can.readthedocs.io/en/stable/configuration.html#interface-names
         od_db: Dict[Any, canopen.ObjectDictionary]
             Database of other nodes's ODs. The dict key will be used by class fields and methods.
         """
