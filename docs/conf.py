@@ -33,6 +33,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx.ext.autodoc",
+    "sphinxcontrib.mermaid",
 ]
 
 # List of patterns, relative to source directory, that match files and

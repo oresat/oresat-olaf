@@ -1,5 +1,5 @@
-Node
-====
+Node and MasterNode
+===================
 
 .. autoclass:: olaf.NetworkError
 

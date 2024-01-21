@@ -1,11 +1,16 @@
+black
 build
 canopen
 flask
+isort
 loguru
 natsort
 oresat-configs
 psutil
+pylama[all]
+pylama[toml]
 setuptools
 sphinx
 sphinx-rtd-theme
+sphinxcontrib-mermaid
 wheel

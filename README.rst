@@ -28,12 +28,6 @@ Install using pip:
 
    $ pip install oresat-olaf
 
-Contributing
-------------
-
-For guidance on setting up a development environment and how to contribution
-to OLAF, see the `<CONTRIBUTING.rst>`_.
-
 .. References
 .. _unittest: https://docs.python.org/3/library/unittest.html#module-unittest
 .. _sphinx: https://www.sphinx-doc.org/en/master/

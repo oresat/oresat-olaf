@@ -6,8 +6,6 @@ App
    :members:
    :member-order: bysource
 
-
 .. autofunction:: olaf.olaf_setup
-
 
 .. autofunction:: olaf.olaf_run

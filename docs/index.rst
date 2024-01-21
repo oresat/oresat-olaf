@@ -17,9 +17,6 @@ Society).
    :maxdepth: 2
 
    glossary
-   contributing_link
-   canopen
-   canopen_on_oresat
    api/index
    rest_api
    updater/index
