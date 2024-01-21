@@ -15,7 +15,11 @@ class MasterNode(Node):
     """OreSat CANopen Master Node (only used by the C3)"""
 
     def __init__(
-        self, od: canopen.ObjectDictionary, bus: str, od_db: Dict[Any, canopen.ObjectDictionary]
+        self,
+        od: canopen.ObjectDictionary,
+        bus: str,
+        bus_type: str,
+        od_db: Dict[Any, canopen.ObjectDictionary],
     ):
         """
         Parameters
@@ -24,11 +28,13 @@ class MasterNode(Node):
             The CANopen ObjectDictionary
         bus: str
             Which CAN bus to use.
+        bus_type: str
+            CAN bus type. See https://python-can.readthedocs.io/en/stable/configuration.html#interface-names
         od_db: Dict[Any, canopen.ObjectDictionary]
             Database of other nodes's ODs. The dict key will be used by class fields and methods.
         """
 
-        super().__init__(od, bus)
+        super().__init__(od, bus, bus_type)
 
         self._od_db = od_db
 

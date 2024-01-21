@@ -8,7 +8,10 @@ from oresat_configs import OreSatConfig, OreSatId
 
 from olaf import app, logger, logger_tmp_file_setup, olaf_run, rest_api
 
-if __name__ == "__main__":
+
+def main():
+    """Quick main to run a empty olaf app."""
+
     parser = ArgumentParser()
     parser.add_argument("card", metavar="CARD", help="oresat card name; c3, star_tracker_1, etc")
     parser.add_argument(
@@ -30,6 +33,12 @@ if __name__ == "__main__":
     )
     parser.add_argument("-w", "--hardware-version", default="0.0", help="set the hardware version")
     parser.add_argument("-n", "--number", type=int, default=1, help="card number")
+    parser.add_argument(
+        "-t",
+        "--bus-type",
+        default="socketcan",
+        help="can bus type; can be socketcan or slcan",
+    )
     args = parser.parse_args()
 
     if args.verbose:
@@ -61,10 +70,14 @@ if __name__ == "__main__":
     is_octavo = config.cards[card_name].processor == "octavo"
 
     if card_name == "c3":
-        app.setup(od, args.bus, config.od_db, is_octavo)
+        app.setup(od, args.bus, args.bus_type, config.od_db, is_octavo)
     else:
-        app.setup(od, args.bus, None, is_octavo)
+        app.setup(od, args.bus, args.bus_type, None, is_octavo)
 
     rest_api.setup(address=args.address, port=args.port)
 
     olaf_run()
+
+
+if __name__ == "__main__":
+    main()

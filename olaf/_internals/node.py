@@ -1,9 +1,9 @@
 """OreSat CANopen Node"""
 
+import os
 import struct
 import subprocess
 from enum import IntEnum, auto
-from os import geteuid
 from pathlib import Path
 from threading import Event
 from typing import Any, Callable, Dict, Union
@@ -62,7 +62,7 @@ class Node:
     basic API for CANopen things.
     """
 
-    def __init__(self, od: canopen.ObjectDictionary, bus: str):
+    def __init__(self, od: canopen.ObjectDictionary, bus: str, bus_type: str):
         """
         Parameters
         ----------
@@ -70,10 +70,13 @@ class Node:
             The CANopen ObjectDictionary
         bus: str
             Which CAN bus to use.
+        bus_type: str
+            CAN bus type. See https://python-can.readthedocs.io/en/stable/configuration.html#interface-names
         """
 
         self._od = od
         self._bus = bus
+        self._bus_type = bus_type
         self._bus_state = CanState.BUS_DOWN
         self._node: canopen.LocalNode = None
         self._network: canopen.Network = None
@@ -86,7 +89,7 @@ class Node:
         self._daemons = {}  # type: ignore
         self.first_bus_reset = False
 
-        if geteuid() == 0:  # running as root
+        if os.geteuid() == 0:  # running as root
             self.work_base_dir = "/var/lib/oresat"
             self.cache_base_dir = "/var/cache/oresat"
         else:
@@ -255,10 +258,13 @@ class Node:
     def _restart_bus(self):
         """Try to restart the CAN bus"""
 
+        if os.path.exists(self._bus):
+            return  # skip. On MacOS, the CAN bus is always up, if it exists
+
         if self.first_bus_reset:
             logger.error(f"{self._bus} is down")
 
-        if geteuid() == 0:  # running as root
+        if os.geteuid() == 0:  # running as root
             if self.first_bus_reset:
                 logger.info(f"trying to restart CAN bus {self._bus}")
             cmd = (
@@ -278,7 +284,7 @@ class Node:
         logger.info("(re)starting CANopen network")
 
         self._network = canopen.Network()
-        self._network.connect(bustype="socketcan", channel=self._bus)
+        self._network.connect(bustype=self._bus_type, channel=self._bus)
         self._setup_node()
         self._network.add_node(self._node)
 
@@ -314,13 +320,13 @@ class Node:
         self.first_bus_reset = True  # flag to only log error message on first error
         while not self._event.is_set():
             bus = psutil.net_if_stats().get(self._bus)
-            if not bus:  # bus does not exist
+            if bus is None and not os.path.exists(self._bus):  # bus does not exist
                 self._bus_state = CanState.BUS_NOT_FOUND
                 self._disable_network()
                 if first_bus_down:
                     logger.critical(f"{self._bus} does not exists, nothing OLAF can do")
                     first_bus_down = False
-            elif not bus.isup:  # bus is down
+            elif (bus and not bus.isup) or os.path.exists(self._bus):  # bus is down
                 self._bus_state = CanState.BUS_DOWN
                 first_bus_down = True  # reset flag
                 self._disable_network()
@@ -348,7 +354,7 @@ class Node:
         """
 
         logger.info(f"{self.name} node is starting")
-        if geteuid() != 0:  # running as root
+        if os.geteuid() != 0:  # running as root
             logger.warning("not running as root, cannot restart CAN bus if it goes down")
 
         try:

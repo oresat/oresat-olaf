@@ -23,7 +23,7 @@ class TestResource(unittest.TestCase):
         """All exception should be caught"""
 
         od = OreSatConfig(OreSatId.ORESAT0).od_db["gps"]
-        node = Node(od, "vcan0")
+        node = Node(od, "vcan0", "virtual")
 
         good_res = Resource()
         bad_res = BadResource()

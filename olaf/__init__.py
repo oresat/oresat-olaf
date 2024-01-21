@@ -80,6 +80,12 @@ def olaf_setup(name: str) -> tuple[Namespace, dict]:
     )
     parser.add_argument("-w", "--hardware-version", default="0.0", help="set the hardware version")
     parser.add_argument("-n", "--number", type=int, default=1, help="card number")
+    parser.add_argument(
+        "-t",
+        "--bus-type",
+        default="socketcan",
+        help="can bus type; can be socketcan, slcan, etc",
+    )
     args = parser.parse_args()
 
     if args.verbose:
@@ -123,9 +129,9 @@ def olaf_setup(name: str) -> tuple[Namespace, dict]:
     is_octavo = config.cards[name].processor == "octavo"
 
     if name == "c3":
-        app.setup(od, args.bus, config.od_db, is_octavo)
+        app.setup(od, args.bus, args.bus_type, config.od_db, is_octavo)
     else:
-        app.setup(od, args.bus, None, is_octavo)
+        app.setup(od, args.bus, args.bus_type, None, is_octavo)
 
     rest_api.setup(address=args.address, port=args.port)
 

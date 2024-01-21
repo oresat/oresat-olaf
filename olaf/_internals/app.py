@@ -34,6 +34,7 @@ class App:
     def __init__(self):
         self._od = None
         self._bus = ""
+        self._bus_type = ""
         self._resources = []
         self._services = []
         self._node = None
@@ -49,7 +50,14 @@ class App:
         logger.debug(f"signal {signal.Signals(signo).name} was caught")
         self.stop()
 
-    def setup(self, od, bus: str, master_od_db: Union[dict, None] = None, load_core: bool = True):
+    def setup(
+        self,
+        od,
+        bus: str,
+        bus_type: str,
+        master_od_db: Union[dict, None] = None,
+        load_core: bool = True,
+    ):
         """
         Setup the app. Will be called by ``olaf_setup`` automatically.
 
@@ -59,6 +67,8 @@ class App:
             The node for the app.
         bus: str
             The name of CAN bus/interface to connect to.
+        bus_type: str
+            The type of CAN bus adaptor. e.g.: "socketcan", "slcan", "virtual", etc.
         master_od_db: dict
             Master node od database. Only for the C3.
         load_core: bool
@@ -72,11 +82,12 @@ class App:
 
         self._od = od
         self._bus = bus
+        self._bus_type = bus_type
 
         if master_od_db:
-            self._node = MasterNode(self._od, self._bus, master_od_db)
+            self._node = MasterNode(self._od, self._bus, self._bus_type, master_od_db)
         else:
-            self._node = Node(self._od, self._bus)
+            self._node = Node(self._od, self._bus, self._bus_type)
 
         # setup updater
         self._updater = Updater(

@@ -14,7 +14,7 @@ class MockNode(Node):
 
     def __init__(self):
         od = OreSatConfig(OreSatId.ORESAT0).od_db["gps"]
-        super().__init__(od, None)
+        super().__init__(od, "virtual", None)
 
         self._fread_cache = OreSatFileCache("/tmp/fread")
         self._fread_cache.clear()
