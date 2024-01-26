@@ -1,4 +1,5 @@
 """Test the Resource class."""
+
 import unittest
 
 from oresat_configs import OreSatConfig, OreSatId

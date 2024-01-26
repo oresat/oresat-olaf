@@ -1,4 +1,5 @@
 """Test the REST API."""
+
 import unittest
 
 from olaf import app, olaf_setup, rest_api

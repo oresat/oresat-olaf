@@ -1,4 +1,5 @@
 """Resource for the system."""
+
 from time import monotonic, time
 
 import psutil
