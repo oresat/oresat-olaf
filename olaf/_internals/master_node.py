@@ -1,6 +1,7 @@
 """OreSat CANopen Master Node class to support the C3"""
 
 from collections import namedtuple
+from time import monotonic
 from typing import Any, Dict, Union
 
 import canopen
@@ -8,7 +9,7 @@ from loguru import logger
 
 from .node import NetworkError, Node
 
-NodeHeartbeatInfo = namedtuple("NodeHeartbeatInfo", ["state", "timestamp"])
+NodeHeartbeatInfo = namedtuple("NodeHeartbeatInfo", ["state", "timestamp", "time_since_boot"])
 
 
 class MasterNode(Node):
@@ -48,7 +49,9 @@ class MasterNode(Node):
                 continue  # skip itself
             self._remote_nodes[key] = canopen.RemoteNode(od_db[key].node_id, od_db[key])
             self.node_status[key] = NodeHeartbeatInfo(
-                0xFF, 0.0
+                0xFF,
+                0.0,
+                0.0,
             )  # 0xFF is a flag, not a CANopen standard
 
     def _restart_network(self):
@@ -58,7 +61,7 @@ class MasterNode(Node):
         for key, od in self._od_db.items():
             if od == self._od:
                 continue  # skip itself
-            self.node_status[key] = NodeHeartbeatInfo(0xFF, 0.0)
+            self.node_status[key] = NodeHeartbeatInfo(0xFF, 0.0, 0.0)
             self._network.subscribe(0x80 + od.node_id, self._on_emergency)
             self._network.subscribe(0x700 + od.node_id, self._on_heartbeat)
 
@@ -71,7 +74,7 @@ class MasterNode(Node):
         node_id = cob_id - 0x700
         status = int.from_bytes(data, "little")
         key = self._node_id_to_key[node_id]
-        self.node_status[key] = NodeHeartbeatInfo(status, timestamp)
+        self.node_status[key] = NodeHeartbeatInfo(status, timestamp, monotonic())
 
     def _on_emergency(self, cob_id: int, data: bytes, timestamp: float):  # pylint: disable=W0613
         """Callback on node emergency messages."""
