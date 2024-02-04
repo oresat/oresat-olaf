@@ -124,7 +124,8 @@ def olaf_setup(name: str) -> tuple[Namespace, dict]:
         od["flight_mode"].value = False
 
     od["versions"]["olaf_version"].value = __version__
-    od["versions"]["hw_version"].value = args.hardware_version
+    if args.hardware_version != "0.0":
+        od["versions"]["hw_version"].value = args.hardware_version
 
     is_octavo = config.cards[name].processor == "octavo"
 

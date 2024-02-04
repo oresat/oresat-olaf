@@ -6,7 +6,7 @@ from argparse import ArgumentParser
 
 from oresat_configs import OreSatConfig, OreSatId
 
-from olaf import app, logger, logger_tmp_file_setup, olaf_run, rest_api
+from olaf import app, logger, logger_tmp_file_setup, olaf_run, rest_api, __version__
 
 
 def main():
@@ -65,7 +65,9 @@ def main():
 
     od = config.od_db[card_name]
 
-    od["versions"]["hw_version"].value = args.hardware_version
+    od["versions"]["olaf_version"].value = __version__
+    if args.hardware_version != "0.0":
+        od["versions"]["hw_version"].value = args.hardware_version
 
     is_octavo = config.cards[card_name].processor == "octavo"
 

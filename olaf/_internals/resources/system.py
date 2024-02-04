@@ -4,6 +4,9 @@ from time import monotonic, time
 
 import psutil
 
+from olaf import logger
+
+from ...common.eeprom import Eeprom
 from ...common.resource import Resource
 from ..node import NodeStop
 
@@ -19,6 +22,12 @@ class SystemResource(Resource):
         self.node.add_sdo_callbacks("system", "uptime", self.on_read_uptime, None)
         self.node.add_sdo_callbacks("system", "unix_time", self.on_read_unix_time, None)
         self.node.add_sdo_callbacks("system", "reset", None, self.on_write_reset)
+
+        try:
+            eeprom = Eeprom()
+            self.node.od["versions"]["hw_version"].value = f"{eeprom.major}.{eeprom.minor}"
+        except (PermissionError, FileNotFoundError):
+            logger.warning("could not read hardware info from eeprom")
 
     def on_read_ram(self):
         """SDO read callback for getting the RAM usage percent."""
