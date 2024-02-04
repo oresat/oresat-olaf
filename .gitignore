@@ -128,8 +128,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# temps
-*.eds.tmp
+# Vim
+*.swp
 
-# Vagrant
-.vagrant/
+# MacOS
+.DS_Store
