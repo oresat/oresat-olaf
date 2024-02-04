@@ -85,7 +85,7 @@ class App:
         self._bus_type = bus_type
 
         if master_od_db:
-            self._node = MasterNode(self._od, self._bus, self._bus_type, master_od_db)
+            self._node = MasterNode(self._od, master_od_db, self._bus, self._bus_type)
         else:
             self._node = Node(self._od, self._bus, self._bus_type)
 

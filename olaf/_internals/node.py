@@ -62,7 +62,7 @@ class Node:
     basic API for CANopen things.
     """
 
-    def __init__(self, od: canopen.ObjectDictionary, bus: str, bus_type: str):
+    def __init__(self, od: canopen.ObjectDictionary, bus: str, bus_type: str = "socketcan"):
         """
         Parameters
         ----------

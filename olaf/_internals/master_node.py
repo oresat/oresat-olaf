@@ -18,22 +18,22 @@ class MasterNode(Node):
     def __init__(
         self,
         od: canopen.ObjectDictionary,
-        bus: str,
-        bus_type: str,
         od_db: Dict[Any, canopen.ObjectDictionary],
+        bus: str,
+        bus_type: str = "socketcan",
     ):
         """
         Parameters
         ----------
         od: canopen.ObjectDictionary
             The CANopen ObjectDictionary
+        od_db: Dict[Any, canopen.ObjectDictionary]
+            Database of other nodes's ODs. The dict key will be used by class fields and methods.
         bus: str
             Which CAN bus to use.
         bus_type: str
             CAN bus type.
             See https://python-can.readthedocs.io/en/stable/configuration.html#interface-names
-        od_db: Dict[Any, canopen.ObjectDictionary]
-            Database of other nodes's ODs. The dict key will be used by class fields and methods.
         """
 
         super().__init__(od, bus, bus_type)
