@@ -8,6 +8,7 @@ from pathlib import Path
 from threading import Event
 from typing import Any, Callable, Dict, Union
 
+import can
 import canopen
 import psutil
 from loguru import logger
@@ -62,22 +63,23 @@ class Node:
     basic API for CANopen things.
     """
 
-    def __init__(self, od: canopen.ObjectDictionary, bus: str, bus_type: str = "socketcan"):
+    def __init__(
+        self,
+        od: canopen.ObjectDictionary,
+        bus: can.BusABC,
+    ):
         """
         Parameters
         ----------
         od: canopen.ObjectDictionary
             The CANopen ObjectDictionary
-        bus: str
-            Which CAN bus to use.
-        bus_type: str
-            CAN bus type.
-            See https://python-can.readthedocs.io/en/stable/configuration.html#interface-names
+        bus: can.BusABC
+            The can bus object to use.
         """
 
         self._od = od
         self._bus = bus
-        self._bus_type = bus_type
+        self._channel = self._bus.channel_info.split(" ")[-1]
         self._bus_state = CanState.BUS_DOWN
         self._node: canopen.LocalNode = None
         self._network: canopen.Network = None
@@ -118,6 +120,8 @@ class Node:
             except Exception:  # pylint: disable=W0718
                 pass
 
+        self._bus.shutdown()
+
     def _on_sync(self, cob_id: int, data: bytes, timestamp: float):  # pylint: disable=W0613
         """On SYNC message send TPDOs configured to be SYNC-based"""
 
@@ -155,7 +159,7 @@ class Node:
 
         # PDOs can't be sent if CAN bus is down and PDOs should not be sent if CAN bus not in
         # 'OPERATIONAL' state
-        can_bus = psutil.net_if_stats().get(self._bus)
+        can_bus = psutil.net_if_stats().get(self._channel)
         if (
             can_bus is None
             or self._node is None
@@ -259,19 +263,19 @@ class Node:
     def _restart_bus(self):
         """Try to restart the CAN bus"""
 
-        if os.path.exists(self._bus):
+        if os.path.exists(self._channel):
             return  # skip. On MacOS, the CAN bus is always up, if it exists
 
         if self.first_bus_reset:
-            logger.error(f"{self._bus} is down")
+            logger.error(f"{self._channel} is down")
 
         if os.geteuid() == 0:  # running as root
             if self.first_bus_reset:
-                logger.info(f"trying to restart CAN bus {self._bus}")
+                logger.info(f"trying to restart CAN bus {self._channel}")
             cmd = (
-                f"ip link set {self._bus} down;"
-                f"ip link set {self._bus} type can bitrate 1000000;"
-                f"ip link set {self._bus} up"
+                f"ip link set {self._channel} down;"
+                f"ip link set {self._channel} type can bitrate 1000000;"
+                f"ip link set {self._channel} up"
             )
             out = subprocess.run(cmd, shell=True, check=False)
             if out.returncode != 0:
@@ -284,8 +288,8 @@ class Node:
 
         logger.info("(re)starting CANopen network")
 
-        self._network = canopen.Network()
-        self._network.connect(bustype=self._bus_type, channel=self._bus)
+        self._network = canopen.Network(self._bus)
+        self._network.connect()
         self._setup_node()
         self._network.add_node(self._node)
 
@@ -320,14 +324,14 @@ class Node:
         first_bus_down = True  # flag to only log error message on first error
         self.first_bus_reset = True  # flag to only log error message on first error
         while not self._event.is_set():
-            bus = psutil.net_if_stats().get(self._bus)
-            if bus is None and not os.path.exists(self._bus):  # bus does not exist
+            bus = psutil.net_if_stats().get(self._channel)
+            if bus is None and not os.path.exists(self._channel):  # bus does not exist
                 self._bus_state = CanState.BUS_NOT_FOUND
                 self._disable_network()
                 if first_bus_down:
-                    logger.critical(f"{self._bus} does not exists, nothing OLAF can do")
+                    logger.critical(f"{self._channel} does not exists, nothing OLAF can do")
                     first_bus_down = False
-            elif (bus and not bus.isup) or os.path.exists(self._bus):  # bus is down
+            elif (bus and not bus.isup) or os.path.exists(self._channel):  # bus is down
                 self._bus_state = CanState.BUS_DOWN
                 first_bus_down = True  # reset flag
                 self._disable_network()
@@ -536,7 +540,7 @@ class Node:
     def bus(self) -> str:
         """str: The CAN bus."""
 
-        return self._bus
+        return self._channel
 
     @property
     def bus_state(self) -> str:

@@ -4,6 +4,7 @@ from collections import namedtuple
 from time import monotonic
 from typing import Any, Dict, Union
 
+import can
 import canopen
 from loguru import logger
 
@@ -19,8 +20,7 @@ class MasterNode(Node):
         self,
         od: canopen.ObjectDictionary,
         od_db: Dict[Any, canopen.ObjectDictionary],
-        bus: str,
-        bus_type: str = "socketcan",
+        bus: can.BusABC,
     ):
         """
         Parameters
@@ -29,14 +29,11 @@ class MasterNode(Node):
             The CANopen ObjectDictionary
         od_db: Dict[Any, canopen.ObjectDictionary]
             Database of other nodes's ODs. The dict key will be used by class fields and methods.
-        bus: str
-            Which CAN bus to use.
-        bus_type: str
-            CAN bus type.
-            See https://python-can.readthedocs.io/en/stable/configuration.html#interface-names
+        bus: can.BusABC
+            The can bus object to use.
         """
 
-        super().__init__(od, bus, bus_type)
+        super().__init__(od, bus)
 
         self._od_db = od_db
 

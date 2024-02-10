@@ -62,7 +62,8 @@ linters = "pycodestyle,pyflakes,pylint,mccabe,mypy,radon"
 # W0707:    Consider explicitly re-raising
 # W0102:    Dangerous default value as argument
 # W0107:    Unnecessary pass statement
-ignore = "E402,C901,C0103,E203,R0912,R0915,R901,R901,R0914,C0413,C0206,R1716,W1514,R0902,R0913,W0707,W0102,W0107"
+# R0903:    Too few public methods
+ignore = "E402,C901,C0103,E203,R0912,R0915,R901,R901,R0914,C0413,C0206,R1716,W1514,R0902,R0913,W0707,W0102,W0107,R0903"
 max_line_length = 100
 
 [[tool.pylama.files]]

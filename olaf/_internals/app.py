@@ -5,6 +5,7 @@ import signal
 import subprocess
 from typing import Union
 
+import can
 import canopen
 from loguru import logger
 
@@ -33,8 +34,6 @@ class App:
 
     def __init__(self):
         self._od = None
-        self._bus = ""
-        self._bus_type = ""
         self._resources = []
         self._services = []
         self._node = None
@@ -53,8 +52,7 @@ class App:
     def setup(
         self,
         od,
-        bus: str,
-        bus_type: str,
+        bus: can.BusABC,
         master_od_db: Union[dict, None] = None,
         load_core: bool = True,
     ):
@@ -65,10 +63,8 @@ class App:
         ----------
         node: Node
             The node for the app.
-        bus: str
-            The name of CAN bus/interface to connect to.
-        bus_type: str
-            The type of CAN bus adaptor. e.g.: "socketcan", "slcan", "virtual", etc.
+        bus: can.BusABC
+            The can bus object to use.
         master_od_db: dict
             Master node od database. Only for the C3.
         load_core: bool
@@ -81,13 +77,11 @@ class App:
         """
 
         self._od = od
-        self._bus = bus
-        self._bus_type = bus_type
 
         if master_od_db:
-            self._node = MasterNode(self._od, master_od_db, self._bus, self._bus_type)
+            self._node = MasterNode(self._od, master_od_db, bus)
         else:
-            self._node = Node(self._od, self._bus, self._bus_type)
+            self._node = Node(self._od, bus)
 
         # setup updater
         self._updater = Updater(

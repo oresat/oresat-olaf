@@ -3,7 +3,9 @@
 import sys
 from argparse import ArgumentParser, Namespace
 from logging.handlers import SysLogHandler
+from typing import Optional
 
+import can
 from loguru import logger
 from oresat_configs import NodeId, OreSatConfig, OreSatId
 
@@ -27,8 +29,55 @@ from .common.timer_loop import TimerLoop
 
 __version__ = "3.3.1"
 
+olaf_parser = ArgumentParser(prog="OLAF", add_help=False)
+olaf_parser.add_argument("-b", "--bus", default="vcan0", help="CAN bus to use, defaults to vcan0")
+olaf_parser.add_argument("-v", "--verbose", action="store_true", help="enable verbose logging")
+olaf_parser.add_argument("-l", "--log", action="store_true", help="log to only journald")
+olaf_parser.add_argument(
+    "-m",
+    "--mock-hw",
+    nargs="*",
+    metavar="HW",
+    default=[],
+    help='list the hardware to mock or just "all" to mock all hardware',
+)
+olaf_parser.add_argument(
+    "-a", "--address", default="localhost", help="rest api address, defaults to localhost"
+)
+olaf_parser.add_argument(
+    "-p", "--port", type=int, default=8000, help="rest api port number, defaults to 8000"
+)
+olaf_parser.add_argument(
+    "-d",
+    "--disable-flight-mode",
+    action="store_true",
+    help="disable flight mode on start, defaults to flight mode enabled",
+)
+olaf_parser.add_argument(
+    "-o", "--oresat", default="oresat0.5", help="oresat mission; oresat0, oresat0.5, etc"
+)
+olaf_parser.add_argument(
+    "-w", "--hardware-version", default="0.0", help="override the hardware version"
+)
+olaf_parser.add_argument("-n", "--number", type=int, default=1, help="card number")
+olaf_parser.add_argument(
+    "-t",
+    "--bus-type",
+    default="socketcan",
+    help=(
+        "can bus type; socketcan (default), socketcand, virtual, slcan, etc;"
+        "see https://python-can.readthedocs.io/en/stable/configuration.html#interface-names"
+    ),
+)
+olaf_parser.add_argument(
+    "-H",
+    "--socketcand-host",
+    default="localhost",
+    help='host for socketcand bus (only used if bus_type is "socketcand")',
+)
 
-def olaf_setup(name: str) -> tuple[Namespace, dict]:
+
+def olaf_setup(name: str, args: Optional[Namespace] = None) -> tuple[Namespace, dict]:
     """
     Parse runtime args and setup the app and REST API.
 
@@ -36,6 +85,8 @@ def olaf_setup(name: str) -> tuple[Namespace, dict]:
     ----------
     name: str
         The card's node name.
+    Namespace
+        The runtime args.
 
     Returns
     -------
@@ -51,42 +102,9 @@ def olaf_setup(name: str) -> tuple[Namespace, dict]:
     elif isinstance(name, NodeId):
         name = name.name.lower()
 
-    parser = ArgumentParser(prog="OLAF")
-    parser.add_argument("-b", "--bus", default="vcan0", help="CAN bus to use, defaults to vcan0")
-    parser.add_argument("-v", "--verbose", action="store_true", help="enable verbose logging")
-    parser.add_argument("-l", "--log", action="store_true", help="log to only journald")
-    parser.add_argument(
-        "-m",
-        "--mock-hw",
-        nargs="*",
-        metavar="HW",
-        default=[],
-        help='list the hardware to mock or just "all" to mock all hardware',
-    )
-    parser.add_argument(
-        "-a", "--address", default="localhost", help="rest api address, defaults to localhost"
-    )
-    parser.add_argument(
-        "-p", "--port", type=int, default=8000, help="rest api port number, defaults to 8000"
-    )
-    parser.add_argument(
-        "-d",
-        "--disable-flight-mode",
-        action="store_true",
-        help="disable flight mode on start, defaults to flight mode enabled",
-    )
-    parser.add_argument(
-        "-o", "--oresat", default="oresat0.5", help="oresat mission; oresat0, oresat0.5, etc"
-    )
-    parser.add_argument("-w", "--hardware-version", default="0.0", help="set the hardware version")
-    parser.add_argument("-n", "--number", type=int, default=1, help="card number")
-    parser.add_argument(
-        "-t",
-        "--bus-type",
-        default="socketcan",
-        help="can bus type; can be socketcan, slcan, etc",
-    )
-    args = parser.parse_args()
+    if args is None:
+        parser = ArgumentParser(parents=[olaf_parser])
+        args = parser.parse_args()
 
     if args.verbose:
         level = "DEBUG"
@@ -123,17 +141,19 @@ def olaf_setup(name: str) -> tuple[Namespace, dict]:
     if args.disable_flight_mode:
         od["flight_mode"].value = False
 
-    od["versions"]["olaf_version"].value = __version__
     if args.hardware_version != "0.0":
         od["versions"]["hw_version"].value = args.hardware_version
 
     is_octavo = config.cards[name].processor == "octavo"
+    if is_octavo:
+        od["versions"]["olaf_version"].value = __version__
 
-    if name == "c3":
-        app.setup(od, args.bus, args.bus_type, config.od_db, is_octavo)
-    else:
-        app.setup(od, args.bus, args.bus_type, None, is_octavo)
+    bus = can.interface.Bus(
+        interface=args.bus_type, host=args.socketcand_host, port=29536, channel=args.bus
+    )
+    od_db = config.od_db if name == "c3" else None
 
+    app.setup(od, bus, od_db, is_octavo)
     rest_api.setup(address=args.address, port=args.port)
 
     return args, config

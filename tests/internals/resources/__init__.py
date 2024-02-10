@@ -1,5 +1,6 @@
 """Tests for Resources."""
 
+import can
 import canopen
 from oresat_configs import OreSatConfig, OreSatId
 
@@ -14,7 +15,8 @@ class MockNode(Node):
 
     def __init__(self):
         od = OreSatConfig(OreSatId.ORESAT0).od_db["gps"]
-        super().__init__(od, "virtual", None)
+        bus = can.interface.Bus(interface="virtual", channel="vcan0")
+        super().__init__(od, bus)
 
         self._fread_cache = OreSatFileCache("/tmp/fread")
         self._fread_cache.clear()

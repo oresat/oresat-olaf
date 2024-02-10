@@ -2,7 +2,10 @@
 
 import unittest
 
-from olaf import app, olaf_setup, rest_api
+import can
+from oresat_configs import OreSatConfig, OreSatId
+
+from olaf import app, rest_api
 
 
 class TestRestApi(unittest.TestCase):
@@ -10,7 +13,13 @@ class TestRestApi(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        olaf_setup("gps")
+        # Setup OLAF for unit testing.
+        config = OreSatConfig(OreSatId.ORESAT0_5)
+        od = config.od_db["gps"]
+        bus = can.interface.Bus(interface="virtual", channel="vcan0")
+        app.setup(od, bus, None, False)
+        rest_api.setup(address="localhost", port=8000)
+
         cls.client = rest_api.app.test_client()
 
         app.node._setup_node()
