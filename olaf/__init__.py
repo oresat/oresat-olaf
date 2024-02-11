@@ -7,7 +7,7 @@ from typing import Optional
 
 import can
 from loguru import logger
-from oresat_configs import NodeId, OreSatConfig, OreSatId
+from oresat_configs import OreSatConfig, OreSatId
 
 from ._internals.app import App, app
 from ._internals.master_node import MasterNode
@@ -85,8 +85,8 @@ def olaf_setup(name: str, args: Optional[Namespace] = None) -> tuple[Namespace, 
     ----------
     name: str
         The card's node name.
-    Namespace
-        The runtime args.
+    args: Namespace
+        Optional runtime args. If not set, the default from `olaf_parser` will be used.
 
     Returns
     -------
@@ -95,12 +95,6 @@ def olaf_setup(name: str, args: Optional[Namespace] = None) -> tuple[Namespace, 
     dict
         The OreSat configs.
     """
-
-    # for backwards support
-    if name == NodeId.CFC:
-        name = "cfc_processor"
-    elif isinstance(name, NodeId):
-        name = name.name.lower()
 
     if args is None:
         parser = ArgumentParser(parents=[olaf_parser])
