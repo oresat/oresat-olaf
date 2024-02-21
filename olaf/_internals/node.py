@@ -289,7 +289,7 @@ class Node:
         logger.info("(re)starting CANopen network")
 
         self._network = canopen.Network(self._bus)
-        self._network.connect()
+        self._network.notifier = can.Notifier(self._network.bus, self._network.listeners, 1)
         self._setup_node()
         self._network.add_node(self._node)
 
@@ -323,7 +323,16 @@ class Node:
 
         first_bus_down = True  # flag to only log error message on first error
         self.first_bus_reset = True  # flag to only log error message on first error
+        bus_type = self._bus.channel_info.split(" ")[0]
+        if bus_type == "socketcand":
+            print(self._bus)
+            self._restart_network()
+            self._bus_state = CanState.BUS_UP_NETWORK_UP
         while not self._event.is_set():
+            if bus_type == "socketcand":
+                self._event.wait(1)
+                continue
+
             bus = psutil.net_if_stats().get(self._channel)
             if bus is None and not os.path.exists(self._channel):  # bus does not exist
                 self._bus_state = CanState.BUS_NOT_FOUND

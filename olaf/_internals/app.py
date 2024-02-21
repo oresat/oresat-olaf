@@ -51,7 +51,7 @@ class App:
 
     def setup(
         self,
-        od,
+        od: canopen.ObjectDictionary,
         bus: can.BusABC,
         master_od_db: Union[dict, None] = None,
         load_core: bool = True,
