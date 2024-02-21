@@ -27,7 +27,10 @@ from .common.resource import Resource
 from .common.service import Service, ServiceState
 from .common.timer_loop import TimerLoop
 
-__version__ = "3.3.1"
+try:
+    from ._version import version as __version__
+except ImportError:
+    __version__ = "unknown"  # package is not installed
 
 olaf_parser = ArgumentParser(prog="OLAF", add_help=False)
 olaf_parser.add_argument("-b", "--bus", default="vcan0", help="CAN bus to use, defaults to vcan0")

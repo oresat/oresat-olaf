@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools", "setuptools_scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -28,14 +28,14 @@ dependencies = [
 ]
 dynamic = ["version"]
 
-[tool.setuptools.dynamic]
-version = {attr = "olaf.__version__"}
-
 [tool.setuptools.packages.find]
 exclude = ["docs*", "tests*"]
 
 [tool.setuptools.package-data]
 "*" = ["*.html", "*.ico"]
+
+[tool.setuptools_scm]
+write_to = "olaf/_version.py"
 
 [tool.black]
 line_length = 100
@@ -75,6 +75,11 @@ ignore = "W0611"
 path = "tests/*"
 # W0212:    Access to a protected member of a class
 ignore = "W0212"
+
+[[tool.pylama.files]]
+path = "*/_version.py"
+# C0114:    Missing module docstring
+ignore = "C0114"
 
 [[tool.mypy.overrides]]
 module = "canopen,oresat_configs,psutil"

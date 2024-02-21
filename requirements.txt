@@ -10,6 +10,7 @@ psutil
 pylama[all]
 pylama[toml]
 setuptools
+setuptools-scm
 sphinx
 sphinx-rtd-theme
 sphinxcontrib-mermaid
