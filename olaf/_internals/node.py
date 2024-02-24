@@ -79,7 +79,7 @@ class Node:
 
         self._od = od
         self._bus = bus
-        self._channel = self._bus.channel_info.split(" ")[-1]
+        self._channel = self._bus.channel_info.split(" ")[-1].replace("'", "")
         self._bus_state = CanState.BUS_DOWN
         self._node: canopen.LocalNode = None
         self._network: canopen.Network = None
@@ -325,7 +325,6 @@ class Node:
         self.first_bus_reset = True  # flag to only log error message on first error
         bus_type = self._bus.channel_info.split(" ")[0]
         if bus_type == "socketcand":
-            print(self._bus)
             self._restart_network()
             self._bus_state = CanState.BUS_UP_NETWORK_UP
         while not self._event.is_set():
