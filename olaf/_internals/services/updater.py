@@ -26,9 +26,13 @@ class UpdaterService(Service):
         self.update_obj.value = False
         self.make_status_obj.value = False
 
-        self.node.add_sdo_callbacks("updater", "status", self.on_read_status, None)
-        self.node.add_sdo_callbacks("updater", "cache_files_json", self.on_read_cache_json, None)
-        self.node.add_sdo_callbacks("updater", "cache_length", self.on_read_cache_len, None)
+        self.node.add_sdo_callbacks_multi(
+            [
+                ("updater", "status", self.on_read_status, None),
+                ("updater", "cache_files_json", self.on_read_cache_json, None),
+                ("updater", "cache_length", self.on_read_cache_len, None),
+            ]
+        )
 
     def on_loop(self):
         # check for update files in fwrite cache

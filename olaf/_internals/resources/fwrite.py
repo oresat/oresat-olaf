@@ -26,13 +26,15 @@ class FwriteResource(Resource):
             remove(f"{self.tmp_dir}/{i}")
 
     def on_start(self):
-        self.node.add_sdo_callbacks("fwrite_cache", "length", self.on_read_cache_len, None)
-        self.node.add_sdo_callbacks("fwrite_cache", "files_json", self.on_read_cache_json, None)
         self.node.add_sdo_callbacks(
-            "fwrite_cache", "file_name", self.on_read_file_name, self.on_write_file_name
+            [
+                ("fwrite_cache", "length", self.on_read_cache_len, None),
+                ("fwrite_cache", "files_json", self.on_read_cache_json, None),
+                ("fwrite_cache", "file_name", self.on_read_file_name, self.on_write_file_name),
+                ("fwrite_cache", "file_data", None, self.on_write_file_data),
+                ("fwrite_cache", "remove", None, self.on_write_delete),
+            ]
         )
-        self.node.add_sdo_callbacks("fwrite_cache", "file_data", None, self.on_write_file_data)
-        self.node.add_sdo_callbacks("fwrite_cache", "remove", None, self.on_write_delete)
 
     def on_read_cache_len(self) -> int:
         """SDO read callback to get the length of the write cache."""

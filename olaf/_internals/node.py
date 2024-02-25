@@ -440,6 +440,20 @@ class Node:
         if write_cb is not None:
             self._write_cbs[index, subindex] = write_cb
 
+    def add_sdo_callbacks_multi(self, data: list):
+        """
+        Add multiple SDO read callbacks for variables.
+
+        Parameters
+        ----------
+        list[tuple[str, str, Callable[[None], Any], Callable[[Any], None]]]:
+            List of tuples of the args for add_sdo_callback.
+        """
+
+        for i in data:
+            print(*i)
+            self.add_sdo_callbacks(*i)
+
     def send_emcy(self, code: int, register: int = 0, data: bytes = b""):
         """
         Send a EMCY message. Wrapper on canopen's `EmcyProducer.send`.

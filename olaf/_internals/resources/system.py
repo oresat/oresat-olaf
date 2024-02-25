@@ -17,11 +17,15 @@ class SystemResource(Resource):
     def on_start(self):
         self.node.od["system"]["reset"].value = 0
 
-        self.node.add_sdo_callbacks("system", "ram_percent", self.on_read_ram, None)
-        self.node.add_sdo_callbacks("system", "storage_percent", self.on_read_storage, None)
-        self.node.add_sdo_callbacks("system", "uptime", self.on_read_uptime, None)
-        self.node.add_sdo_callbacks("system", "unix_time", self.on_read_unix_time, None)
-        self.node.add_sdo_callbacks("system", "reset", None, self.on_write_reset)
+        self.node.add_sdo_callbacks_multi(
+            [
+                ("system", "ram_percent", self.on_read_ram, None),
+                ("system", "storage_percent", self.on_read_storage, None),
+                ("system", "uptime", self.on_read_uptime, None),
+                ("system", "unix_time", self.on_read_unix_time, None),
+                ("system", "reset", None, self.on_write_reset),
+            ]
+        )
 
         try:
             eeprom = Eeprom()
