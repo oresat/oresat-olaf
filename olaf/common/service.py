@@ -43,9 +43,6 @@ class Service:
         if not self._event.is_set():
             self._event.set()
 
-        if self._thread.is_alive():
-            self._thread.join()
-
     def start(self, node: Node):
         """
         App will call this to start the service. This will call `self.on_start()` start a thread
