@@ -1,6 +1,7 @@
 """Quick GPIO legacy sysfs wrapper that supports mocking."""
 
 import os
+from typing import Union
 
 GPIO_LOW = 0
 """int: GPIO pin value is low"""
@@ -34,7 +35,7 @@ class Gpio:
             with open(f"{_GPIO_DIR_PATH}/{i}/label", "r") as f:
                 _LABELS[f.read()[:-1]] = int(i[4:])  # remove the trailing '\n'
 
-    def __init__(self, pin: str, mock: bool = False):
+    def __init__(self, pin: Union[str, int], mock: bool = False):
         """
         Parameters
         ----------
@@ -59,7 +60,10 @@ class Gpio:
             if mock:
                 self._name = pin
             else:
-                self._pin = self._LABELS[pin]
+                try:
+                    self._pin = self._LABELS[pin]
+                except KeyError as e:
+                    raise GpioError(f"pin {pin} not found") from e
         else:
             raise GpioError(f"invalid pin {pin}")
 
