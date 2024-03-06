@@ -1,6 +1,6 @@
 """The OLAF base Service class. A Resource with a dedicated thread."""
 
-from enum import IntEnum
+from enum import Enum, unique
 from threading import Event, Thread
 
 from loguru import logger
@@ -8,7 +8,8 @@ from loguru import logger
 from .._internals.node import Node
 
 
-class ServiceState(IntEnum):
+@unique
+class ServiceState(Enum):
     """State a service can be in."""
 
     STOPPED = 0
@@ -19,7 +20,7 @@ class ServiceState(IntEnum):
     """Service is running."""
     STOPPING = 3
     """Service is stopping."""
-    FAILED = 3
+    FAILED = 4
     """Service has failed."""
 
 
@@ -42,9 +43,6 @@ class Service:
     def __del__(self):
         if not self._event.is_set():
             self._event.set()
-
-        if self._thread.is_alive():
-            self._thread.join()
 
     def start(self, node: Node):
         """
