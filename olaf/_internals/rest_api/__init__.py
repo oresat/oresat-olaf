@@ -10,12 +10,13 @@ from typing import Union
 
 import canopen
 from flask import Flask, jsonify, render_template, request, send_from_directory
-from loguru import logger
 from natsort import natsorted
 from oresat_configs import OreSatId
 from werkzeug.serving import make_server
 
 from ..app import app
+
+logger = logging.getLogger(__file__)
 
 DATA_TYPE_NAMES = {
     canopen.objectdictionary.BOOLEAN: "BOOLEAN",

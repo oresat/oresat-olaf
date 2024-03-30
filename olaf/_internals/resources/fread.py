@@ -1,13 +1,14 @@
 """Resource for readings oresat files over the CAN bus"""
 
 import json
+import logging
 from os import listdir, remove
 from os.path import basename
 from pathlib import Path
 
-from loguru import logger
-
 from ...common.resource import Resource
+
+logger = logging.getLogger(__file__)
 
 
 class FreadResource(Resource):

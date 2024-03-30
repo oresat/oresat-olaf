@@ -1,19 +1,19 @@
 """OLAF (OreSat Linux App Framework)"""
 
-import sys
+import logging
+import os
 from argparse import ArgumentParser, Namespace
 from logging.handlers import SysLogHandler
 from typing import Optional
 
 import can
-from loguru import logger
 from oresat_configs import OreSatConfig, OreSatId
 
 from ._internals.app import App, app
 from ._internals.master_node import MasterNode
 from ._internals.node import NetworkError, Node, NodeStop
 from ._internals.rest_api import RestAPI, render_olaf_template, rest_api
-from ._internals.services.logs import logger_tmp_file_setup
+from ._internals.services.logs import TMP_LOGS_FILE
 from ._internals.updater import Updater, UpdaterState
 from .common.adc import Adc
 from .common.cpufreq import A8_CPUFREQS, get_cpufreq, get_cpufreq_gov, set_cpufreq, set_cpufreq_gov
@@ -31,6 +31,9 @@ try:
     from ._version import version as __version__  # type: ignore
 except ImportError:
     __version__ = "0.0.0"  # package is not installed
+
+logger = logging.getLogger(__file__)
+LOGGER_FORMAT = "%(asctime)s %(levelname)s [%(filename)s:%(lineno)s] %(message)s"
 
 olaf_parser = ArgumentParser(prog="OLAF", add_help=False)
 olaf_parser.add_argument("-b", "--bus", default="vcan0", help="CAN bus to use, defaults to vcan0")
@@ -104,17 +107,29 @@ def olaf_setup(name: str, args: Optional[Namespace] = None) -> tuple[Namespace, 
         args = parser.parse_args()
 
     if args.verbose:
-        level = "DEBUG"
+        level = logging.DEBUG
     else:
-        level = "INFO"
+        level = logging.INFO
 
-    logger.remove()  # remove default logger
+    handlers: list[logging.Handler] = []
+    formatter = logging.Formatter(LOGGER_FORMAT)
+
     if args.log:
-        logger.add(SysLogHandler(address="/dev/log"), level=level, backtrace=True)
+        syslog_handler = SysLogHandler()
+        syslog_handler.setFormatter(formatter)
+        handlers.append(syslog_handler)
     else:
-        logger.add(sys.stdout, level=level, backtrace=True)
+        stream_handler = logging.StreamHandler()
+        stream_handler.setFormatter(formatter)
+        handlers.append(stream_handler)
 
-    logger_tmp_file_setup(level)
+    if os.path.isfile(TMP_LOGS_FILE):
+        os.remove(TMP_LOGS_FILE)
+    file_handler = logging.FileHandler(TMP_LOGS_FILE)
+    file_handler.setFormatter(formatter)
+    handlers.append(file_handler)
+
+    logging.basicConfig(format=LOGGER_FORMAT, level=level, handlers=handlers)
 
     arg_oresat = args.oresat.lower()
     if arg_oresat in ["oresat0", "0"]:

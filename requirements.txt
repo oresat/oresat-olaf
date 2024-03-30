@@ -3,7 +3,6 @@ build
 canopen
 flask
 isort
-loguru
 natsort
 oresat-configs
 psutil

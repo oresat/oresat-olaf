@@ -1,14 +1,16 @@
 """OreSat CANopen Master Node class to support the C3"""
 
+import logging
 from collections import namedtuple
 from time import monotonic
 from typing import Any, Dict, Union
 
 import can
 import canopen
-from loguru import logger
 
 from .node import NetworkError, Node
+
+logger = logging.getLogger(__file__)
 
 NodeHeartbeatInfo = namedtuple("NodeHeartbeatInfo", ["state", "timestamp", "time_since_boot"])
 

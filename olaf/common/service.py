@@ -1,11 +1,12 @@
 """The OLAF base Service class. A Resource with a dedicated thread."""
 
+import logging
 from enum import IntEnum
 from threading import Event, Thread
 
-from loguru import logger
-
 from .._internals.node import Node
+
+logger = logging.getLogger(__file__)
 
 
 class ServiceState(IntEnum):

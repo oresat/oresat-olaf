@@ -1,8 +1,10 @@
 """The OreSat Linux base app resource. It is a nice way to organize OD callbacks."""
 
-from loguru import logger
+import logging
 
 from .._internals.node import Node
+
+logger = logging.getLogger(__file__)
 
 
 class Resource:

@@ -1,14 +1,15 @@
 """Resource for writing oresat files over the CAN bus"""
 
 import json
+import logging
 from os import listdir, remove
 from os.path import basename
 from pathlib import Path
 
-from loguru import logger
-
 from ...common.oresat_file import OreSatFile
 from ...common.resource import Resource
+
+logger = logging.getLogger(__file__)
 
 
 class FwriteResource(Resource):

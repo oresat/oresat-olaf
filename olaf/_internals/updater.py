@@ -1,6 +1,7 @@
 """OreSat Linux updater"""
 
 import json
+import logging
 import subprocess
 import tarfile
 from enum import IntEnum
@@ -9,10 +10,10 @@ from os.path import abspath, basename, isfile
 from pathlib import Path
 from shutil import rmtree
 
-from loguru import logger
-
 from ..common.oresat_file import OreSatFile, new_oresat_file
 from ..common.oresat_file_cache import OreSatFileCache
+
+logger = logging.getLogger(__file__)
 
 INSTRUCTIONS_FILE = "instructions.txt"
 """The instructions file that is always in a OreSat Linux update archive. It

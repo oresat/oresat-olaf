@@ -1,11 +1,12 @@
 """Service for running OS (bash) commands over CAN bus."""
 
+import logging
 import subprocess
 from enum import IntEnum
 
-from loguru import logger
-
 from ...common.service import Service
+
+logger = logging.getLogger(__file__)
 
 
 class OsCommandState(IntEnum):
