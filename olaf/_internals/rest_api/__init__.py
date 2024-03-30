@@ -10,10 +10,10 @@ from typing import Union
 
 import canopen
 from flask import Flask, jsonify, render_template, request, send_from_directory
-from natsort import natsorted
 from oresat_configs import OreSatId
 from werkzeug.serving import make_server
 
+from ...common import natsorted
 from ..app import app
 
 logger = logging.getLogger(__file__)

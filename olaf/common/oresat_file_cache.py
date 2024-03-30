@@ -7,8 +7,7 @@ from os.path import abspath, basename, isfile
 from pathlib import Path
 from threading import Lock
 
-from natsort import natsorted
-
+from . import natsorted
 from .oresat_file import OreSatFile
 
 
