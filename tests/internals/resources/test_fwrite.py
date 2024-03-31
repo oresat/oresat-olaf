@@ -7,7 +7,7 @@ import unittest
 from os import remove
 from os.path import basename
 
-from olaf import new_oresat_file, natsorted
+from olaf import natsorted, new_oresat_file
 from olaf._internals.resources.fwrite import FwriteResource
 
 from . import MockApp

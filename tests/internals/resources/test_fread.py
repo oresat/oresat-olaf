@@ -6,7 +6,7 @@ import string
 import unittest
 from os.path import basename
 
-from olaf import new_oresat_file, natsorted
+from olaf import natsorted, new_oresat_file
 from olaf._internals.resources.fread import FreadResource
 
 from . import MockApp

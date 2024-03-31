@@ -83,7 +83,8 @@ ignore = "W0611,W1201"
 [[tool.pylama.files]]
 path = "tests/*"
 # W0212:    Access to a protected member of a class
-ignore = "W0212"
+# C0114:    Missing module docstring
+ignore = "W0212,C0114"
 
 [[tool.pylama.files]]
 path = "*/_version.py"
