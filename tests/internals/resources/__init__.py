@@ -4,10 +4,8 @@ import can
 import canopen
 from oresat_configs import OreSatConfig, OreSatId
 
-from olaf import OreSatFileCache, Resource, logger
+from olaf import OreSatFileCache, Resource
 from olaf._internals.node import Node
-
-logger.disable("olaf")
 
 
 class MockNode(Node):

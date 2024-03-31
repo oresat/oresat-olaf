@@ -15,6 +15,7 @@ from ._internals.node import NetworkError, Node, NodeStop
 from ._internals.rest_api import RestAPI, render_olaf_template, rest_api
 from ._internals.services.logs import get_log_file_handler
 from ._internals.updater import Updater, UpdaterState
+from .common import natsorted
 from .common.adc import Adc
 from .common.cpufreq import A8_CPUFREQS, get_cpufreq, get_cpufreq_gov, set_cpufreq, set_cpufreq_gov
 from .common.daemon import Daemon, DaemonState

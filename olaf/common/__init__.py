@@ -20,10 +20,18 @@ def natsorted(data: list[str], ignore_case: bool = False) -> list[str]:
         List of natural sorted strings.
     """
 
+    if not data:
+        return []
+
     def convert(text):
-        return int(text) if text.isdigit() else (text.lower() if ignore_case else text)
+        r = text
+        if text.isdigit():
+            r = int(text)
+        elif ignore_case:
+            text.lower()
+        return r
 
     def alphanum_key(key):
-        return [convert(c) for c in re.split("([0-9]+)", key)]
+        return [convert(c) for c in re.split("([0-9]+)", str(key))]
 
     return sorted(data, key=alphanum_key)

@@ -6,7 +6,7 @@ import string
 import unittest
 from os.path import basename
 
-from olaf import new_oresat_file
+from olaf import new_oresat_file, natsorted
 from olaf._internals.resources.fread import FreadResource
 
 from . import MockApp
@@ -88,7 +88,7 @@ class TestFreadResource(unittest.TestCase):
         self.assertEqual(self.app.sdo_read(index, subindex_file_data).decode(), file_data2)
         self.assertEqual(self.app.sdo_read(index, subindex_len), 2)
         file_names = json.loads(self.app.sdo_read(index, subindex_files_json))
-        self.assertListEqual(file_names, [file_name, file_name2])
+        self.assertListEqual(file_names, natsorted([file_name, file_name2]))
 
         # delete the first file
         self.app.sdo_write(index, subindex_file_name, basename(file_name))
