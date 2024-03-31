@@ -71,8 +71,7 @@ linters = "pycodestyle,pyflakes,pylint,mccabe,mypy,radon"
 # R0903:    Too few public methods
 # W1201:    Use % formatting in logging functions
 # W1203:    Use %s formatting in logging functions
-# E731:     Do not assign a lambda expression, use a def
-ignore = "E402,C901,C0103,E203,R0912,R0915,R901,R901,R0914,C0413,C0206,R1716,W1514,R0902,R0913,W0707,W0102,W0107,R0903,W1201,W1203,E731"
+ignore = "E402,C901,C0103,E203,R0912,R0915,R901,R901,R0914,C0413,C0206,R1716,W1514,R0902,R0913,W0707,W0102,W0107,R0903,W1201,W1203"
 max_line_length = 100
 
 [[tool.pylama.files]]
