@@ -3,6 +3,7 @@ build
 canopen
 flask
 isort
+python-can>=4.3.0
 oresat-configs
 psutil
 pylama[all]

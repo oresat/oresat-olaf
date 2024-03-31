@@ -19,12 +19,20 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Application Frameworks",
 ]
 dependencies = [
+    "python-can>=4.3.0",
     "canopen",
     "flask",
     "psutil",
     "oresat-configs",
 ]
 dynamic = ["version"]
+
+[project.optional-dependencies]
+lint = [
+    "black",
+    "isort",
+    "pylama",
+]
 
 [tool.setuptools.packages.find]
 exclude = ["docs*", "tests*"]
