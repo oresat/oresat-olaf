@@ -15,15 +15,16 @@ from ._internals.node import NetworkError, Node, NodeStop
 from ._internals.rest_api import RestAPI, render_olaf_template, rest_api
 from ._internals.services.logs import get_log_file_handler
 from ._internals.updater import Updater, UpdaterState
+from .board.adc import Adc
+from .board.cpufreq import A8_CPUFREQS, get_cpufreq, get_cpufreq_gov, set_cpufreq, set_cpufreq_gov
+from .board.eeprom import Eeprom
+from .board.gpio import GPIO_HIGH, GPIO_IN, GPIO_LOW, GPIO_OUT, Gpio, GpioError
+from .board.pru import Pru, PruError, PruState
 from .common import natsorted
-from .common.adc import Adc
-from .common.cpufreq import A8_CPUFREQS, get_cpufreq, get_cpufreq_gov, set_cpufreq, set_cpufreq_gov
 from .common.daemon import Daemon, DaemonState
 from .common.ecss import scet_int_from_time, scet_int_to_time, utc_int_from_time, utc_int_to_time
-from .common.gpio import GPIO_HIGH, GPIO_IN, GPIO_LOW, GPIO_OUT, Gpio, GpioError
 from .common.oresat_file import OreSatFile, new_oresat_file
 from .common.oresat_file_cache import OreSatFileCache
-from .common.pru import Pru, PruError, PruState
 from .common.resource import Resource
 from .common.service import Service, ServiceState
 from .common.timer_loop import TimerLoop

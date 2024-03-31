@@ -5,7 +5,7 @@ from time import monotonic, time
 
 import psutil
 
-from ...common.eeprom import Eeprom
+from ...board.eeprom import Eeprom
 from ...common.resource import Resource
 from ..node import NodeStop
 
