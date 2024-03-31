@@ -1,4 +1,4 @@
-"""Service for getting system logs"""
+"""Service for the getting system logs over CAN."""
 
 import logging
 import os
@@ -10,6 +10,13 @@ from ...common.service import Service
 logger = logging.getLogger(__file__)
 
 TMP_LOGS_FILE = "/tmp/olaf.log"
+
+
+def get_log_file_handler() -> logging.FileHandler:
+    """Get the boot log file handler and clean up temp log file used by LogsService."""
+    if os.path.isfile(TMP_LOGS_FILE):
+        os.remove(TMP_LOGS_FILE)
+    return logging.FileHandler(TMP_LOGS_FILE)
 
 
 class LogsService(Service):

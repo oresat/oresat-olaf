@@ -13,7 +13,7 @@ from ._internals.app import App, app
 from ._internals.master_node import MasterNode
 from ._internals.node import NetworkError, Node, NodeStop
 from ._internals.rest_api import RestAPI, render_olaf_template, rest_api
-from ._internals.services.logs import TMP_LOGS_FILE
+from ._internals.services.logs import get_log_file_handler
 from ._internals.updater import Updater, UpdaterState
 from .common.adc import Adc
 from .common.cpufreq import A8_CPUFREQS, get_cpufreq, get_cpufreq_gov, set_cpufreq, set_cpufreq_gov
@@ -123,9 +123,7 @@ def olaf_setup(name: str, args: Optional[Namespace] = None) -> tuple[Namespace, 
         stream_handler.setFormatter(formatter)
         handlers.append(stream_handler)
 
-    if os.path.isfile(TMP_LOGS_FILE):
-        os.remove(TMP_LOGS_FILE)
-    file_handler = logging.FileHandler(TMP_LOGS_FILE)
+    file_handler = get_log_file_handler()
     file_handler.setFormatter(formatter)
     handlers.append(file_handler)
 
