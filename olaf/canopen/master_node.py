@@ -7,7 +7,8 @@ from typing import Any
 
 import canopen
 from can import BusABC
-from canopen import ObjectDictionary, RemoteNode, SdoError
+from canopen import ObjectDictionary, RemoteNode
+from canopen.sdo.exceptions import SdoError
 from canopen.sdo import SdoArray, SdoRecord, SdoVariable
 
 from .node import NetworkError, Node

@@ -2,7 +2,7 @@
 
 import logging
 
-from .._internals.node import Node
+from ..canopen.node import Node
 
 logger = logging.getLogger(__file__)
 

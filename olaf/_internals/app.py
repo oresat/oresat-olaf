@@ -11,8 +11,8 @@ import canopen
 
 from ..common.resource import Resource
 from ..common.service import Service
-from .master_node import MasterNode
-from .node import Node, NodeStop
+from ..canopen.master_node import MasterNode
+from ..canopen.node import Node, NodeStop
 from .resources.ecss import EcssResource
 from .resources.fread import FreadResource
 from .resources.fwrite import FwriteResource

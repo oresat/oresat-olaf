@@ -4,7 +4,7 @@ import logging
 from enum import IntEnum
 from threading import Event, Thread
 
-from .._internals.node import Node
+from ..canopen.node import Node
 
 logger = logging.getLogger(__file__)
 

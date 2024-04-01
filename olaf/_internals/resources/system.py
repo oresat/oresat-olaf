@@ -7,7 +7,7 @@ import psutil
 
 from ...board.eeprom import Eeprom
 from ...common.resource import Resource
-from ..node import NodeStop
+from ...canopen.node import NodeStop
 
 logger = logging.getLogger(__file__)
 

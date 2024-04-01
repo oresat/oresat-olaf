@@ -4,7 +4,7 @@ import logging
 from os import geteuid
 from time import CLOCK_REALTIME, clock_settime, time
 
-from ...common.ecss import scet_int_from_time, scet_int_to_time, utc_int_from_time, utc_int_to_time
+from ...canopen.ecss import scet_int_from_time, scet_int_to_time, utc_int_from_time, utc_int_to_time
 from ...common.resource import Resource
 
 logger = logging.getLogger(__file__)
