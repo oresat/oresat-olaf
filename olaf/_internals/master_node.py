@@ -3,10 +3,12 @@
 import logging
 from collections import namedtuple
 from time import monotonic
-from typing import Any, Dict, Union
+from typing import Any
 
-import can
 import canopen
+from can import BusABC
+from canopen import ObjectDictionary, RemoteNode, SdoError
+from canopen.sdo import SdoArray, SdoRecord, SdoVariable
 
 from .node import NetworkError, Node
 
@@ -20,18 +22,18 @@ class MasterNode(Node):
 
     def __init__(
         self,
-        od: canopen.ObjectDictionary,
-        od_db: Dict[Any, canopen.ObjectDictionary],
-        bus: can.BusABC,
+        od: ObjectDictionary,
+        od_db: dict[Any, ObjectDictionary],
+        bus: BusABC,
     ):
         """
         Parameters
         ----------
-        od: canopen.ObjectDictionary
+        od: ObjectDictionary
             The CANopen ObjectDictionary
-        od_db: Dict[Any, canopen.ObjectDictionary]
+        od_db: dict[Any, ObjectDictionary]
             Database of other nodes's ODs. The dict key will be used by class fields and methods.
-        bus: can.BusABC
+        bus: BusABC
             The can bus object to use.
         """
 
@@ -46,7 +48,7 @@ class MasterNode(Node):
         for key in od_db:
             if od_db[key] == od:
                 continue  # skip itself
-            self._remote_nodes[key] = canopen.RemoteNode(od_db[key].node_id, od_db[key])
+            self._remote_nodes[key] = RemoteNode(od_db[key].node_id, od_db[key])
             self.node_status[key] = NodeHeartbeatInfo(
                 0xFF,
                 0.0,
@@ -97,7 +99,7 @@ class MasterNode(Node):
 
         self._network.sync.transmit()
 
-    def sdo_read(self, key: Any, index: Union[int, str], subindex: Union[int, str]) -> Any:
+    def sdo_read(self, key: Any, index: [int, str], subindex: [int, str, None] = None) -> Any:
         """
         Read a value from a remote node's object dictionary using an SDO.
 
@@ -107,14 +109,14 @@ class MasterNode(Node):
             The dict key for the node to read from.
         index: int or str
             The index to read from.
-        subindex: int or str
+        subindex: int, str, or None
             The subindex to read from.
 
         Raises
         ------
         NetworkError
             Cannot send a SDO read message when the network is down.
-        canopen.SdoError
+        SdoError
             Error with the SDO.
 
         Returns
@@ -126,7 +128,9 @@ class MasterNode(Node):
         if self._network is None:
             raise NetworkError("network is down cannot send an SDO read message")
 
-        if subindex == 0 and isinstance(self._od_db[key][index], canopen.objectdictionary.Variable):
+        if subindex == None and isinstance(
+            self._od_db[key][index], canopen.objectdictionary.Variable
+        ):
             value = self._remote_nodes[key].sdo[index].raw
         else:
             value = self._remote_nodes[key].sdo[index][subindex].raw
@@ -165,11 +169,85 @@ class MasterNode(Node):
             self._remote_nodes[key].sdo[index][subindex].raw = value
 
     @property
-    def remote_nodes(self) -> dict[Any, canopen.RemoteNode]:
-        """dict[Any, canopen.RemoteNode]: All other node as remote node."""
+    def remote_nodes(self) -> dict[Any, RemoteNode]:
+        """dict[Any, RemoteNode]: All other node as remote node."""
         return self._remote_nodes
 
     @property
-    def od_db(self) -> dict[Any, canopen.ObjectDictionary]:
-        """dict[Any, canopen.ObjectDictionary]: All other node ODs."""
+    def od_db(self) -> dict[Any, ObjectDictionary]:
+        """dict[Any, ObjectDictionary]: All other node ODs."""
         return self._od_db
+
+    def sdo_get_obj(
+        self, key: Any, index: [int, str], subindex: [int, str, None]
+    ) -> [SdoVariable, SdoArray, SdoRecord]:
+
+        if subindex is None:
+            return self._remote_nodes[key].sdo[index]
+        return self._remote_nodes[key].sdo[index][subindex]
+
+    def sdo_read(
+        self, key: Any, index: [int, str], subindex: [int, str, None]
+    ) -> [int, str, float, bytes, bool]:
+        """Read an value from another node's OD using a SDO."""
+
+        return self.sdo_get_obj(key, index, subindex).phys
+
+    def sdo_read_bitfield(
+        self, key: Any, index: [int, str], subindex: [int, str, None], field: str
+    ) -> int:
+        """Read an field from a object from another node's OD using a SDO."""
+
+        obj = self.sdo_get_obj(key, index, subindex)
+        bits = obj.od.bit_definitions[field]
+
+        value = 0
+        obj_value = obj.phys
+        for i in bits:
+            tmp = obj_value & (1 << bits[i])
+            value |= tmp >> bits[i]
+        return value
+
+    def sdo_read_enum(self, key: Any, index: [int, str], subindex: [int, str, None]) -> str:
+        """Read an enum str from another node's OD using a SDO."""
+
+        obj = self.sdo_get_obj(key, index, subindex)
+        obj_value = obj.phys
+        return obj.od.value_descriptions[obj_value]
+
+    def sdo_write(
+        self,
+        key: Any,
+        index: [int, str],
+        subindex: [int, str, None],
+        value: [int, str, float, bytes, bool],
+    ):
+        """Write an enginerring value to another node's OD using a SDO."""
+
+        obj = self.sdo_get_obj(key, index, subindex)
+        obj.phys = value
+
+    def sdo_write_bitfield(
+        self, key: Any, index: [int, str], subindex: [int, str, None], field: str, value: int
+    ):
+        """Write a field from a object to another node's OD using a SDO."""
+
+        obj = self.sdo_get_obj(key, index, subindex)
+        bits = obj.od.bit_definitions[field]
+        offset = min(bits)
+
+        mask = 0
+        for i in bits:
+            mask |= 1 << bits[i]
+
+        new_value = obj.phys
+        new_value ^= mask
+        new_value |= value << offset
+        obj.phys = new_value
+
+    def sdo_write_enum(self, key: Any, index: [int, str], subindex: [int, str, None], value: str):
+        """Write a enum str to another node's OD using a SDO."""
+
+        obj = self.sdo_get_obj(key, index, subindex)
+        tmp = {d: v for v, d in obj.od.value_descriptions}
+        obj.phys = tmp[value]

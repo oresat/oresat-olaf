@@ -6,7 +6,7 @@ from argparse import ArgumentParser, Namespace
 from logging.handlers import SysLogHandler
 from typing import Optional
 
-import can
+from can import Bus
 from oresat_configs import OreSatConfig, OreSatId
 
 from ._internals.app import App, app
@@ -160,9 +160,7 @@ def olaf_setup(name: str, args: Optional[Namespace] = None) -> tuple[Namespace, 
     if is_octavo:
         od["versions"]["olaf_version"].value = __version__
 
-    bus = can.interface.Bus(
-        interface=args.bus_type, host=args.socketcand_host, port=29536, channel=args.bus
-    )
+    bus = Bus(interface=args.bus_type, host=args.socketcand_host, port=29536, channel=args.bus)
     od_db = config.od_db if name == "c3" else None
 
     app.setup(od, bus, od_db, is_octavo)

@@ -9,9 +9,18 @@ from pathlib import Path
 from threading import Event
 from typing import Any, Callable, Dict, Union
 
-import can
-import canopen
 import psutil
+from can import BusABC, Notifier
+from canopen import LocalNode, Network, ObjectDictionary
+from canopen.objectdictionary import (
+    DOMAIN,
+    INTEGER_TYPES,
+    OCTET_STRING,
+    ODArray,
+    ODRecord,
+    ODVariable,
+)
+from canopen.pdo.base import Map as PdoMap
 
 from ..common.daemon import Daemon
 from ..common.oresat_file_cache import OreSatFileCache
@@ -51,7 +60,7 @@ class Node:
     OreSat CANopen Node class
 
     Jobs:
-    - It abstracts away the canopen.LocalNode and canopen.Network from Resources and Services.
+    - It abstracts away the LocalNode and Network from Resources and Services.
     - Provides access to the OD for Resources and Services.
     - Lets Resources and Services send TPDOs.
     - Lets Resources and Services send EMCY messages.
@@ -67,15 +76,15 @@ class Node:
 
     def __init__(
         self,
-        od: canopen.ObjectDictionary,
-        bus: can.BusABC,
+        od: ObjectDictionary,
+        bus: BusABC,
     ):
         """
         Parameters
         ----------
-        od: canopen.ObjectDictionary
+        od: ObjectDictionary
             The CANopen ObjectDictionary
-        bus: can.BusABC
+        bus: BusABC
             The can bus object to use.
         """
 
@@ -83,8 +92,8 @@ class Node:
         self._bus = bus
         self._channel = self._bus.channel_info.split(" ")[-1].replace("'", "")
         self._bus_state = CanState.BUS_DOWN
-        self._node: canopen.LocalNode = None
-        self._network: canopen.Network = None
+        self._node: LocalNode = None
+        self._network: Network = None
         self._event = Event()
         self._read_cbs = {}  # type: ignore
         self._write_cbs = {}  # type: ignore
@@ -183,7 +192,7 @@ class Node:
             index, subindex, _ = struct.unpack(">HBB", pdo_map_bytes)
 
             # call sdo callback(s) and convert data to bytes
-            if isinstance(self.od[index], canopen.objectdictionary.Variable):
+            if isinstance(self.od[index], ODVariable):
                 value = self._node.sdo[index].phys
                 value_bytes = self.od[index].encode_raw(value)
             else:  # record or array
@@ -208,7 +217,7 @@ class Node:
 
         return True
 
-    def _on_rpdo_update_od(self, mapping: canopen.pdo.base.Map):
+    def _on_rpdo_update_od(self, mapping: PdoMap):
         """Handle parsering an RPDO"""
 
         for i in mapping.map_array:
@@ -220,7 +229,7 @@ class Node:
                 break  # no more mapping
 
             index, subindex, _ = struct.unpack(">HBB", value.to_bytes(4, "big"))
-            if isinstance(self.od[index], canopen.objectdictionary.Variable):
+            if isinstance(self.od[index], ODVariable):
                 self._node.sdo[index].raw = mapping.map[i - 1].get_data()
             else:
                 self._node.sdo[index][subindex].raw = mapping.map[i - 1].get_data()
@@ -231,7 +240,7 @@ class Node:
         if self._od.node_id is None:
             self._od.node_id = 0x7C
 
-        self._node = canopen.LocalNode(self._od.node_id, self._od)
+        self._node = LocalNode(self._od.node_id, self._od)
 
         self._node.add_read_callback(self._on_sdo_read)
         self._node.add_write_callback(self._on_sdo_write)
@@ -290,8 +299,8 @@ class Node:
 
         logger.info("(re)starting CANopen network")
 
-        self._network = canopen.Network(self._bus)
-        self._network.notifier = can.Notifier(self._network.bus, self._network.listeners, 1)
+        self._network = Network(self._bus)
+        self._network.notifier = Notifier(self._network.bus, self._network.listeners, 1)
         self._setup_node()
         self._network.add_node(self._node)
 
@@ -467,7 +476,7 @@ class Node:
 
         self._node.emcy.send(code, register, data)
 
-    def _on_sdo_read(self, index: int, subindex: int, od: canopen.objectdictionary.Variable):
+    def _on_sdo_read(self, index: int, subindex: int, od: ODVariable):
         """
         SDO read callback function. Allows overriding the data being sent on a SDO read. Return
         valid datatype for object, if overriding read data, or :py:data:`None` to use the the value
@@ -479,7 +488,7 @@ class Node:
             The index the SDO is reading to.
         subindex: int
             The subindex the SDO is reading to.
-        od: canopen.objectdictionary.Variable
+        od: ODVariable
             The variable object being read to. Badly named. And not appart of the actual OD.
 
         Returns
@@ -491,7 +500,7 @@ class Node:
         ret = None
 
         # convert any ints to strs
-        if isinstance(self.od[index], canopen.objectdictionary.Variable) and od == self.od[index]:
+        if isinstance(self.od[index], ODVariable) and od == self.od[index]:
             index = od.name
             subindex = None  # type: ignore
         else:
@@ -507,9 +516,7 @@ class Node:
 
         return ret
 
-    def _on_sdo_write(
-        self, index: int, subindex: int, od: canopen.objectdictionary.Variable, data: bytes
-    ):
+    def _on_sdo_write(self, index: int, subindex: int, od: ODVariable, data: bytes):
         """
         SDO write callback function. Gives access to the data being received on a SDO write.
 
@@ -521,13 +528,13 @@ class Node:
             The index the SDO being written to.
         subindex: int
             The subindex the SDO being written to.
-        od: canopen.objectdictionary.Variable
+        od: ODVariable
             The variable object being written to. Badly named.
         data: bytes
             The raw data being written.
         """
 
-        binary_types = [canopen.objectdictionary.DOMAIN, canopen.objectdictionary.OCTET_STRING]
+        binary_types = [DOMAIN, OCTET_STRING]
 
         # set value in OD before callback
         if od.data_type in binary_types:
@@ -536,7 +543,7 @@ class Node:
             od.value = od.decode_raw(data)
 
         # convert any ints to strs
-        if isinstance(self.od[index], canopen.objectdictionary.Variable) and od == self.od[index]:
+        if isinstance(self.od[index], ODVariable) and od == self.od[index]:
             index = od.name
             subindex = None  # type: ignore
         else:
@@ -565,8 +572,8 @@ class Node:
         return self._od.device_information.product_name
 
     @property
-    def od(self) -> canopen.ObjectDictionary:
-        """canopen.ObjectDictionary: Access to the object dictionary."""
+    def od(self) -> ObjectDictionary:
+        """ObjectDictionary: Access to the object dictionary."""
 
         return self._od
 
@@ -593,3 +600,75 @@ class Node:
         """dict: The dictionary of external daemons that are monitored and/or controllable"""
 
         return self._daemons
+
+    def od_get_obj(
+        self, index: [int, str], subindex: [int, str, None] = None
+    ) -> [ODVariable, ODArray, ODRecord]:
+        """Quick helper function to get an object from the od."""
+
+        if subindex is None:
+            return self._od[index]
+        return self._od[index][subindex]
+
+    def od_read(
+        self, index: [int, str], subindex: [int, str, None]
+    ) -> [int, str, float, bytes, bool]:
+        """Read the engineering value from the OD."""
+
+        obj = self.od_get_obj(index, subindex)
+        value = obj.value
+        if obj.data_type in [INTEGER_TYPES, FLOAT_TYPES]:
+            if obj.factor != 1:
+                value *= obj.factor
+        return value
+
+    def od_read_bitfield(self, index: [int, str], subindex: [int, str, None], field: str) -> int:
+        """Read a field from a object from the OD."""
+
+        obj = self.od_get_obj(index, subindex)
+        bits = obj.bit_definitions[field]
+
+        value = 0
+        for i in bits:
+            tmp = obj.value & (1 << bits[i])
+            value |= tmp >> bits[i]
+        return value
+
+    def od_read_enum(self, index: [int, str], subindex: [int, str, None]) -> str:
+        """Read a enum str from the OD."""
+
+        obj = self.od_get_obj(index, subindex)
+        return obj.value_descriptions[obj.value]
+
+    def od_write(
+        self, index: [int, str], subindex: [int, str, None], value: [int, str, float, bytes, bool]
+    ):
+        """Write a enginerring value to the OD."""
+
+        obj = self.od_get_obj(index, subindex)
+        obj.value = value
+
+    def od_write_bitfield(
+        self, index: [int, str], subindex: [int, str, None], field: str, value: int
+    ):
+        """Write a field from a object to the OD."""
+
+        obj = self.od_get_obj(index, subindex)
+        bits = obj.bit_definitions[field]
+        offset = min(bits)
+
+        mask = 0
+        for i in bits:
+            mask |= 1 << bits[i]
+
+        new_value = obj.value
+        new_value ^= mask
+        new_value |= value << offset
+        obj.value = new_value
+
+    def od_write_enum(self, index: [int, str], subindex: [int, str, None], value: str):
+        """Write a enum str to the OD."""
+
+        obj = self.od_get_obj(index, subindex)
+        tmp = {d: v for v, d in obj.value_descriptions}
+        obj.value = tmp[value]
