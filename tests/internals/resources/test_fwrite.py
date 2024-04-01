@@ -7,7 +7,7 @@ import unittest
 from os import remove
 from os.path import basename
 
-from olaf import natsorted, new_oresat_file
+from olaf import new_oresat_file
 from olaf._internals.resources.fwrite import FwriteResource
 
 from . import MockApp
@@ -77,7 +77,7 @@ class TestFwriteResource(unittest.TestCase):
         self.assertEqual(len(self.app.node.fwrite_cache), 2)
         self.assertEqual(self.app.sdo_read(index, subindex_len), 2)
         file_names = json.loads(self.app.sdo_read(index, subindex_files_json))
-        self.assertListEqual(file_names, natsorted([file_name, file_name2]))
+        self.assertListEqual(file_names, [file_name, file_name2])
 
         # remove test file
         remove(file_path2)
