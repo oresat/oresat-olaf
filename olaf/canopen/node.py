@@ -18,6 +18,7 @@ from canopen.objectdictionary import (
     FLOAT_TYPES,
     INTEGER_TYPES,
     OCTET_STRING,
+    VISIBLE_STRING,
     ODArray,
     ODRecord,
     ODVariable,
@@ -743,7 +744,7 @@ class Node:
 
         value_type = type(value)
 
-        def make_error_value(name, data_type):
+        def make_error_value(name, data_type) -> str:
             return f"cannot write {value} ({value_type}) to object {obj.name} ({obj.data_type})"
 
         if obj.data_type in INTEGER_TYPES:
@@ -751,17 +752,17 @@ class Node:
                 raise TypeError(make_error_value(int, obj.name))
             if obj.min != 0 and obj.max != 0:
                 if value > obj.max:
-                    raise ValueError("value {value} too high (high limit {obj.max})")
+                    raise ValueError(f"value {value} too high (high limit {obj.max})")
                 if value < obj.min:
-                    raise ValueError("value {value} too low (low limit {obj.min})")
+                    raise ValueError(f"value {value} too low (low limit {obj.min})")
         elif obj.data_type in FLOAT_TYPES:
             if not isinstance(value, int):
                 raise TypeError(make_error_value(float, obj.name))
             if obj.min != 0 and obj.max != 0:
                 if value > obj.max:
-                    raise ValueError("value {value} too high (high limit {obj.max})")
+                    raise ValueError(f"value {value} too high (high limit {obj.max})")
                 if value < obj.min:
-                    raise ValueError("value {value} too low (low limit {obj.min})")
+                    raise ValueError(f"value {value} too low (low limit {obj.min})")
         elif obj.data_type == VISIBLE_STRING and not isinstance(value, str):
             raise TypeError(make_error_value(str, obj.name))
         elif obj.data_type == OCTET_STRING and not isinstance(value, bytes):

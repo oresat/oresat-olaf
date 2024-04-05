@@ -16,7 +16,7 @@ class SystemResource(Resource):
     """Resource for the system."""
 
     def on_start(self):
-        self.node.od["system"]["reset"].value = 0
+        self.node.od_write("system", "reset", 0)
 
         self.node.add_sdo_callbacks("system", "ram_percent", self.on_read_ram, None)
         self.node.add_sdo_callbacks("system", "storage_percent", self.on_read_storage, None)
@@ -26,7 +26,7 @@ class SystemResource(Resource):
 
         try:
             eeprom = Eeprom()
-            self.node.od["versions"]["hw_version"].value = f"{eeprom.major}.{eeprom.minor}"
+            self.node.od_write("versions", "hw_version", f"{eeprom.major}.{eeprom.minor}")
         except (PermissionError, FileNotFoundError):
             logger.warning("could not read hardware info from eeprom")
 

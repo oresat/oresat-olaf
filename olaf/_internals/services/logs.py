@@ -29,8 +29,7 @@ class LogsService(Service):
         self.make_file_obj = None
 
     def on_start(self):
-        self.make_file_obj = self.node.od["logs"]["make_file"]
-        self.make_file_obj.value = False  # make sure this is False by default
+        self.node.od_write("logs", "make_file", False)  # make sure this is False by default
 
         self.node.add_sdo_callbacks("logs", "since_boot", self.on_read_since_boot, None)
 
@@ -45,7 +44,7 @@ class LogsService(Service):
                     t.add(self.logs_dir_path + "/" + i, arcname=i)
 
             self.node.fread_cache.add(tar_file_path, consume=True)
-            self.make_file_obj.value = False
+            self.node.od_write("logs", "make_file", False)
 
         self.sleep(0.1)
 
