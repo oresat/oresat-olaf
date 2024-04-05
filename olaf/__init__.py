@@ -18,6 +18,7 @@ from .board.cpufreq import A8_CPUFREQS, get_cpufreq, get_cpufreq_gov, set_cpufre
 from .board.eeprom import Eeprom
 from .board.gpio import GPIO_HIGH, GPIO_IN, GPIO_LOW, GPIO_OUT, Gpio, GpioError
 from .board.pru import Pru, PruError, PruState
+from .canopen import EmcyCode, OdDataType
 from .canopen.ecss import scet_int_from_time, scet_int_to_time, utc_int_from_time, utc_int_to_time
 from .canopen.master_node import MasterNode
 from .canopen.node import NetworkError, Node, NodeStop

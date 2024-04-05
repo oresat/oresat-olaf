@@ -1,5 +1,5 @@
-Node and MasterNode
-===================
+CANopen
+=======
 
 .. autoclass:: olaf.NetworkError
 
@@ -16,9 +16,15 @@ Node and MasterNode
    :members:
    :member-order: bysource
 
-
 .. autoclass:: olaf.MasterNode
    :class-doc-from: both
    :members:
    :member-order: bysource
    :show-inheritance:
+
+.. autoclass:: olaf.EmcyCode
+   :class-doc-from: both
+   :show-inheritance:
+   :members:
+   :member-order: bysource
+

@@ -6,8 +6,8 @@ from time import monotonic, time
 import psutil
 
 from ...board.eeprom import Eeprom
-from ...common.resource import Resource
 from ...canopen.node import NodeStop
+from ...common.resource import Resource
 
 logger = logging.getLogger(__file__)
 

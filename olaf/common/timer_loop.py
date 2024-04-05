@@ -5,7 +5,7 @@ from threading import Event, Thread
 from time import monotonic
 from typing import Union
 
-import canopen
+from canopen.objectdictionary import ODVariable
 
 logger = logging.getLogger(__file__)
 
@@ -17,8 +17,8 @@ class TimerLoop:
         self,
         name: str,
         loop_func,
-        delay: Union[int, float, canopen.objectdictionary.Variable],
-        start_delay: Union[int, float, canopen.objectdictionary.Variable] = 0,
+        delay: Union[int, float, ODVariable],
+        start_delay: Union[int, float, ODVariable] = 0,
         args: tuple = (),
         exc_func=None,
     ):
@@ -42,10 +42,10 @@ class TimerLoop:
             the function as a argument.
         """
 
-        if not isinstance(delay, (int, float, canopen.objectdictionary.Variable)):
+        if not isinstance(delay, (int, float, ODVariable)):
             raise ValueError(f"delay of {delay} is not a int, float, Variable")
 
-        if not isinstance(start_delay, (int, float, canopen.objectdictionary.Variable)):
+        if not isinstance(start_delay, (int, float, ODVariable)):
             raise ValueError(f"start_delay of {start_delay} is not a int, float, or Variable")
 
         self._name = name
@@ -73,7 +73,7 @@ class TimerLoop:
         self._thread.start()
 
     def _loop(self):
-        is_var = isinstance(self._start_delay, canopen.objectdictionary.Variable)
+        is_var = isinstance(self._start_delay, ODVariable)
         if is_var and self._start_delay.value > 0:
             self._event.wait(self._start_delay.value / 1000)
             self._start_time = monotonic()
@@ -94,7 +94,7 @@ class TimerLoop:
                     except Exception as e2:  # pylint: disable=W0718
                         logger.exception(f"{self._name} timer loop exc_func raise: {e2}")
 
-            if isinstance(self._delay, canopen.objectdictionary.Variable):
+            if isinstance(self._delay, ODVariable):
                 delay = self._delay.value / 1000
             else:
                 delay = self._delay / 1000
@@ -111,15 +111,15 @@ class TimerLoop:
             self._thread.join()
 
     @property
-    def delay(self) -> [int, float, canopen.objectdictionary.Variable]:
+    def delay(self) -> [int, float, ODVariable]:
         """int, float, Variable: The delay between loops"""
 
         return self._delay
 
     @delay.setter
-    def delay(self, value: Union[int, float, canopen.objectdictionary.Variable]):
-        if not isinstance(value, (int, float, canopen.objectdictionary.Variable)):
-            raise ValueError(f"{value} is not a int, float, or Variable")
+    def delay(self, value: Union[int, float, ODVariable]):
+        if not isinstance(value, (int, float, ODVariable)):
+            raise ValueError(f"{value} is not a int, float, or ODVariable")
 
         self._start_time = monotonic()
         self._delay = value

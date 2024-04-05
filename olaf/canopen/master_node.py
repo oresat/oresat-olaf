@@ -3,13 +3,12 @@
 import logging
 from collections import namedtuple
 from time import monotonic
-from typing import Any
+from typing import Any, Union
 
-import canopen
 from can import BusABC
 from canopen import ObjectDictionary, RemoteNode
-from canopen.sdo.exceptions import SdoError
 from canopen.sdo import SdoArray, SdoRecord, SdoVariable
+from canopen.sdo.exceptions import SdoError
 
 from .node import NetworkError, Node
 
@@ -85,9 +84,14 @@ class MasterNode(Node):
         value_str = data.hex(sep=" ")
         logger.error(f"node {node_id:02X} raised emergency: {value_str}")
 
-    def send_sync(self):
+    def send_sync(self, raise_exception: bool = True):
         """
         Send a CANopen SYNC message.
+
+        Parameters
+        ----------
+        raise_exception: bool
+            Set to False to not raise NetworkError.
 
         Raises
         ------
@@ -96,78 +100,22 @@ class MasterNode(Node):
         """
 
         if self._network is None:
-            raise NetworkError("network is down cannot send an SYNC message")
+            if raise_exception:
+                raise NetworkError("network is down cannot send an SYNC message")
+            return
 
-        self._network.sync.transmit()
+        try:
+            self._network.sync.transmit()
+        except Exception:  # pylint: disable=W0718
+            pass
 
-    def sdo_read(self, key: Any, index: [int, str], subindex: [int, str, None] = None) -> Any:
-        """
-        Read a value from a remote node's object dictionary using an SDO.
+    def sdo_get_obj(
+        self, key: Any, index: Union[int, str], subindex: Union[int, str, None]
+    ) -> [SdoVariable, SdoArray, SdoRecord]:
 
-        Parameters
-        ----------
-        key: Any
-            The dict key for the node to read from.
-        index: int or str
-            The index to read from.
-        subindex: int, str, or None
-            The subindex to read from.
-
-        Raises
-        ------
-        NetworkError
-            Cannot send a SDO read message when the network is down.
-        SdoError
-            Error with the SDO.
-
-        Returns
-        -------
-        Any
-            The value read.
-        """
-
-        if self._network is None:
-            raise NetworkError("network is down cannot send an SDO read message")
-
-        if subindex == None and isinstance(
-            self._od_db[key][index], canopen.objectdictionary.Variable
-        ):
-            value = self._remote_nodes[key].sdo[index].raw
-        else:
-            value = self._remote_nodes[key].sdo[index][subindex].raw
-
-        return value
-
-    def sdo_write(self, key: Any, index: int, subindex: int, value: Any):
-        """
-        Write a value to a remote node's object dictionary using an SDO.
-
-        Parameters
-        ----------
-        key: Any
-            The dict key for the  node to write to.
-        index: int
-            The index to write to.
-        subindex: int
-            The subindex to write to.
-        value: Any
-            The value to write.
-
-        Raises
-        ------
-        NetworkError
-            Cannot send a SDO write message when the network is down.
-        canopen.SdoError
-            Error with the SDO.
-        """
-
-        if self._network is None:
-            raise NetworkError("network is down cannot send an SDO write message")
-
-        if subindex == 0 and isinstance(self._od_db[key][index], canopen.objectdictionary.Variable):
-            self._remote_nodes[key].sdo[index].raw = value
-        else:
-            self._remote_nodes[key].sdo[index][subindex].raw = value
+        if subindex is None:
+            return self._remote_nodes[key].sdo[index]
+        return self._remote_nodes[key].sdo[index][subindex]
 
     @property
     def remote_nodes(self) -> dict[Any, RemoteNode]:
@@ -179,25 +127,63 @@ class MasterNode(Node):
         """dict[Any, ObjectDictionary]: All other node ODs."""
         return self._od_db
 
-    def sdo_get_obj(
-        self, key: Any, index: [int, str], subindex: [int, str, None]
-    ) -> [SdoVariable, SdoArray, SdoRecord]:
-
-        if subindex is None:
-            return self._remote_nodes[key].sdo[index]
-        return self._remote_nodes[key].sdo[index][subindex]
-
     def sdo_read(
-        self, key: Any, index: [int, str], subindex: [int, str, None]
-    ) -> [int, str, float, bytes, bool]:
-        """Read an value from another node's OD using a SDO."""
+        self, key: Any, index: Union[int, str], subindex: Union[int, str, None]
+    ) -> Union[int, str, float, bytes, bool]:
+        """
+        Read a value from a remote node's object dictionary using an SDO.
+
+        Parameters
+        ----------
+        key: Any
+            The dict key for the node to read from.
+        index: int | str
+            The index to read from.
+        subindex: int | str | None
+            The subindex to read from or None.
+
+        Raises
+        ------
+        NetworkError
+            Cannot send a SDO read message when the network is down.
+        SdoError
+            Error with the SDO.
+
+        Returns
+        -------
+        int | str | float | bytes | bool
+            The value read.
+        """
 
         return self.sdo_get_obj(key, index, subindex).phys
 
     def sdo_read_bitfield(
-        self, key: Any, index: [int, str], subindex: [int, str, None], field: str
+        self, key: Any, index: Union[int, str], subindex: Union[int, str, None], field: str
     ) -> int:
-        """Read an field from a object from another node's OD using a SDO."""
+        """
+        Read an field from a object from another node's OD using a SDO.
+
+        Parameters
+        ----------
+        key: Any
+            The dict key for the node to read from.
+        index: int | str
+            The index to read from.
+        subindex: int | str | None
+            The subindex to read from or None.
+
+        Raises
+        ------
+        NetworkError
+            Cannot send a SDO read message when the network is down.
+        SdoError
+            Error with the SDO.
+
+        Returns
+        -------
+        int
+            The field value.
+        """
 
         obj = self.sdo_get_obj(key, index, subindex)
         bits = obj.od.bit_definitions[field]
@@ -209,8 +195,33 @@ class MasterNode(Node):
             value |= tmp >> bits[i]
         return value
 
-    def sdo_read_enum(self, key: Any, index: [int, str], subindex: [int, str, None]) -> str:
-        """Read an enum str from another node's OD using a SDO."""
+    def sdo_read_enum(
+        self, key: Any, index: Union[int, str], subindex: Union[int, str, None]
+    ) -> str:
+        """
+        Read an enum str from another node's OD using a SDO.
+
+        Parameters
+        ----------
+        key: Any
+            The dict key for the node to read from.
+        index: int | str
+            The index to read from.
+        subindex: int | str | None
+            The subindex to read from or None.
+
+        Raises
+        ------
+        NetworkError
+            Cannot send a SDO read message when the network is down.
+        SdoError
+            Error with the SDO.
+
+        Returns
+        -------
+        str
+            The enum str value.
+        """
 
         obj = self.sdo_get_obj(key, index, subindex)
         obj_value = obj.phys
@@ -219,19 +230,68 @@ class MasterNode(Node):
     def sdo_write(
         self,
         key: Any,
-        index: [int, str],
-        subindex: [int, str, None],
-        value: [int, str, float, bytes, bool],
+        index: Union[int, str],
+        subindex: Union[int, str, None],
+        value: Union[int, str, float, bytes, bool],
     ):
-        """Write an enginerring value to another node's OD using a SDO."""
+        """
+        Write a value to a remote node's object dictionary using an SDO.
+
+        Parameters
+        ----------
+        key: Any
+            The dict key for the  node to write to.
+        index: int | int
+            The index to write to.
+        subindex: int | str | None
+            The subindex to write to or None.
+        value: int | str | float | bytes | bool
+            The value to write.
+
+        Raises
+        ------
+        NetworkError
+            Cannot send a SDO write message when the network is down.
+        SdoError
+            Error with the SDO.
+        """
 
         obj = self.sdo_get_obj(key, index, subindex)
         obj.phys = value
 
     def sdo_write_bitfield(
-        self, key: Any, index: [int, str], subindex: [int, str, None], field: str, value: int
+        self,
+        key: Any,
+        index: Union[int, str],
+        subindex: Union[int, str, None],
+        field: str,
+        value: int,
     ):
-        """Write a field from a object to another node's OD using a SDO."""
+        """
+        Write a field from a object to another node's OD using a SDO.
+
+        Parameters
+        ----------
+        key: Any
+            The dict key for the  node to write to.
+        index: int | int
+            The index to write to.
+        subindex: int | str | None
+            The subindex to write to or None.
+        field: str
+            Name of field to write to.
+        value: int
+            The value to write.
+
+        Raises
+        ------
+        NetworkError
+            Cannot send a SDO write message when the network is down.
+        SdoError
+            Error with the SDO.
+        """
+
+        obj = self.sdo_get_obj(key, index, subindex)
 
         obj = self.sdo_get_obj(key, index, subindex)
         bits = obj.od.bit_definitions[field]
@@ -246,8 +306,30 @@ class MasterNode(Node):
         new_value |= value << offset
         obj.phys = new_value
 
-    def sdo_write_enum(self, key: Any, index: [int, str], subindex: [int, str, None], value: str):
-        """Write a enum str to another node's OD using a SDO."""
+    def sdo_write_enum(
+        self, key: Any, index: Union[int, str], subindex: Union[int, str, None], value: str
+    ):
+        """
+        Write a enum str to another node's OD using a SDO.
+
+        Parameters
+        ----------
+        key: Any
+            The dict key for the  node to write to.
+        index: int | int
+            The index to write to.
+        subindex: int | str | None
+            The subindex to write to or None.
+        value: str
+            The enum str value to write.
+
+        Raises
+        ------
+        NetworkError
+            Cannot send a SDO write message when the network is down.
+        SdoError
+            Error with the SDO.
+        """
 
         obj = self.sdo_get_obj(key, index, subindex)
         tmp = {d: v for v, d in obj.od.value_descriptions}

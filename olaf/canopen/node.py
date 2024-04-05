@@ -4,9 +4,10 @@ import logging
 import os
 import struct
 import subprocess
-from enum import IntEnum, auto
+from enum import IntEnum, auto, unique
 from pathlib import Path
 from threading import Event
+from time import monotonic
 from typing import Any, Callable, Dict, Union
 
 import psutil
@@ -14,6 +15,7 @@ from can import BusABC, Notifier
 from canopen import LocalNode, Network, ObjectDictionary
 from canopen.objectdictionary import (
     DOMAIN,
+    FLOAT_TYPES,
     INTEGER_TYPES,
     OCTET_STRING,
     ODArray,
@@ -25,10 +27,12 @@ from canopen.pdo.base import Map as PdoMap
 from ..common.daemon import Daemon
 from ..common.oresat_file_cache import OreSatFileCache
 from ..common.timer_loop import TimerLoop
+from . import EmcyCode, OdDataType
 
 logger = logging.getLogger(__file__)
 
 
+@unique
 class CanState(IntEnum):
     """CAN bus states."""
 
@@ -38,6 +42,7 @@ class CanState(IntEnum):
     BUS_NOT_FOUND = auto()
 
 
+@unique
 class NodeStop(IntEnum):
     """Node stop commands."""
 
@@ -60,6 +65,7 @@ class Node:
     OreSat CANopen Node class
 
     Jobs:
+
     - It abstracts away the LocalNode and Network from Resources and Services.
     - Provides access to the OD for Resources and Services.
     - Lets Resources and Services send TPDOs.
@@ -143,30 +149,15 @@ class Node:
         for i in range(16):
             transmission_type = self.od[0x1800 + i][2].value
             if self._syncs % transmission_type == 0:
-                self.send_tpdo(i)
+                self.send_tpdo(i, False)
 
-    def send_tpdo(self, tpdo: int):
-        """
-        Send a TPDO. Will not be sent if not node is not in operational state.
-
-        Parameters
-        ----------
-        tpdo: int
-            TPDO number to send, should be between 1 and 16.
-
-        Raises
-        ------
-        NetworkError
-            Cannot send a TPDO message when the network is down.
-        """
+    def _send_pdo(self, comm_index: int, map_index: int, raise_exception: bool = True):
+        """Send a PDO. Will not be sent if not node is not in operational state."""
 
         if self._network is None:
-            raise NetworkError("network is down cannot send an TPDO message")
-
-        if tpdo < 1:
-            raise ValueError("TPDO number must be greather than 1")
-
-        tpdo -= 1  # number to offset
+            if raise_exception:
+                raise NetworkError("network is down cannot send an TPDO message")
+            return
 
         # PDOs can't be sent if CAN bus is down and PDOs should not be sent if CAN bus not in
         # 'OPERATIONAL' state
@@ -178,12 +169,12 @@ class Node:
         ):
             return
 
-        cob_id = self.od[0x1800 + tpdo][1].value & 0x3F_FF_FF_FF
-        maps = self.od[0x1A00 + tpdo][0].value
+        cob_id = self.od[comm_index][1].value & 0x3F_FF_FF_FF
+        maps = self.od[map_index][0].value
 
         data = b""
         for i in range(maps):
-            pdo_map = self.od[0x1A00 + tpdo][i + 1].value
+            pdo_map = self.od[map_index][i + 1].value
 
             if pdo_map == 0:
                 break  # nothing todo
@@ -202,20 +193,63 @@ class Node:
             # pack pdo with bytes
             data += value_bytes
 
+        if len(data) > 8:
+            self.send_emcy(EmcyCode.PROTOCOL_PDO_LEN_EXCEEDED, b"", False)
+            return
+
         try:
             self._network.send_message(cob_id, data)
-        except Exception as e:  # pylint: disable=W0718
-            logger.exception(f"TPDO{tpdo} failed with: {e}")
-
-    def _tpdo_timer_loop(self, tpdo: int) -> bool:
-        """Send TPDO for TPDO loop. Can handle network errors."""
-
-        try:
-            self.send_tpdo(tpdo)
-        except NetworkError:
+        except Exception:  # pylint: disable=W0718
             pass
 
-        return True
+    def send_tpdo(self, tpdo: int, raise_exception: bool = True):
+        """
+        Send a TPDO. Will not be sent if not node is not in operational state.
+
+        Parameters
+        ----------
+        tpdo: int
+            TPDO number to send, should be between 1 and 16.
+        raise_exception: bool
+            Set to False to not raise NetworkError.
+
+        Raises
+        ------
+        NetworkError
+            Cannot send a TPDO message when the network is down.
+        """
+        if tpdo < 1:
+            raise ValueError("TPDO number must be greater than 1")
+
+        tpdo -= 1  # number to offset
+        comm_index = 0x1800 + tpdo
+        map_index = 0x1A00 + tpdo
+        self._send_pdo(comm_index, map_index, raise_exception)
+
+    def send_rpdo(self, rpdo: int, raise_exception: bool = True):
+        """
+        Send a RPDO. Will not be sent if not node is not in operational state.
+
+        Parameters
+        ----------
+        rpdo: int
+            RPDO number to send, should be between 1 and 16.
+        raise_exception: bool
+            Set to False to not raise NetworkError.
+
+        Raises
+        ------
+        NetworkError
+            Cannot send a RPDO message when the network is down.
+        """
+
+        if rpdo < 1:
+            raise ValueError("RPDO number must be greater than 1")
+
+        rpdo -= 1  # number to offset
+        comm_index = 0x1400 + rpdo
+        map_index = 0x1600 + rpdo
+        self._send_pdo(comm_index, map_index, raise_exception)
 
     def _on_rpdo_update_od(self, mapping: PdoMap):
         """Handle parsering an RPDO"""
@@ -230,9 +264,10 @@ class Node:
 
             index, subindex, _ = struct.unpack(">HBB", value.to_bytes(4, "big"))
             if isinstance(self.od[index], ODVariable):
-                self._node.sdo[index].raw = mapping.map[i - 1].get_data()
+                sdo_obj = self._node.sdo[index]
             else:
-                self._node.sdo[index][subindex].raw = mapping.map[i - 1].get_data()
+                sdo_obj = self._node.sdo[index][subindex]
+            sdo_obj.raw = mapping.map[i - 1].get_data()
 
     def _setup_node(self):
         """Create the CANopen and TPDO timer loops"""
@@ -245,21 +280,20 @@ class Node:
         self._node.add_read_callback(self._on_sdo_read)
         self._node.add_write_callback(self._on_sdo_write)
 
-        for i in range(16):
-            if i + 0x1800 not in self.od:
-                continue
-            transmission_type = self.od[0x1800 + i][2].default
-            event_time = self.od[0x1800 + i][5].default
-            if transmission_type in [0xFE, 0xFF] and event_time > 0:
-                timer = TimerLoop(
-                    name=f"TPDO{i + 1}",
-                    loop_func=self._tpdo_timer_loop,
-                    delay=self.od[0x1800 + i][5],
-                    start_delay=self.od[0x1800 + i][3],
-                    args=(i + 1,),
-                )
-                self._tpdo_timers.append(timer)
-                timer.start()
+    def _send_timer_tpdos(self, delay: int = 100):
+        """Loop to send all timer-based TPDOs."""
+
+        while not self._event.is_set():
+            loop = 0
+            start_time = monotonic()
+            delay_s = delay / 1000
+            for i in range(self.od.num_of_TPDO):
+                ttype = self.od[0x1800][2].value
+                event_time = self.od[0x1800][5].value
+            if event_time == 0 and ttype in [0xFE, 0xFF] and (event_time // delay) % loop == 0:
+                self.send_tpdo(i + 1, False)
+            loop += 1
+            self._event.wait(delay_s - ((monotonic() - start_time) % delay_s))
 
     def _destroy_node(self):
         """Destroy the CANopen and TPDO timer loops"""
@@ -271,7 +305,7 @@ class Node:
 
         self._node = None
 
-    def _restart_bus(self):
+    def _restart_bus(self, send_emcy: bool = True):
         """Try to restart the CAN bus"""
 
         if os.path.exists(self._channel):
@@ -293,6 +327,8 @@ class Node:
                 logger.error(out)
 
         self.first_bus_reset = False
+        if send_emcy:
+            self.send_emcy(EmcyCode.COMM_RECOVERED_BUS, b"", False)
 
     def _restart_network(self):
         """Restart the CANopen network"""
@@ -335,9 +371,12 @@ class Node:
         first_bus_down = True  # flag to only log error message on first error
         self.first_bus_reset = True  # flag to only log error message on first error
         bus_type = self._bus.channel_info.split(" ")[0]
+
+        self._restart_bus(False)
         if bus_type == "socketcand":
             self._restart_network()
             self._bus_state = CanState.BUS_UP_NETWORK_UP
+
         while not self._event.is_set():
             if bus_type == "socketcand":
                 self._event.wait(1)
@@ -451,19 +490,20 @@ class Node:
         if write_cb is not None:
             self._write_cbs[index, subindex] = write_cb
 
-    def send_emcy(self, code: int, register: int = 0, data: bytes = b""):
+    def send_emcy(
+        self, code: Union[EmcyCode, int], data: bytes = b"", raise_exception: bool = True
+    ):
         """
         Send a EMCY message. Wrapper on canopen's `EmcyProducer.send`.
 
         Parameters
         ----------
-        code: int
+        code: Emcy, int
             The EMCY code.
-        register: int
-            Optional error register value in EMCY message (uint8). See Object 1001 def for bit
-            field.
         manufacturer_code: bytes
             Optional manufacturer error code (up to 5 bytes).
+        raise_exception: bool
+            Set to False to not raise NetworkError.
 
         Raises
         ------
@@ -472,9 +512,17 @@ class Node:
         """
 
         if self._network is None:
-            raise NetworkError("network is down cannot send an EMCY message")
+            if raise_exception:
+                raise NetworkError("network is down cannot send an EMCY message")
+            return
 
-        self._node.emcy.send(code, register, data)
+        if isinstance(code, EmcyCode):
+            code = code.value
+
+        try:
+            self._node.emcy.send(code, self._od[0x1001].value, data)
+        except Exception:  # pylint: disable=W0718
+            pass
 
     def _on_sdo_read(self, index: int, subindex: int, od: ODVariable):
         """
@@ -573,7 +621,7 @@ class Node:
 
     @property
     def od(self) -> ObjectDictionary:
-        """ObjectDictionary: Access to the object dictionary."""
+        """ObjectDictionary: LEGACY use od_* methods. Provides access to the object dictionary."""
 
         return self._od
 
@@ -602,18 +650,39 @@ class Node:
         return self._daemons
 
     def od_get_obj(
-        self, index: [int, str], subindex: [int, str, None] = None
-    ) -> [ODVariable, ODArray, ODRecord]:
-        """Quick helper function to get an object from the od."""
+        self, index: Union[int, str], subindex: Union[int, str, None] = None
+    ) -> Union[ODVariable, ODArray, ODRecord]:
+        """
+        Quick helper function to get an object from the od.
+
+        Returns
+        -------
+        ODVariable | ODArray | ODRecord
+            The object from the OD.
+        """
 
         if subindex is None:
             return self._od[index]
         return self._od[index][subindex]
 
     def od_read(
-        self, index: [int, str], subindex: [int, str, None]
-    ) -> [int, str, float, bytes, bool]:
-        """Read the engineering value from the OD."""
+        self, index: Union[int, str], subindex: Union[int, str, None]
+    ) -> Union[int, str, float, bytes, bool]:
+        """
+        Read a value from the OD.
+
+        Parameters
+        ----------
+        index: int or str
+            The index to read from.
+        subindex: int, str, or None
+            The subindex to read from or None.
+
+        Returns
+        -------
+        int | str | float | bytes | bool
+            The value read.
+        """
 
         obj = self.od_get_obj(index, subindex)
         value = obj.value
@@ -622,8 +691,24 @@ class Node:
                 value *= obj.factor
         return value
 
-    def od_read_bitfield(self, index: [int, str], subindex: [int, str, None], field: str) -> int:
-        """Read a field from a object from the OD."""
+    def od_read_bitfield(
+        self, index: Union[int, str], subindex: Union[int, str, None], field: str
+    ) -> int:
+        """
+        Read a field from a object from the OD.
+
+        Parameters
+        ----------
+        index: int or str
+            The index to read from.
+        subindex: int, str, or None
+            The subindex to read from or None.
+
+        Returns
+        -------
+        int:
+            The field value.
+        """
 
         obj = self.od_get_obj(index, subindex)
         bits = obj.bit_definitions[field]
@@ -634,22 +719,86 @@ class Node:
             value |= tmp >> bits[i]
         return value
 
-    def od_read_enum(self, index: [int, str], subindex: [int, str, None]) -> str:
-        """Read a enum str from the OD."""
+    def od_read_enum(self, index: Union[int, str], subindex: Union[int, str, None]) -> str:
+        """
+        Read a enum str from the OD.
+
+        Parameters
+        ----------
+        index: int or str
+            The index to read from.
+        subindex: int, str, or None
+            The subindex to read from or None.
+
+        Returns
+        -------
+        str
+            The enum str value.
+        """
 
         obj = self.od_get_obj(index, subindex)
         return obj.value_descriptions[obj.value]
 
+    def _var_write(self, obj: ODVariable, value: Union[int, str, float, bytes, bool]):
+
+        value_type = type(value)
+
+        def make_error_value(name, data_type):
+            return f"cannot write {value} ({value_type}) to object {obj.name} ({obj.data_type})"
+
+        if obj.data_type in INTEGER_TYPES:
+            if value_type != int:
+                raise TypeError(make_error_value(int, obj.name))
+            if obj.min != 0 and obj.max != 0:
+                if value > obj.max:
+                    raise ValueError("value {value} too high (high limit {obj.max})")
+                if value < obj.min:
+                    raise ValueError("value {value} too low (low limit {obj.min})")
+        elif obj.data_type in FLOAT_TYPES:
+            if not isinstance(value, int):
+                raise TypeError(make_error_value(float, obj.name))
+            if obj.min != 0 and obj.max != 0:
+                if value > obj.max:
+                    raise ValueError("value {value} too high (high limit {obj.max})")
+                if value < obj.min:
+                    raise ValueError("value {value} too low (low limit {obj.min})")
+        elif obj.data_type == VISIBLE_STRING and not isinstance(value, str):
+            raise TypeError(make_error_value(str, obj.name))
+        elif obj.data_type == OCTET_STRING and not isinstance(value, bytes):
+            raise TypeError(make_error_value(bytes, obj.name))
+
     def od_write(
-        self, index: [int, str], subindex: [int, str, None], value: [int, str, float, bytes, bool]
+        self,
+        index: Union[int, str],
+        subindex: Union[int, str, None],
+        value: Union[int, str, float, bytes, bool],
     ):
-        """Write a enginerring value to the OD."""
+        """
+        Write a enginerring value to the OD.
+
+        Parameters
+        ----------
+        index: int or str
+            The index to read from.
+        subindex: int, str, or None
+            The subindex to read from or None.
+        value: int, str, float, bytes, bool
+            The value to write.
+
+        Raises
+        ------
+        ValueError
+            An invalid value.
+        """
 
         obj = self.od_get_obj(index, subindex)
+
+        if obj.data_type in INTEGER_TYPES and isinstance(value, int):
+            raise ValueError(f"Cannot write non-int to bject {obj.name} (type: {obj.data_type})")
         obj.value = value
 
     def od_write_bitfield(
-        self, index: [int, str], subindex: [int, str, None], field: str, value: int
+        self, index: Union[int, str], subindex: Union[int, str, None], field: str, value: int
     ):
         """Write a field from a object to the OD."""
 
@@ -666,7 +815,7 @@ class Node:
         new_value |= value << offset
         obj.value = new_value
 
-    def od_write_enum(self, index: [int, str], subindex: [int, str, None], value: str):
+    def od_write_enum(self, index: Union[int, str], subindex: Union[int, str, None], value: str):
         """Write a enum str to the OD."""
 
         obj = self.od_get_obj(index, subindex)

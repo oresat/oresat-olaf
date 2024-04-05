@@ -54,4 +54,8 @@ html_theme = "sphinx_rtd_theme"
 
 # Example configuration for intersphinx: refer to the Python standard library.
 # To add links to stand python type definitions.
-intersphinx_mapping = {"python": ("https://docs.python.org/3/", None)}
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3/", None),
+    "can": ("https://python-can.readthedocs.io/en/stable/", None),
+    "canopen": ("https://canopen.readthedocs.io/en/latest/", None),
+}

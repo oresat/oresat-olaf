@@ -6,11 +6,11 @@ API
 
    adc
    app
+   canopen
    cpufreq
    daemon
    ecss
    gpio
-   node
    oresat_file
    oresat_file_cache
    pru
