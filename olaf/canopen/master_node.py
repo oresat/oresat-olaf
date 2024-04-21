@@ -10,11 +10,33 @@ from canopen import ObjectDictionary, RemoteNode
 from canopen.sdo import SdoArray, SdoRecord, SdoVariable
 from canopen.sdo.exceptions import SdoError
 
-from .node import NetworkError, Node
+from .node import NetworkError, Node, EmcyEvent
 
 logger = logging.getLogger(__file__)
 
 NodeHeartbeatInfo = namedtuple("NodeHeartbeatInfo", ["state", "timestamp", "time_since_boot"])
+
+
+class EmcyServerHistory:
+
+    def __init__(self, nodes: list[Any]):
+
+        self._data: dict[Any, dict[int, EmcyEvent]] = {node: {} for node in nodes}
+
+    def add(self, node: Any, timestamp: float, code: int, data: bytes):
+        """Add a new emcy to the history."""
+
+        if code in self._data[node]:
+            self._data[node][code].occurances += 1
+            self._data[node][code].last_timestamp = timestamp
+            self._data[node][code].data = data
+        else:
+            self._data[node][code] = EmcyEvent(code, 1, timestamp, data)
+
+    def clear(self):
+        """Clear the Emcy history."""
+
+        self._data = {}
 
 
 class MasterNode(Node):
@@ -42,6 +64,7 @@ class MasterNode(Node):
         self._od_db = od_db
 
         self._node_id_to_key = {od.node_id: key for key, od in od_db.items()}
+        self.emcy_history
 
         self._remote_nodes = {}
         self.node_status = {}

@@ -9,6 +9,7 @@ from pathlib import Path
 from threading import Event
 from time import monotonic
 from typing import Any, Callable, Dict, Union
+from dataclasses import dataclass
 
 import psutil
 from can import BusABC, Notifier
@@ -59,6 +60,36 @@ class NodeStop(IntEnum):
 
 class NetworkError(Exception):
     """Error with the CANopen network / bus"""
+
+
+@dataclass
+class EmcyEvent():
+
+    code: int = 0
+    occurances: int = 1
+    last_timestamp: float = 0.0
+    data: bytes = b""
+
+
+class EmcyClientHistory:
+    def __init__(self):
+
+        self._data: dict[int, EmcyEvent] = {}
+
+    def add(self, timestamp: float, code: int, data: bytes):
+        """Add a new emcy to the history."""
+
+        if code in self._data:
+            self._data[code].occurances += 1
+            self._data[code].last_timestamp = timestamp
+            self._data[code].data = data
+        else:
+            self._data[code] = EmcyEvent(code, 1, timestamp, data)
+
+    def clear(self):
+        """Clear the Emcy history."""
+
+        self._data = {}
 
 
 class Node:
