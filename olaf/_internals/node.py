@@ -193,8 +193,8 @@ class Node:
 
         try:
             self._network.send_message(cob_id, data)
-        except Exception as e:  # pylint: disable=W0718
-            logger.exception(f"TPDO{tpdo} failed with: {e}")
+        except Exception:  # pylint: disable=W0718
+            pass
 
     def _tpdo_timer_loop(self, tpdo: int) -> bool:
         """Send TPDO for TPDO loop. Can handle network errors."""
