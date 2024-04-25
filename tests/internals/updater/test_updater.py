@@ -122,19 +122,19 @@ class TestUpdater(unittest.TestCase):
         self.assertTrue(updater.add_update_archive(PATH + "/test_update_1611941111.tar.xz"))
         self.assertTrue(updater.add_update_archive(PATH + "/test_update_1611942222.tar.xz"))
         self.assertTrue(updater.add_update_archive(PATH + "/test_update_1611943333.tar.xz"))
-        self.assertEqual(updater.updates_cached, updates_cached + 4)
+        self.assertEqual(len(updater.updates_cached), len(updates_cached) + 4)
 
         # valid updates
         updater.update()  # 0
         self.assertEqual(updater.status, UpdaterState.UPDATE_SUCCESSFUL)
         updater.update()  # 1
         self.assertEqual(updater.status, UpdaterState.UPDATE_SUCCESSFUL)
-        self.assertEqual(updater.updates_cached, updates_cached + 2)
+        self.assertEqual(len(updater.updates_cached), len(updates_cached) + 2)
 
         # valid updates that failed during update (missing dependency)
         updater.update()  # 2
         self.assertEqual(updater.status, UpdaterState.UPDATE_FAILED)
-        self.assertEqual(updater.updates_cached, 0)  # should clear cache on failure
+        self.assertEqual(len(updater.updates_cached), 0)  # should clear cache on failure
 
         # add invalid update archives
         self.assertTrue(updater.add_update_archive(PATH + "/test_update_1611943333.tar.xz"))
@@ -143,7 +143,7 @@ class TestUpdater(unittest.TestCase):
         self.assertTrue(updater.add_update_archive(PATH + "/test_update_1611946666.tar.xz"))
         self.assertTrue(updater.add_update_archive(PATH + "/test_update_1611947777.tar.xz"))
         self.assertTrue(updater.add_update_archive(PATH + "/test_update_1611948888.tar.xz"))
-        self.assertEqual(updater.updates_cached, 6)
+        self.assertEqual(len(updater.updates_cached), 6)
 
         # invalid updates (failed during pre update)
         updater.update()  # 3
@@ -158,4 +158,4 @@ class TestUpdater(unittest.TestCase):
         self.assertEqual(updater.status, UpdaterState.PRE_UPDATE_FAILED)
         updater.update()  # 8
         self.assertEqual(updater.status, UpdaterState.PRE_UPDATE_FAILED)
-        self.assertEqual(updater.updates_cached, 0)
+        self.assertEqual(len(updater.updates_cached), 0)
