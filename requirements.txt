@@ -1,6 +1,7 @@
 black
 build
 canopen
+python-can>=4.3.0
 flask
 isort
 loguru
