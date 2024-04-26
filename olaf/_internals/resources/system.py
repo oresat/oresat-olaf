@@ -1,14 +1,15 @@
 """Resource for the system."""
 
+import logging
 from time import monotonic, time
 
 import psutil
 
-from olaf import logger
-
 from ...common.eeprom import Eeprom
 from ...common.resource import Resource
 from ..node import NodeStop
+
+logger = logging.getLogger(__file__)
 
 
 class SystemResource(Resource):

@@ -1,5 +1,6 @@
 """OLAF App."""
 
+import logging
 import os
 import signal
 import subprocess
@@ -7,7 +8,6 @@ from typing import Union
 
 import can
 import canopen
-from loguru import logger
 
 from ..common.resource import Resource
 from ..common.service import Service
@@ -23,6 +23,8 @@ from .services.logs import LogsService
 from .services.os_command import OsCommandService
 from .services.updater import UpdaterService
 from .updater import Updater
+
+logger = logging.getLogger(__file__)
 
 
 class App:

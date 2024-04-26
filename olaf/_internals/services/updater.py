@@ -1,10 +1,13 @@
 """Service for interacting with the updater"""
 
+import logging
+
 import canopen
-from loguru import logger
 
 from ...common.service import Service
 from ..updater import Updater, UpdaterError
+
+logger = logging.getLogger(__file__)
 
 
 class UpdaterService(Service):

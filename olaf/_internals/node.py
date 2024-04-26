@@ -1,5 +1,6 @@
 """OreSat CANopen Node"""
 
+import logging
 import os
 import struct
 import subprocess
@@ -11,11 +12,12 @@ from typing import Any, Callable, Dict, Union
 import can
 import canopen
 import psutil
-from loguru import logger
 
 from ..common.daemon import Daemon
 from ..common.oresat_file_cache import OreSatFileCache
 from ..common.timer_loop import TimerLoop
+
+logger = logging.getLogger(__file__)
 
 
 class CanState(IntEnum):

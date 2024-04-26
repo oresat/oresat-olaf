@@ -1,12 +1,13 @@
 """A quick timer-based class that calls a function in a loop"""
 
+import logging
 from threading import Event, Thread
 from time import monotonic
 from typing import Union
 
 import canopen
 
-from .. import logger
+logger = logging.getLogger(__file__)
 
 
 class TimerLoop:

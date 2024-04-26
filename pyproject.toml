@@ -19,14 +19,20 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Application Frameworks",
 ]
 dependencies = [
+    "python-can>=4.3.0",
     "canopen",
     "flask",
-    "loguru",
-    "natsort",
     "psutil",
     "oresat-configs",
 ]
 dynamic = ["version"]
+
+[project.optional-dependencies]
+lint = [
+    "black",
+    "isort",
+    "pylama",
+]
 
 [tool.setuptools.packages.find]
 exclude = ["docs*", "tests*"]
@@ -63,18 +69,22 @@ linters = "pycodestyle,pyflakes,pylint,mccabe,mypy,radon"
 # W0102:    Dangerous default value as argument
 # W0107:    Unnecessary pass statement
 # R0903:    Too few public methods
-ignore = "E402,C901,C0103,E203,R0912,R0915,R901,R901,R0914,C0413,C0206,R1716,W1514,R0902,R0913,W0707,W0102,W0107,R0903"
+# W1201:    Use % formatting in logging functions
+# W1203:    Use %s formatting in logging functions
+ignore = "E402,C901,C0103,E203,R0912,R0915,R901,R901,R0914,C0413,C0206,R1716,W1514,R0902,R0913,W0707,W0102,W0107,R0903,W1201,W1203"
 max_line_length = 100
 
 [[tool.pylama.files]]
 path = "*/__init__.py"
 # W0611:    Imported but unused
-ignore = "W0611"
+# W1201:    Use % formatting in logging functions
+ignore = "W0611,W1201"
 
 [[tool.pylama.files]]
 path = "tests/*"
 # W0212:    Access to a protected member of a class
-ignore = "W0212"
+# C0114:    Missing module docstring
+ignore = "W0212,C0114"
 
 [[tool.pylama.files]]
 path = "*/_version.py"

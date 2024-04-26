@@ -1,8 +1,10 @@
 """Functions to get/set the CPU frequency and its governor on the Octavo A8."""
 
+import logging
 from os import geteuid
 
-from loguru import logger
+logger = logging.getLogger(__file__)
+
 
 A8_CPUFREQS = [300, 600, 720, 800, 1000]
 """list: CPU frequencies for the Cortex A8 in MHz"""

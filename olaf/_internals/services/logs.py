@@ -1,23 +1,22 @@
-"""Service for getting system logs"""
+"""Service for the getting system logs over CAN."""
 
+import logging
 import os
 import tarfile
-
-from loguru import logger
 
 from ...common.oresat_file import new_oresat_file
 from ...common.service import Service
 
+logger = logging.getLogger(__file__)
+
 TMP_LOGS_FILE = "/tmp/olaf.log"
 
 
-def logger_tmp_file_setup(level: str):
-    """Congfigure logger to save to tmp file for LogsService"""
-
-    # log file for log service (overrides each time app starts)
+def get_log_file_handler() -> logging.FileHandler:
+    """Get the boot log file handler and clean up temp log file used by LogsService."""
     if os.path.isfile(TMP_LOGS_FILE):
         os.remove(TMP_LOGS_FILE)
-    logger.add(TMP_LOGS_FILE, level=level, backtrace=True)
+    return logging.FileHandler(TMP_LOGS_FILE)
 
 
 class LogsService(Service):
