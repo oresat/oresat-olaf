@@ -6,8 +6,8 @@ import psutil
 
 from olaf import logger
 
+from ...board.eeprom import Eeprom
 from ...canopen.node import NodeStop
-from ...common.eeprom import Eeprom
 from ...common.resource import Resource
 
 

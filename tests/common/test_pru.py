@@ -3,7 +3,7 @@
 import unittest
 from os.path import isdir
 
-from olaf.common.pru import Pru, PruError, PruState
+from olaf.board.pru import Pru, PruError, PruState
 
 PRU_EXIST = isdir("/dev/remoteproc/pruss-core0") and isdir("/dev/remoteproc/pruss-core1")
 
