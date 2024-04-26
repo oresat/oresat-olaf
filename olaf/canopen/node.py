@@ -2,29 +2,18 @@
 
 import os
 import struct
-import subprocess
-from enum import IntEnum, auto
+from enum import IntEnum
 from pathlib import Path
 from threading import Event
 from typing import Any, Callable, Dict, Union
 
-import can
 import canopen
-import psutil
 from loguru import logger
 
+from ..canopen.network import CanNetwork, CanNetworkState
 from ..common.daemon import Daemon
 from ..common.oresat_file_cache import OreSatFileCache
 from ..common.timer_loop import TimerLoop
-
-
-class CanState(IntEnum):
-    """CAN bus states."""
-
-    BUS_UP_NETWORK_UP = auto()
-    BUS_UP_NETWORK_DOWN = auto()
-    BUS_DOWN = auto()
-    BUS_NOT_FOUND = auto()
 
 
 class NodeStop(IntEnum):
@@ -57,32 +46,24 @@ class Node:
     - Starts/stops all Resources and Services.
     - Sets up all timer-base TPDO threads.
     - Sets up all RPDO callbacks.
-    - Monitor and resets the CAN bus if it goes into a bad state.
 
     Basically it tries to abstract all the CANopen things as much a possible, while providing a
     basic API for CANopen things.
     """
 
-    def __init__(
-        self,
-        od: canopen.ObjectDictionary,
-        bus: can.BusABC,
-    ):
+    def __init__(self, network: CanNetwork, od: canopen.ObjectDictionary):
         """
         Parameters
         ----------
+        network: CanNetwork
+            The CAN network
         od: canopen.ObjectDictionary
             The CANopen ObjectDictionary
-        bus: can.BusABC
-            The can bus object to use.
         """
 
         self._od = od
-        self._bus = bus
-        self._channel = self._bus.channel_info.split(" ")[-1].replace("'", "")
-        self._bus_state = CanState.BUS_DOWN
         self._node: canopen.LocalNode = None
-        self._network: canopen.Network = None
+        self._network: CanNetwork = network
         self._event = Event()
         self._read_cbs = {}  # type: ignore
         self._write_cbs = {}  # type: ignore
@@ -90,7 +71,6 @@ class Node:
         self._reset = NodeStop.SOFT_RESET
         self._tpdo_timers = []  # type: ignore
         self._daemons = {}  # type: ignore
-        self.first_bus_reset = False
 
         if os.geteuid() == 0:  # running as root
             self.work_base_dir = "/var/lib/oresat"
@@ -112,15 +92,6 @@ class Node:
         # stop the monitor thread if it is running
         if not self._event.is_set():
             self.stop()
-
-        # stop the CANopen network
-        if self._network:
-            try:
-                self._network.disconnect()
-            except Exception:  # pylint: disable=W0718
-                pass
-
-        self._bus.shutdown()
 
     def _on_sync(self, cob_id: int, data: bytes, timestamp: float):  # pylint: disable=W0613
         """On SYNC message send TPDOs configured to be SYNC-based"""
@@ -149,22 +120,17 @@ class Node:
             Cannot send a TPDO message when the network is down.
         """
 
-        if self._network is None:
-            raise NetworkError("network is down cannot send an TPDO message")
-
         if tpdo < 1:
             raise ValueError("TPDO number must be greather than 1")
 
+        if self._network.status == CanNetworkState.NETWORK_UP:
+            logger.debug("network is down cannot send an TPDO message")
+            return
+
         tpdo -= 1  # number to offset
 
-        # PDOs can't be sent if CAN bus is down and PDOs should not be sent if CAN bus not in
-        # 'OPERATIONAL' state
-        can_bus = psutil.net_if_stats().get(self._channel)
-        if (
-            can_bus is None
-            or self._node is None
-            or (can_bus.isup and self._node.nmt.state != "OPERATIONAL")
-        ):
+        # PDOs should not be sent if CAN bus not in 'OPERATIONAL' state as defined by spec
+        if self._node is None or self._node.nmt.state != "OPERATIONAL":
             return
 
         cob_id = self.od[0x1800 + tpdo][1].value & 0x3F_FF_FF_FF
@@ -191,10 +157,7 @@ class Node:
             # pack pdo with bytes
             data += value_bytes
 
-        try:
-            self._network.send_message(cob_id, data)
-        except Exception:  # pylint: disable=W0718
-            pass
+        self._network.send_message(cob_id, data, False)
 
     def _tpdo_timer_loop(self, tpdo: int) -> bool:
         """Send TPDO for TPDO loop. Can handle network errors."""
@@ -260,102 +223,7 @@ class Node:
 
         self._node = None
 
-    def _restart_bus(self):
-        """Try to restart the CAN bus"""
-
-        if os.path.exists(self._channel):
-            return  # skip. On MacOS, the CAN bus is always up, if it exists
-
-        if self.first_bus_reset:
-            logger.error(f"{self._channel} is down")
-
-        if os.geteuid() == 0:  # running as root
-            if self.first_bus_reset:
-                logger.info(f"trying to restart CAN bus {self._channel}")
-            cmd = (
-                f"ip link set {self._channel} down;"
-                f"ip link set {self._channel} type can bitrate 1000000;"
-                f"ip link set {self._channel} up"
-            )
-            out = subprocess.run(cmd, shell=True, check=False)
-            if out.returncode != 0:
-                logger.error(out)
-
-        self.first_bus_reset = False
-
-    def _restart_network(self):
-        """Restart the CANopen network"""
-
-        logger.info("(re)starting CANopen network")
-
-        self._network = canopen.Network(self._bus)
-        self._network.notifier = can.Notifier(self._network.bus, self._network.listeners, 1)
-        self._setup_node()
-        self._network.add_node(self._node)
-
-        try:
-            self._node.nmt.start_heartbeat(self.od[0x1017].default)
-            self._node.nmt.state = "OPERATIONAL"
-        except Exception as e:  # pylint: disable=W0718
-            logger.exception(f"failed to (re)start CANopen network with {e}")
-
-        self._network.subscribe(0x80, self._on_sync)
-
-        # setup RPDOs callbacks
-        self._node.rpdo.read()
-        for i in self._node.rpdo:
-            if self._node.rpdo[i].enabled:
-                self._node.rpdo[i].add_callback(self._on_rpdo_update_od)
-
-    def _disable_network(self):
-        """Disable the CANopen network"""
-
-        try:
-            if self._network:
-                self._network.disconnect()
-            self._destroy_node()
-        except Exception:  # pylint: disable=W0718
-            self._network = None  # make sure the canopen network is down
-            self._node = None
-
-    def _monitor_can(self):
-        """Monitor the CAN bus and CAN network"""
-
-        first_bus_down = True  # flag to only log error message on first error
-        self.first_bus_reset = True  # flag to only log error message on first error
-        bus_type = self._bus.channel_info.split(" ")[0]
-        if bus_type == "socketcand":
-            self._restart_network()
-            self._bus_state = CanState.BUS_UP_NETWORK_UP
-        while not self._event.is_set():
-            if bus_type == "socketcand":
-                self._event.wait(1)
-                continue
-
-            bus = psutil.net_if_stats().get(self._channel)
-            if bus is None and not os.path.exists(self._channel):  # bus does not exist
-                self._bus_state = CanState.BUS_NOT_FOUND
-                self._disable_network()
-                if first_bus_down:
-                    logger.critical(f"{self._channel} does not exists, nothing OLAF can do")
-                    first_bus_down = False
-            elif (bus and not bus.isup) or os.path.exists(self._channel):  # bus is down
-                self._bus_state = CanState.BUS_DOWN
-                first_bus_down = True  # reset flag
-                self._disable_network()
-                self._restart_bus()
-            elif not self._network:  # bus is up, network is down
-                self._bus_state = CanState.BUS_UP_NETWORK_DOWN
-                first_bus_down = True  # reset flag
-                self._restart_network()
-            else:  # bus is up, network is up
-                self._bus_state = CanState.BUS_UP_NETWORK_UP
-                self.first_bus_reset = True  # reset flag
-                first_bus_down = True  # reset flag
-
-            self._event.wait(1)
-
-    def run(self) -> int:
+    def run(self) -> NodeStop:
         """
         Go into operational mode, start all the resources, start all the threads, and monitor
         everything in a loop.
@@ -367,13 +235,13 @@ class Node:
         """
 
         logger.info(f"{self.name} node is starting")
-        if os.geteuid() != 0:  # running as root
-            logger.warning("not running as root, cannot restart CAN bus if it goes down")
 
-        try:
-            self._monitor_can()
-        except Exception as e:  # pylint: disable=W0718
-            logger.exception(e)
+        i = 0
+        while not self._event.is_set():
+            self._network.send_message(i, b"\x12\x34", False)
+            self._network.monitor()
+            self._event.wait(1)
+            i += 1
 
         # stop the node and TPDO timers
         self._destroy_node()
@@ -460,8 +328,9 @@ class Node:
             Cannot send a EMCY message when the network is down.
         """
 
-        if self._network is None:
-            raise NetworkError("network is down cannot send an EMCY message")
+        if self._network.status == CanNetworkState.NETWORK_UP:
+            logger.debug("network is down cannot send an EMCY message")
+            return
 
         self._node.emcy.send(code, register, data)
 
@@ -548,13 +417,13 @@ class Node:
     def bus(self) -> str:
         """str: The CAN bus."""
 
-        return self._channel
+        return self._network.channel
 
     @property
     def bus_state(self) -> str:
         """str: The CAN bus status."""
 
-        return self._bus_state.name
+        return self._network.status.name
 
     @property
     def name(self) -> str:

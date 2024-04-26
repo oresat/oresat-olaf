@@ -5,6 +5,7 @@ import canopen
 from oresat_configs import OreSatConfig, OreSatId
 
 from olaf import OreSatFileCache, Service, logger
+from olaf.canopen.network import CanNetwork
 from olaf.canopen.node import Node
 
 logger.disable("olaf")
@@ -15,8 +16,8 @@ class MockNode(Node):
 
     def __init__(self):
         od = OreSatConfig(OreSatId.ORESAT0).od_db["gps"]
-        bus = can.interface.Bus(interface="virtual", channel="vcan0")
-        super().__init__(od, bus)
+        network = CanNetwork("virtual", "vcan0")
+        super().__init__(network, od)
 
         self._fread_cache = OreSatFileCache("/tmp/fread")
         self._fread_cache.clear()

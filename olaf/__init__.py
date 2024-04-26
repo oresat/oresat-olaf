@@ -5,7 +5,6 @@ from argparse import ArgumentParser, Namespace
 from logging.handlers import SysLogHandler
 from typing import Optional
 
-import can
 from loguru import logger
 from oresat_configs import OreSatConfig, OreSatId
 
@@ -19,6 +18,7 @@ from .board.gpio import GPIO_HIGH, GPIO_IN, GPIO_LOW, GPIO_OUT, Gpio, GpioError
 from .board.pru import Pru, PruError, PruState
 from .canopen.ecss import scet_int_from_time, scet_int_to_time, utc_int_from_time, utc_int_to_time
 from .canopen.master_node import MasterNode
+from .canopen.network import CanNetwork, CanNetworkState
 from .canopen.node import NetworkError, Node, NodeStop
 from .common.daemon import Daemon, DaemonState
 from .common.oresat_file import OreSatFile, new_oresat_file
@@ -145,12 +145,10 @@ def olaf_setup(name: str, args: Optional[Namespace] = None) -> tuple[Namespace, 
     if is_octavo:
         od["versions"]["olaf_version"].value = __version__
 
-    bus = can.interface.Bus(
-        interface=args.bus_type, host=args.socketcand_host, port=29536, channel=args.bus
-    )
+    network = CanNetwork(args.bus_type, args.bus, args.socketcand_host)
     od_db = config.od_db if name == "c3" else None
 
-    app.setup(od, bus, od_db, is_octavo)
+    app.setup(network, od, od_db, is_octavo)
     rest_api.setup(address=args.address, port=args.port)
 
     return args, config

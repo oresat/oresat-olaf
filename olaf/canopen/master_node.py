@@ -4,10 +4,10 @@ from collections import namedtuple
 from time import monotonic
 from typing import Any, Dict, Union
 
-import can
 import canopen
 from loguru import logger
 
+from ..canopen.network import CanNetwork, CanNetworkState
 from .node import NetworkError, Node
 
 NodeHeartbeatInfo = namedtuple("NodeHeartbeatInfo", ["state", "timestamp", "time_since_boot"])
@@ -18,52 +18,53 @@ class MasterNode(Node):
 
     def __init__(
         self,
+        network: CanNetwork,
         od: canopen.ObjectDictionary,
         od_db: Dict[Any, canopen.ObjectDictionary],
-        bus: can.BusABC,
     ):
         """
         Parameters
         ----------
+        network: CanNetwork
+            The CAN network
         od: canopen.ObjectDictionary
             The CANopen ObjectDictionary
         od_db: Dict[Any, canopen.ObjectDictionary]
             Database of other nodes's ODs. The dict key will be used by class fields and methods.
-        bus: can.BusABC
-            The can bus object to use.
         """
 
-        super().__init__(od, bus)
+        super().__init__(network, od)
 
         self._od_db = od_db
-
+        self.network = network
         self._node_id_to_key = {od.node_id: key for key, od in od_db.items()}
 
         self._remote_nodes = {}
         self.node_status = {}
-        for key in od_db:
-            if od_db[key] == od:
+        for k, v in self._od_db.items():
+            if v == od:
                 continue  # skip itself
-            self._remote_nodes[key] = canopen.RemoteNode(od_db[key].node_id, od_db[key])
-            self.node_status[key] = NodeHeartbeatInfo(
+            self._remote_nodes[k] = canopen.RemoteNode(v.node_id, v)
+            self.node_status[k] = NodeHeartbeatInfo(
                 0xFF,
                 0.0,
                 0.0,
             )  # 0xFF is a flag, not a CANopen standard
+            self._network.subscribe(0x80 + v.node_id, self._on_emergency)
+            self._network.subscribe(0x700 + v.node_id, self._on_heartbeat)
+
+        for remote_node in self._remote_nodes.values():
+            self._network.add_node(remote_node)
+
+        self._network.add_reset_callback(self._restart_network())
 
     def _restart_network(self):
         """Restart the CANopen network"""
-        super()._restart_network()
 
         for key, od in self._od_db.items():
             if od == self._od:
                 continue  # skip itself
             self.node_status[key] = NodeHeartbeatInfo(0xFF, 0.0, 0.0)
-            self._network.subscribe(0x80 + od.node_id, self._on_emergency)
-            self._network.subscribe(0x700 + od.node_id, self._on_heartbeat)
-
-        for remote_node in self._remote_nodes.values():
-            self._network.add_node(remote_node)
 
     def _on_heartbeat(self, cob_id: int, data: bytes, timestamp: float):
         """Callback on node hearbeat messages."""
@@ -90,8 +91,8 @@ class MasterNode(Node):
             Cannot send a SYNC message when the network is down.
         """
 
-        if self._network is None:
-            raise NetworkError("network is down cannot send an SYNC message")
+        if self._network.status == CanNetworkState.NETWORK_UP:
+            return
 
         self._network.sync.transmit()
 
@@ -121,7 +122,7 @@ class MasterNode(Node):
             The value read.
         """
 
-        if self._network is None:
+        if self._network.status == CanNetworkState.NETWORK_UP:
             raise NetworkError("network is down cannot send an SDO read message")
 
         if subindex == 0 and isinstance(self._od_db[key][index], canopen.objectdictionary.Variable):
@@ -154,7 +155,7 @@ class MasterNode(Node):
             Error with the SDO.
         """
 
-        if self._network is None:
+        if self._network.status == CanNetworkState.NETWORK_UP:
             raise NetworkError("network is down cannot send an SDO write message")
 
         if subindex == 0 and isinstance(self._od_db[key][index], canopen.objectdictionary.Variable):

@@ -5,11 +5,11 @@ import signal
 import subprocess
 from typing import Union
 
-import can
 import canopen
 from loguru import logger
 
 from ..canopen.master_node import MasterNode
+from ..canopen.network import CanNetwork
 from ..canopen.node import Node, NodeStop
 from ..common.resource import Resource
 from ..common.service import Service
@@ -18,8 +18,6 @@ from .resources.fread import FreadResource
 from .resources.fwrite import FwriteResource
 from .resources.system import SystemResource
 from .services.logs import LogsService
-
-# from .resources.daemons import DaemonsResource
 from .services.os_command import OsCommandService
 from .services.updater import UpdaterService
 from .updater import Updater
@@ -27,7 +25,7 @@ from .updater import Updater
 
 class App:
     """
-    The application class that manages the CAN bus and resources.
+    The application class that manages the CANopen node and resources.
 
     Use the global ``olaf.app`` obect.
     """
@@ -51,8 +49,8 @@ class App:
 
     def setup(
         self,
+        network: CanNetwork,
         od: canopen.ObjectDictionary,
-        bus: can.BusABC,
         master_od_db: Union[dict, None] = None,
         load_core: bool = True,
     ):
@@ -61,10 +59,10 @@ class App:
 
         Parameters
         ----------
-        node: Node
-            The node for the app.
-        bus: can.BusABC
-            The can bus object to use.
+        network: CanNetwork
+            The CAN network to use.
+        od: canopen.ObjectDictionary
+            The nodes object dictionary.
         master_od_db: dict
             Master node od database. Only for the C3.
         load_core: bool
@@ -79,9 +77,9 @@ class App:
         self._od = od
 
         if master_od_db:
-            self._node = MasterNode(self._od, master_od_db, bus)
+            self._node = MasterNode(network, self._od, master_od_db)
         else:
-            self._node = Node(self._od, bus)
+            self._node = Node(network, self._od)
 
         # setup updater
         self._updater = Updater(
