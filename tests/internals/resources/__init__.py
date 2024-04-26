@@ -5,7 +5,7 @@ import canopen
 from oresat_configs import OreSatConfig, OreSatId
 
 from olaf import OreSatFileCache, Resource, logger
-from olaf._internals.node import Node
+from olaf.canopen.node import Node
 
 logger.disable("olaf")
 

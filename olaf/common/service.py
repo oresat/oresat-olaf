@@ -5,7 +5,7 @@ from threading import Event, Thread
 
 from loguru import logger
 
-from .._internals.node import Node
+from ..canopen.node import Node
 
 
 class ServiceState(IntEnum):

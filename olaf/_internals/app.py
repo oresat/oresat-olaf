@@ -9,10 +9,10 @@ import can
 import canopen
 from loguru import logger
 
+from ..canopen.master_node import MasterNode
+from ..canopen.node import Node, NodeStop
 from ..common.resource import Resource
 from ..common.service import Service
-from .master_node import MasterNode
-from .node import Node, NodeStop
 from .resources.ecss import EcssResource
 from .resources.fread import FreadResource
 from .resources.fwrite import FwriteResource

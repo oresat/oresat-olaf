@@ -5,7 +5,7 @@ from time import CLOCK_REALTIME, clock_settime, time
 
 from loguru import logger
 
-from ...common.ecss import scet_int_from_time, scet_int_to_time, utc_int_from_time, utc_int_to_time
+from ...canopen.ecss import scet_int_from_time, scet_int_to_time, utc_int_from_time, utc_int_to_time
 from ...common.resource import Resource
 
 

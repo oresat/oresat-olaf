@@ -6,9 +6,9 @@ import psutil
 
 from olaf import logger
 
+from ...canopen.node import NodeStop
 from ...common.eeprom import Eeprom
 from ...common.resource import Resource
-from ..node import NodeStop
 
 
 class SystemResource(Resource):
