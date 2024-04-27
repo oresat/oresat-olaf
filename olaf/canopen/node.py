@@ -87,6 +87,13 @@ class Node:
         self._network.monitor()
         self._first_network_reset = True
         self._network.add_reset_callback(self._setup_node)
+        self._network.subscribe(0x80, self._on_sync)
+
+        self._rpdo_cobid_to_num: dict[int, int] = {}
+        for i in range(self._od.device_information.nr_of_RXPDO):
+            cob_id = self._od[0x1400 + i][1].value
+            self._rpdo_cobid_to_num[cob_id] = i
+            self._network.subscribe(cob_id, self._on_pdo)
 
     def __del__(self):
         # stop the monitor thread if it is running
@@ -104,6 +111,30 @@ class Node:
             transmission_type = self.od[0x1800 + i][2].value
             if self._syncs % transmission_type == 0:
                 self.send_tpdo(i)
+
+    def _on_pdo(self, cob_id: int, data: bytes, timestamp: float):
+
+        rpdo = self._rpdo_cobid_to_num[cob_id]
+        maps = self.od[0x1600 + rpdo][0].value
+
+        offset = 0
+        for i in range(maps):
+            pdo_map = self.od[0x1600 + rpdo][i + 1].value
+
+            if pdo_map == 0:
+                break  # nothing todo
+
+            pdo_map_bytes = pdo_map.to_bytes(4, "big")
+            index, subindex, size = struct.unpack(">HBB", pdo_map_bytes)
+            size //= 8
+
+            # call sdo callback(s) and convert data to bytes
+            if isinstance(self.od[index], canopen.objectdictionary.Variable):
+                self._node.sdo[index].raw = data[offset: offset+size]
+            else:  # record or array
+                self._node.sdo[index][subindex].raw = data[offset: offset+size]
+
+            offset += size
 
     def send_tpdo(self, tpdo: int):
         """
@@ -216,7 +247,7 @@ class Node:
             self._event.wait(delay - ((monotonic() - start_time) % delay))
             self._network.monitor()
 
-            if self._network.status == CanNetworkState.NETWORK_UP:
+            if self._network.status != CanNetworkState.NETWORK_UP:
                 continue
 
             # send heartbeat
