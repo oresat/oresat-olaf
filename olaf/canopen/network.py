@@ -40,7 +40,11 @@ class CanNetwork:
         self._bus: Union[can.BusABC, None] = None
         self._network: Union[canopen.Network, None] = None
         self._notifier = None
-        self._state = CanNetworkState.NETWORK_UP
+
+        if self.channel == "socketcand":
+            self._state = CanNetworkState.NETWORK_UP
+        else:
+            self._state = CanNetworkState.NETWORK_DOWN
 
         if os.geteuid() != 0:  # running as root
             logger.warning("not running as root, cannot restart CAN bus if it goes down")
@@ -67,14 +71,12 @@ class CanNetwork:
         self._notifier = can.Notifier(self._network.bus, self._network.listeners, 1)
         self._network.notifier = self._notifier
         try:
-            for node in self._nodes:
-                self._network.add_node(node)
             for sub in self._subscriptions:
                 self._network.subscribe(sub[0], sub[1])
-            for cb in self._reset_cbs:
-                cb(self._network)
+            for reset_cb in self._reset_cbs:
+                reset_cb()
         except Exception as e:  # pylint: disable=W0718
-            logger.error(e)
+            logger.exception(e)
 
     def _del(self):
         if self._network is not None:
@@ -156,6 +158,8 @@ class CanNetwork:
 
     def add_reset_callback(self, reset_cb: Callable[[None], None]):
         """Add CAN bus/network reset callback."""
+        if self._network is not None:
+            reset_cb()
         self._reset_cbs.append(reset_cb)
 
     @property
@@ -182,7 +186,6 @@ class CanNetwork:
         """Add a node to the network."""
         if self._network is not None:
             self._network.add_node(node)
-        self._nodes.append(node)
 
     @property
     def channel(self) -> str:

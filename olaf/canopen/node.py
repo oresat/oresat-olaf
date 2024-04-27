@@ -88,6 +88,8 @@ class Node:
         logger.debug(f"fread cache path {self._fread_cache.dir}")
         logger.debug(f"fwrite cache path {self._fwrite_cache.dir}")
 
+        self._network.add_reset_callback(self._setup_node)
+
     def __del__(self):
         # stop the monitor thread if it is running
         if not self._event.is_set():
@@ -162,11 +164,7 @@ class Node:
     def _tpdo_timer_loop(self, tpdo: int) -> bool:
         """Send TPDO for TPDO loop. Can handle network errors."""
 
-        try:
-            self.send_tpdo(tpdo)
-        except NetworkError:
-            pass
-
+        self.send_tpdo(tpdo)
         return True
 
     def _on_rpdo_update_od(self, mapping: canopen.pdo.base.Map):
@@ -193,6 +191,9 @@ class Node:
             self._od.node_id = 0x7C
 
         self._node = canopen.LocalNode(self._od.node_id, self._od)
+        self._network.add_node(self._node)
+        self._node.nmt.start_heartbeat(self._od[0x1017].default)
+        self._node.nmt.state = "OPERATIONAL"
 
         self._node.add_read_callback(self._on_sdo_read)
         self._node.add_write_callback(self._on_sdo_write)
@@ -236,12 +237,9 @@ class Node:
 
         logger.info(f"{self.name} node is starting")
 
-        i = 0
         while not self._event.is_set():
-            self._network.send_message(i, b"\x12\x34", False)
             self._network.monitor()
             self._event.wait(1)
-            i += 1
 
         # stop the node and TPDO timers
         self._destroy_node()

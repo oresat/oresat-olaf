@@ -53,10 +53,7 @@ class MasterNode(Node):
             self._network.subscribe(0x80 + v.node_id, self._on_emergency)
             self._network.subscribe(0x700 + v.node_id, self._on_heartbeat)
 
-        for remote_node in self._remote_nodes.values():
-            self._network.add_node(remote_node)
-
-        self._network.add_reset_callback(self._restart_network())
+        self._network.add_reset_callback(self._restart_network)
 
     def _restart_network(self):
         """Restart the CANopen network"""
@@ -65,6 +62,9 @@ class MasterNode(Node):
             if od == self._od:
                 continue  # skip itself
             self.node_status[key] = NodeHeartbeatInfo(0xFF, 0.0, 0.0)
+
+        for remote_node in self._remote_nodes.values():
+            self._network.add_node(remote_node)
 
     def _on_heartbeat(self, cob_id: int, data: bytes, timestamp: float):
         """Callback on node hearbeat messages."""
