@@ -5,6 +5,7 @@ import struct
 from enum import IntEnum
 from pathlib import Path
 from threading import Event
+from time import monotonic
 from typing import Any, Callable, Dict, Union
 
 import canopen
@@ -13,7 +14,6 @@ from loguru import logger
 from ..canopen.network import CanNetwork, CanNetworkState
 from ..common.daemon import Daemon
 from ..common.oresat_file_cache import OreSatFileCache
-from ..common.timer_loop import TimerLoop
 
 
 class NodeStop(IntEnum):
@@ -44,7 +44,7 @@ class Node:
     - Lets Resources and Services send EMCY messages.
     - Set up the file transfer caches.
     - Starts/stops all Resources and Services.
-    - Sets up all timer-base TPDO threads.
+    - Sets up all timer-base TPDOs.
     - Sets up all RPDO callbacks.
 
     Basically it tries to abstract all the CANopen things as much a possible, while providing a
@@ -69,7 +69,6 @@ class Node:
         self._write_cbs = {}  # type: ignore
         self._syncs = 0
         self._reset = NodeStop.SOFT_RESET
-        self._tpdo_timers = []  # type: ignore
         self._daemons = {}  # type: ignore
 
         if os.geteuid() == 0:  # running as root
@@ -102,7 +101,7 @@ class Node:
         if self._syncs == 241:
             self._syncs = 1
 
-        for i in range(16):
+        for i in range(self.od.device_information.nr_of_TXPDO):
             transmission_type = self.od[0x1800 + i][2].value
             if self._syncs % transmission_type == 0:
                 self.send_tpdo(i)
@@ -125,7 +124,7 @@ class Node:
         if tpdo < 1:
             raise ValueError("TPDO number must be greather than 1")
 
-        if self._network.status == CanNetworkState.NETWORK_UP:
+        if self._network.status != CanNetworkState.NETWORK_UP:
             logger.debug("network is down cannot send an TPDO message")
             return
 
@@ -161,12 +160,6 @@ class Node:
 
         self._network.send_message(cob_id, data, False)
 
-    def _tpdo_timer_loop(self, tpdo: int) -> bool:
-        """Send TPDO for TPDO loop. Can handle network errors."""
-
-        self.send_tpdo(tpdo)
-        return True
-
     def _on_rpdo_update_od(self, mapping: canopen.pdo.base.Map):
         """Handle parsering an RPDO"""
 
@@ -185,7 +178,7 @@ class Node:
                 self._node.sdo[index][subindex].raw = mapping.map[i - 1].get_data()
 
     def _setup_node(self):
-        """Create the CANopen and TPDO timer loops"""
+        """Create the CANopen node."""
 
         if self._od.node_id is None:
             self._od.node_id = 0x7C
@@ -198,29 +191,8 @@ class Node:
         self._node.add_read_callback(self._on_sdo_read)
         self._node.add_write_callback(self._on_sdo_write)
 
-        for i in range(16):
-            if i + 0x1800 not in self.od:
-                continue
-            transmission_type = self.od[0x1800 + i][2].default
-            event_time = self.od[0x1800 + i][5].default
-            if transmission_type in [0xFE, 0xFF] and event_time > 0:
-                timer = TimerLoop(
-                    name=f"TPDO{i + 1}",
-                    loop_func=self._tpdo_timer_loop,
-                    delay=self.od[0x1800 + i][5],
-                    start_delay=self.od[0x1800 + i][3],
-                    args=(i + 1,),
-                )
-                self._tpdo_timers.append(timer)
-                timer.start()
-
     def _destroy_node(self):
-        """Destroy the CANopen and TPDO timer loops"""
-
-        for timer in self._tpdo_timers:
-            timer.stop()
-
-        self._tpdo_timers = []  # remove all
+        """Destroy the CANopen node."""
 
         self._node = None
 
@@ -237,11 +209,31 @@ class Node:
 
         logger.info(f"{self.name} node is starting")
 
+        loops = -1
+        delay_ms = 100
+        delay = delay_ms / 1000
+        start_time = monotonic()
         while not self._event.is_set():
+            loops += 1
+            self._event.wait(delay - ((monotonic() - start_time) % delay))
             self._network.monitor()
-            self._event.wait(1)
 
-        # stop the node and TPDO timers
+            if self._network.status != CanNetworkState.NETWORK_UP:
+                continue
+
+            # send all timer-based TPDOs
+            for i in range(self._od.device_information.nr_of_TXPDO):
+                if i + 0x1800 not in self.od:
+                    continue
+                transmission_type = self.od[0x1800 + i][2].value
+                event_time = self.od[0x1800 + i][5].value
+                if (
+                    transmission_type in [0xFE, 0xFF]
+                    and event_time != 0
+                    and loops % (event_time // delay_ms) == 0
+                ):
+                    self.send_tpdo(i + 1)
+
         self._destroy_node()
 
         logger.info(f"{self.name} node has ended")
