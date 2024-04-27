@@ -29,10 +29,6 @@ class NodeStop(IntEnum):
     """Just power off the system."""
 
 
-class NetworkError(Exception):
-    """Error with the CANopen network / bus"""
-
-
 class Node:
     """
     OreSat CANopen Node class
@@ -61,10 +57,10 @@ class Node:
             The CANopen ObjectDictionary
         """
 
+        self._event = Event()
         self._od = od
         self._node: canopen.LocalNode = None
         self._network: CanNetwork = network
-        self._event = Event()
         self._read_cbs = {}  # type: ignore
         self._write_cbs = {}  # type: ignore
         self._syncs = 0
@@ -87,6 +83,9 @@ class Node:
         logger.debug(f"fread cache path {self._fread_cache.dir}")
         logger.debug(f"fwrite cache path {self._fwrite_cache.dir}")
 
+        self._start_time = monotonic()
+        self._network.monitor()
+        self._first_network_reset = True
         self._network.add_reset_callback(self._setup_node)
 
     def __del__(self):
@@ -114,11 +113,6 @@ class Node:
         ----------
         tpdo: int
             TPDO number to send, should be between 1 and 16.
-
-        Raises
-        ------
-        NetworkError
-            Cannot send a TPDO message when the network is down.
         """
 
         if tpdo < 1:
@@ -185,11 +179,15 @@ class Node:
 
         self._node = canopen.LocalNode(self._od.node_id, self._od)
         self._network.add_node(self._node)
-        self._node.nmt.start_heartbeat(self._od[0x1017].default)
         self._node.nmt.state = "OPERATIONAL"
 
         self._node.add_read_callback(self._on_sdo_read)
         self._node.add_write_callback(self._on_sdo_write)
+
+        if not self._first_network_reset or monotonic() - self._start_time > 5:
+            self.send_emcy(0x8140)
+        else:
+            self._first_network_reset = False
 
     def _destroy_node(self):
         """Destroy the CANopen node."""
@@ -218,8 +216,13 @@ class Node:
             self._event.wait(delay - ((monotonic() - start_time) % delay))
             self._network.monitor()
 
-            if self._network.status != CanNetworkState.NETWORK_UP:
+            if self._network.status == CanNetworkState.NETWORK_UP:
                 continue
+
+            # send heartbeat
+            event_time = self.od[0x1017].value
+            if loops % (event_time // delay_ms) == 0:
+                self._network.send_message(0x700 + self.od.node_id, b"\x05", False)
 
             # send all timer-based TPDOs
             for i in range(self._od.device_information.nr_of_TXPDO):
@@ -298,31 +301,25 @@ class Node:
         if write_cb is not None:
             self._write_cbs[index, subindex] = write_cb
 
-    def send_emcy(self, code: int, register: int = 0, data: bytes = b""):
+    def send_emcy(self, code: int, data: bytes = b""):
         """
-        Send a EMCY message. Wrapper on canopen's `EmcyProducer.send`.
+        Send a EMCY message.
 
         Parameters
         ----------
         code: int
             The EMCY code.
-        register: int
-            Optional error register value in EMCY message (uint8). See Object 1001 def for bit
-            field.
-        manufacturer_code: bytes
-            Optional manufacturer error code (up to 5 bytes).
-
-        Raises
-        ------
-        NetworkError
-            Cannot send a EMCY message when the network is down.
+        data: bytes
+            Optional manufacturer error code/data (up to 5 bytes).
         """
 
-        if self._network.status == CanNetworkState.NETWORK_UP:
-            logger.debug("network is down cannot send an EMCY message")
-            return
+        if len(data) > 5:
+            raise ValueError("data must be 5 or less bytes")
 
-        self._node.emcy.send(code, register, data)
+        frame = code.to_bytes(2, "little") + self.od[0x1001].value.to_bytes(1, "little") + data
+        frame += b"\x00" * (5 - len(data))
+        self._network.send_message(self.od.node_id + 0x80, frame)
+        logger.error(f"sent emcy 0x{code:04X} {data.hex()}")
 
     def _on_sdo_read(self, index: int, subindex: int, od: canopen.objectdictionary.Variable):
         """

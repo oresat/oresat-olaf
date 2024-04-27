@@ -11,10 +11,18 @@ import psutil
 from loguru import logger
 
 
+class CanNetworkError(Exception):
+    """Error with the CANopen network / bus"""
+
+
+NetworkError = CanNetworkError  # for backward compatibility
+
+
 class CanNetworkState(IntEnum):
     """CAN network states."""
 
     NETWORK_NO_BUS = auto()
+    NETWORK_INIT = auto()
     NETWORK_DOWN = auto()
     NETWORK_UP = auto()
 
@@ -34,23 +42,20 @@ class CanNetwork:
         self._socketcand_host = socketcand_host
         self._socketcand_port = socketcand_port
 
-        self._reset_cbs: list[Callable[[None], None]] = []
+        self._reset_cbs: list[Callable[[], None]] = []
         self._nodes: list[canopen.Node] = []
         self._subscriptions: list[tuple[int, Callable[[int, bytes, float], None]]] = []
         self._bus: Union[can.BusABC, None] = None
         self._network: Union[canopen.Network, None] = None
         self._notifier = None
 
-        if self.channel == "socketcand":
-            self._state = CanNetworkState.NETWORK_UP
-        else:
-            self._state = CanNetworkState.NETWORK_DOWN
+        self._state = CanNetworkState.NETWORK_INIT
 
         if os.geteuid() != 0:  # running as root
             logger.warning("not running as root, cannot restart CAN bus if it goes down")
 
-        self.first_no_bus = True  # flag to only log error message on first error
-        self.first_bus_down = True  # flag to only log error message on first error
+        self._first_no_bus = True  # flag to only log error message on _first error
+        self._first_bus_down = True  # flag to only log error message on _first error
 
     def __del__(self):
         self._del()
@@ -66,6 +71,7 @@ class CanNetwork:
             )
         except Exception as e:  # pylint: disable=W0718
             logger.info(str(e))
+            return
 
         self._network = canopen.Network(self._bus)
         self._notifier = can.Notifier(self._network.bus, self._network.listeners, 1)
@@ -126,18 +132,21 @@ class CanNetwork:
         bus = psutil.net_if_stats().get(self._channel)
         bus_exist = bus is not None
 
-        if self._state == CanNetworkState.NETWORK_NO_BUS:
-            if self.first_no_bus:
+        if self._state == CanNetworkState.NETWORK_INIT:
+            self._init()
+            self._state = CanNetworkState.NETWORK_UP
+        elif self._state == CanNetworkState.NETWORK_NO_BUS:
+            if self._first_no_bus:
                 logger.critical(f"{self._channel} does not exists, nothing OLAF can do")
-                self.first_no_bus = False
+                self._first_no_bus = False
             if bus_exist:
                 self._state = CanNetworkState.NETWORK_DOWN
         elif self._state == CanNetworkState.NETWORK_DOWN:
-            if self.first_bus_down:
+            if self._first_bus_down:
                 logger.error(f"{self._channel} is down")
-                self.first_bus_down = False
+                self._first_bus_down = False
             if not bus_exist:
-                self.first_no_bus = True  # reset flag
+                self._first_no_bus = True  # reset flag
                 self._del()
                 self._state = CanNetworkState.NETWORK_NO_BUS
             elif not bus.isup:
@@ -148,15 +157,15 @@ class CanNetwork:
                 self._state = CanNetworkState.NETWORK_UP
         elif self._state == CanNetworkState.NETWORK_UP:
             if not bus_exist:
-                self.first_no_bus = True  # reset flag
+                self._first_no_bus = True  # reset flag
                 self._del()
                 self._state = CanNetworkState.NETWORK_NO_BUS
             elif not bus.isup:
-                self.first_bus_down = True  # reset flag
+                self._first_bus_down = True  # reset flag
                 self._del()
                 self._state = CanNetworkState.NETWORK_DOWN
 
-    def add_reset_callback(self, reset_cb: Callable[[None], None]):
+    def add_reset_callback(self, reset_cb: Callable[[], None]):
         """Add CAN bus/network reset callback."""
         if self._network is not None:
             reset_cb()
@@ -169,12 +178,15 @@ class CanNetwork:
 
     def send_message(self, cob_id: int, data: bytes, raise_error: bool = True):
         """Send a CAN message."""
+
         try:
-            if self._network is not None:
-                self._network.send_message(cob_id, data)
+            if self._bus is not None:
+                self._bus.send(can.Message(arbitration_id=cob_id, data=data, is_extended_id=False))
+            elif raise_error:
+                raise CanNetworkError("can network is down")
         except Exception as e:  # pylint: disable=W0718
             if raise_error:
-                raise e
+                raise CanNetworkError(str(e)) from e
 
     def subscribe(self, cob_id: int, callback: Callable[[int, bytes, float], None]):
         """Subscribe to CAN messages by the cob_id."""

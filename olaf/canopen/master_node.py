@@ -7,8 +7,8 @@ from typing import Any, Dict, Union
 import canopen
 from loguru import logger
 
-from ..canopen.network import CanNetwork, CanNetworkState
-from .node import NetworkError, Node
+from ..canopen.network import CanNetwork, CanNetworkError, CanNetworkState
+from .node import Node
 
 NodeHeartbeatInfo = namedtuple("NodeHeartbeatInfo", ["state", "timestamp", "time_since_boot"])
 
@@ -84,17 +84,9 @@ class MasterNode(Node):
     def send_sync(self):
         """
         Send a CANopen SYNC message.
-
-        Raises
-        ------
-        NetworkError
-            Cannot send a SYNC message when the network is down.
         """
 
-        if self._network.status == CanNetworkState.NETWORK_UP:
-            return
-
-        self._network.sync.transmit()
+        self._network.send_message(0x80, b"", False)
 
     def sdo_read(self, key: Any, index: Union[int, str], subindex: Union[int, str]) -> Any:
         """
@@ -111,7 +103,7 @@ class MasterNode(Node):
 
         Raises
         ------
-        NetworkError
+        CanNetworkError
             Cannot send a SDO read message when the network is down.
         canopen.SdoError
             Error with the SDO.
@@ -123,7 +115,7 @@ class MasterNode(Node):
         """
 
         if self._network.status == CanNetworkState.NETWORK_UP:
-            raise NetworkError("network is down cannot send an SDO read message")
+            raise CanNetworkError("network is down cannot send an SDO read message")
 
         if subindex == 0 and isinstance(self._od_db[key][index], canopen.objectdictionary.Variable):
             value = self._remote_nodes[key].sdo[index].raw
@@ -149,14 +141,14 @@ class MasterNode(Node):
 
         Raises
         ------
-        NetworkError
+        CanNetworkError
             Cannot send a SDO write message when the network is down.
         canopen.SdoError
             Error with the SDO.
         """
 
         if self._network.status == CanNetworkState.NETWORK_UP:
-            raise NetworkError("network is down cannot send an SDO write message")
+            raise CanNetworkError("network is down cannot send an SDO write message")
 
         if subindex == 0 and isinstance(self._od_db[key][index], canopen.objectdictionary.Variable):
             self._remote_nodes[key].sdo[index].raw = value

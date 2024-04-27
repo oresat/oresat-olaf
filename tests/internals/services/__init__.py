@@ -1,6 +1,5 @@
 """Mock node for testing services."""
 
-import can
 import canopen
 from oresat_configs import OreSatConfig, OreSatId
 

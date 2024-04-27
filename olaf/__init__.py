@@ -18,8 +18,8 @@ from .board.gpio import GPIO_HIGH, GPIO_IN, GPIO_LOW, GPIO_OUT, Gpio, GpioError
 from .board.pru import Pru, PruError, PruState
 from .canopen.ecss import scet_int_from_time, scet_int_to_time, utc_int_from_time, utc_int_to_time
 from .canopen.master_node import MasterNode
-from .canopen.network import CanNetwork, CanNetworkState
-from .canopen.node import NetworkError, Node, NodeStop
+from .canopen.network import CanNetwork, CanNetworkError, CanNetworkState, NetworkError
+from .canopen.node import Node, NodeStop
 from .common.daemon import Daemon, DaemonState
 from .common.oresat_file import OreSatFile, new_oresat_file
 from .common.oresat_file_cache import OreSatFileCache

@@ -1,6 +1,5 @@
 """Tests for Resources."""
 
-import can
 import canopen
 from oresat_configs import OreSatConfig, OreSatId
 
