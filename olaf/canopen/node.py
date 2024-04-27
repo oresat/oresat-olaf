@@ -112,8 +112,7 @@ class Node:
             if self._syncs % transmission_type == 0:
                 self.send_tpdo(i)
 
-    def _on_pdo(self, cob_id: int, data: bytes, timestamp: float):
-
+    def _on_pdo(self, cob_id: int, data: bytes, timestamp: float):  # pylint: disable=W0613
         rpdo = self._rpdo_cobid_to_num[cob_id]
         maps = self.od[0x1600 + rpdo][0].value
 
@@ -130,9 +129,9 @@ class Node:
 
             # call sdo callback(s) and convert data to bytes
             if isinstance(self.od[index], canopen.objectdictionary.Variable):
-                self._node.sdo[index].raw = data[offset: offset+size]
+                self._node.sdo[index].raw = data[offset : offset + size]
             else:  # record or array
-                self._node.sdo[index][subindex].raw = data[offset: offset+size]
+                self._node.sdo[index][subindex].raw = data[offset : offset + size]
 
             offset += size
 
