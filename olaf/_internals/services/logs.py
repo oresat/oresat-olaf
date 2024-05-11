@@ -1,4 +1,4 @@
-"""Service for getting system logs"""
+"""Service for the getting system logs over CAN."""
 
 import os
 import tarfile
@@ -12,9 +12,7 @@ TMP_LOGS_FILE = "/tmp/olaf.log"
 
 
 def logger_tmp_file_setup(level: str):
-    """Congfigure logger to save to tmp file for LogsService"""
-
-    # log file for log service (overrides each time app starts)
+    """Get the boot log file handler and clean up temp log file used by LogsService."""
     if os.path.isfile(TMP_LOGS_FILE):
         os.remove(TMP_LOGS_FILE)
     logger.add(TMP_LOGS_FILE, level=level, backtrace=True)
@@ -27,16 +25,14 @@ class LogsService(Service):
         super().__init__()
 
         self.logs_dir_path = "/var/log/journal/"
-        self.make_file_obj = None
 
     def on_start(self):
-        self.make_file_obj = self.node.od["logs"]["make_file"]
-        self.make_file_obj.value = False  # make sure this is False by default
+        self.node.od_write("logs", "make_file", False)  # make sure this is False by default
 
         self.node.add_sdo_callbacks("logs", "since_boot", self.on_read_since_boot, None)
 
     def on_loop(self):
-        if self.make_file_obj.value:
+        if self.node.od_read("logs", "make_file"):
             logger.info("Making a copy of logs")
 
             tar_file_path = "/tmp/" + new_oresat_file("logs", ext=".tar.xz")
@@ -46,7 +42,7 @@ class LogsService(Service):
                     t.add(self.logs_dir_path + "/" + i, arcname=i)
 
             self.node.fread_cache.add(tar_file_path, consume=True)
-            self.make_file_obj.value = False
+            self.node.od_write("logs", "make_file", False)
 
         self.sleep(0.1)
 

@@ -5,9 +5,9 @@ from time import monotonic
 from typing import Any, Dict, Union
 
 import canopen
-from loguru import logger
 from canopen.sdo import SdoArray, SdoRecord, SdoVariable
 from canopen.sdo.exceptions import SdoError
+from loguru import logger
 
 from ..canopen.network import CanNetwork, CanNetworkError, CanNetworkState
 from .node import Node

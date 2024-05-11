@@ -1,14 +1,14 @@
 """Service for running OS (bash) commands over CAN bus."""
 
 import subprocess
-from enum import IntEnum
+from enum import Enum
 
 from loguru import logger
 
 from ...common.service import Service
 
 
-class OsCommandState(IntEnum):
+class OsCommandState(Enum):
     """Valid states for OS command as defined by CiA 301 specs."""
 
     NO_ERROR_NO_REPLY = 0x00
@@ -27,35 +27,32 @@ class OsCommandService(Service):
         self.command = ""  # internal to prevent overwriting it when running a command
         self.reply_obj_max_len = 10000
         self.failed = False
-        self.state_obj = None
-        self.reply_obj = None
 
     def on_start(self):
-        self.state_obj = self.node.od["os_command"]["status"]
-        self.state_obj.value = OsCommandState.NO_ERROR_NO_REPLY.value
-        self.reply_obj = self.node.od["os_command"]["reply"]
-        self.reply_obj.value = b""
+        self._set_status_and_reply(OsCommandState.ERROR_NO_REPLY.value, b"")
         self.node.add_sdo_callbacks(
             "os_command", "command", self.on_command_read, self.on_command_write
         )
 
     def on_loop(self):
-        if self.state_obj.value == OsCommandState.EXECUTING:
+        if self.node.od_read("os_command", "status") == OsCommandState.EXECUTING.value:
             logger.info("running os command: " + self.command)
 
             out = subprocess.run(self.command, capture_output=True, shell=True, check=False)
             if out.returncode != 0:  # error
-                self.reply_obj.value = out.stderr[: self.reply_obj_max_len]
-                if self.reply_obj.value:
-                    self.state_obj.value = OsCommandState.ERROR_REPLY.value
+                reply = out.stderr[: self.reply_obj_max_len]
+                if reply:
+                    status = OsCommandState.ERROR_REPLY.value
                 else:
-                    self.state_obj.value = OsCommandState.ERROR_NO_REPLY.value
+                    status = OsCommandState.ERROR_NO_REPLY.value
             else:  # no error
-                self.reply_obj.value = out.stdout[: self.reply_obj_max_len]
-                if self.reply_obj.value:
-                    self.state_obj.value = OsCommandState.NO_ERROR_REPLY.value
+                reply = out.stdout[: self.reply_obj_max_len]
+                if reply:
+                    status = OsCommandState.NO_ERROR_REPLY.value
                 else:
-                    self.state_obj.value = OsCommandState.NO_ERROR_NO_REPLY.value
+                    status = OsCommandState.NO_ERROR_NO_REPLY.value
+
+            self._set_status_and_reply(status, reply)
 
             logger.info(f"os command has completed; ret code: {out.returncode}")
 
@@ -65,9 +62,8 @@ class OsCommandService(Service):
         """On loop error set obj back to default."""
 
         self.failed = True
-        self.command = b""
-        self.state_obj.value = OsCommandState.ERROR_NO_REPLY
-        self.reply_obj.value = b""
+        self.command = ""
+        self._set_status_and_reply(OsCommandState.ERROR_NO_REPLY.value, b"")
         logger.exception(error)
 
     def on_command_read(self) -> bytes:
@@ -76,7 +72,8 @@ class OsCommandService(Service):
 
     def on_command_write(self, command: bytes):
         """SDO write callback for command write."""
-        if self.state_obj.value == OsCommandState.EXECUTING:
+        logger.error("hi")
+        if self.node.od_read("os_command", "status") == OsCommandState.EXECUTING.value:
             logger.error("cannot start another os command when one is running")
             return
         if self.failed:
@@ -84,5 +81,8 @@ class OsCommandService(Service):
             return
 
         self.command = command.decode()
-        self.state_obj.value = OsCommandState.EXECUTING.value
-        self.reply_obj.value = b""
+        self._set_status_and_reply(OsCommandState.EXECUTING.value, b"")
+
+    def _set_status_and_reply(self, status: int, reply: bytes):
+        self.node.od_write("os_command", "status", status)
+        self.node.od_write("os_command", "reply", reply)

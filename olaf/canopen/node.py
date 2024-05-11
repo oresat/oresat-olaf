@@ -213,8 +213,6 @@ class Node:
                 ):
                     self.send_tpdo(i + 1)
 
-            self.send_emcy(loops)
-
         self._destroy_node()
 
         logger.info(f"{self.name} node has ended")
@@ -592,17 +590,17 @@ class Node:
             if value_type != int:
                 raise TypeError(make_error_value("int"))
             if obj.min != 0 and obj.max != 0:
-                if value > obj.max:
+                if obj.max is not None and value > obj.max:
                     raise ValueError(f"value {value!r} too high (high limit {obj.max})")
-                if value < obj.min:
+                if obj.min is not None and value < obj.min:
                     raise ValueError(f"value {value!r} too low (low limit {obj.min})")
         elif obj.data_type in FLOAT_TYPES:
             if not isinstance(value, int):
                 raise TypeError(make_error_value("float"))
             if obj.min != 0 and obj.max != 0:
-                if value > obj.max:
+                if obj.max is not None and value > obj.max:
                     raise ValueError(f"value {value!r} too high (high limit {obj.max})")
-                if value < obj.min:
+                if obj.min is not None and value < obj.min:
                     raise ValueError(f"value {value!r} too low (low limit {obj.min})")
         elif obj.data_type == VISIBLE_STRING and not isinstance(value, str):
             raise TypeError(make_error_value("str"))

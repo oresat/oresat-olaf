@@ -43,14 +43,14 @@ class TestOsCommand(unittest.TestCase):
         )
         self.assertIsNotNone(self.app.sdo_read(self.index, self.subindex_reply))
 
-        self.run_os_command("ls".encode())
-        self.assertEqual(
-            self.app.sdo_read(self.index, self.subindex_status), OsCommandState.NO_ERROR_REPLY
-        )
-        self.assertIsNotNone(self.app.sdo_read(self.index, self.subindex_reply))
+        self.run_os_command(b"ls")
+        status = self.app.sdo_read(self.index, self.subindex_status)
+        self.assertEqual(OsCommandState(status), OsCommandState.NO_ERROR_REPLY)
+        reply = self.app.sdo_read(self.index, self.subindex_reply)
+        self.assertIsNotNone(reply)
 
-        self.run_os_command("invalid-bash-command".encode())
-        self.assertEqual(
-            self.app.sdo_read(self.index, self.subindex_status), OsCommandState.ERROR_REPLY
-        )
-        self.assertIsNotNone(self.app.sdo_read(self.index, self.subindex_reply))
+        self.run_os_command(b"invalid-bash-command")
+        status = self.app.sdo_read(self.index, self.subindex_status)
+        self.assertEqual(OsCommandState(status), OsCommandState.ERROR_REPLY)
+        reply = self.app.sdo_read(self.index, self.subindex_reply)
+        self.assertIsNotNone(reply)

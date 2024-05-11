@@ -1,6 +1,5 @@
 """Service for interacting with the updater"""
 
-import canopen
 from loguru import logger
 
 from ...common.service import Service
@@ -12,19 +11,13 @@ class UpdaterService(Service):
 
     def __init__(self, updater: Updater):
         super().__init__()
-
         self._updater = updater
-        self.update_obj: canopen.objectdictionary.Variable = None
-        self.make_status_obj: canopen.objectdictionary.Variable = None
 
     def on_start(self):
-        record = self.node.od["updater"]
-        self.update_obj = record["update"]
-        self.make_status_obj = record["make_status_file"]
 
         # make sure defaults are set correctly
-        self.update_obj.value = False
-        self.make_status_obj.value = False
+        self.node.od_write("updater", "update", False)
+        self.node.od_write("updater", "make_status_file", False)
 
         self.node.add_sdo_callbacks("updater", "status", self.on_read_status, None)
         self.node.add_sdo_callbacks("updater", "cache_files_json", self.on_read_cache_json, None)
@@ -38,18 +31,18 @@ class UpdaterService(Service):
             logger.info(f"updater moved {i.name} into update cache")
 
         # check for flag to start a update
-        if self.update_obj.value:
+        if self.node.od_read("updater", "update"):
             try:
                 self._updater.update()
             except UpdaterError as e:
                 logger.exception(e)
-            self.update_obj.value = False
+            self.node.od_write("updater", "update", False)
 
         # check for flag to make a status archive
-        if self.make_status_obj.value:
+        if self.node.od_read("updater", "make_status_file"):
             status_archive_file_path = self._updater.make_status_archive()
             self.node.fread_cache.add(status_archive_file_path, consume=True)
-            self.make_status_obj.value = False
+            self.node.od_write("updater", "make_status_file", False)
 
         self.sleep(0.1)
 
