@@ -142,6 +142,7 @@
         document.getElementById("varEngValue").textContent = obj.eng_value;
         document.getElementById("varUnit").textContent = obj.unit;
         document.getElementById("objNewValue").value = obj.value;
+        localStorage.setItem("subindex", obj.name);
       } else {
         document.getElementById("variableObj").style.display = "none";
         document.getElementById("arrayRecordObj").style.display = "inline";
@@ -150,6 +151,7 @@
         document.getElementById("objName").textContent = obj.name;
         document.getElementById("objDesc").textContent = obj.description;
         document.getElementById("objSubindexes").textContent = Object.keys(obj.subindexes).length;
+        localStorage.removeItem("subindex");
       }
     }
 
@@ -180,6 +182,8 @@
       const index = parseInt(indexSelect.value, 16);
       const obj = objects[index];
 
+      localStorage.setItem("index", obj.name);
+
       // clear select options
       subindexSelect.options.length = 0
 
@@ -198,6 +202,9 @@
           opt.value = subindexHex;
           opt.innerHTML = `${subindexHex} - ${objects[index].subindexes[subindex].name}`;
           subindexSelect.appendChild(opt);
+          if (objects[index].subindexes[subindex].name === localStorage.getItem("subindex")) {
+            subindexSelect.value = subindexHex;
+          }
         }
       }
       updateData();
@@ -221,17 +228,20 @@
       await readAllObjects();
 
       const indexSelect = document.getElementById("indexSelect");
-      indexSelect.onchange = updateSubindexSelect
+      indexSelect.onchange = updateSubindexSelect;
       for (const index in objects) {
         let indexHex = "0x" + parseInt(index).toString(16).toUpperCase();
         let opt = document.createElement("option");
         opt.value = indexHex;
         opt.innerHTML = `${indexHex} - ${objects[index].name}`;
         indexSelect.appendChild(opt);
+        if (objects[index].name === localStorage.getItem("index")) {
+          indexSelect.value = indexHex;
+        }
       }
 
       const subindexSelect = document.getElementById("subindexSelect");
-      subindexSelect.onchange = updateData
+      subindexSelect.onchange = updateData;
 
       updateSubindexSelect();
     }
