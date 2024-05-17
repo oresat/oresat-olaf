@@ -64,6 +64,14 @@
         <td>Unit</td>
         <td><span id="varUnit"></span></td>
       </tr>
+      <tr>
+        <td>Low Limit</td>
+        <td><span id="varLowLimit"></span></td>
+      </tr>
+      <tr>
+        <td>High Limit</td>
+        <td><span id="varHighLimit"></span></td>
+      </tr>
     </table>
     <br/>
     <label for="objNewValue">New Value:</label>
@@ -141,6 +149,8 @@
         document.getElementById("varScaling").textContent = obj.scale_factor;
         document.getElementById("varEngValue").textContent = obj.eng_value;
         document.getElementById("varUnit").textContent = obj.unit;
+        document.getElementById("varLowLimit").textContent = obj.low_limit;
+        document.getElementById("varHighLimit").textContent = obj.high_limit;
         document.getElementById("objNewValue").value = obj.value;
         localStorage.setItem("subindex", obj.name);
       } else {

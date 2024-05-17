@@ -368,6 +368,8 @@ def _object_to_dict(
                 data["eng_value"] = obj.factor * value
         data["subindex"] = obj.subindex
         data["unit"] = obj.unit
+        data["low_limit"] = obj.min or ""
+        data["high_limit"] = obj.max or ""
     elif isinstance(obj, canopen.objectdictionary.Array):
         data["object_type"] = "ARRAY"
         data["subindexes"] = {sub: _object_to_dict(index, sub, add_values) for sub in obj}
