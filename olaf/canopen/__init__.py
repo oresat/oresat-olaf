@@ -80,6 +80,8 @@ class EmcyCode(IntEnum):
 
 
 class OdDataType(IntEnum):
+    """Object dictionary data types defined by CiA 301."""
+
     BOOLEAN = 0x0001
     INTEGER8 = 0x0002
     INTEGER16 = 0x0003
@@ -95,7 +97,9 @@ class OdDataType(IntEnum):
     INTEGER64 = 0x0015
     UNSIGNED64 = 0x001B
 
+    @property
     def is_int(self) -> bool:
+        """bool: Check if type is a integer type."""
         return self.value in [
             self.INTEGER8,
             self.INTEGER16,
@@ -108,7 +112,9 @@ class OdDataType(IntEnum):
         ]
 
     def is_float(self) -> bool:
+        """bool: Check if type is a float type."""
         return self.value in [self.REAL32, self.REAL64]
 
     def is_str(self) -> bool:
+        """bool: Check if type is a str type."""
         return self.value in [self.VISIBLE_STRING, self.OCTET_STRING]

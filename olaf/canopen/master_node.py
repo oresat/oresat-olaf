@@ -6,10 +6,9 @@ from typing import Any, Dict, Union
 
 import canopen
 from canopen.sdo import SdoArray, SdoRecord, SdoVariable
-from canopen.sdo.exceptions import SdoError
 from loguru import logger
 
-from ..canopen.network import CanNetwork, CanNetworkError, CanNetworkState
+from ..canopen.network import CanNetwork
 from .node import Node
 
 NodeHeartbeatInfo = namedtuple("NodeHeartbeatInfo", ["state", "timestamp", "time_since_boot"])
@@ -90,73 +89,6 @@ class MasterNode(Node):
 
         self._network.send_message(0x80, b"", False)
 
-    def sdo_read(self, key: Any, index: Union[int, str], subindex: Union[int, str]) -> Any:
-        """
-        Read a value from a remote node's object dictionary using an SDO.
-
-        Parameters
-        ----------
-        key: Any
-            The dict key for the node to read from.
-        index: int or str
-            The index to read from.
-        subindex: int or str
-            The subindex to read from.
-
-        Raises
-        ------
-        CanNetworkError
-            Cannot send a SDO read message when the network is down.
-        canopen.SdoError
-            Error with the SDO.
-
-        Returns
-        -------
-        Any
-            The value read.
-        """
-
-        if self._network.status == CanNetworkState.NETWORK_UP:
-            raise CanNetworkError("network is down cannot send an SDO read message")
-
-        if subindex == 0 and isinstance(self._od_db[key][index], canopen.objectdictionary.Variable):
-            value = self._remote_nodes[key].sdo[index].raw
-        else:
-            value = self._remote_nodes[key].sdo[index][subindex].raw
-
-        return value
-
-    def sdo_write(self, key: Any, index: int, subindex: int, value: Any):
-        """
-        Write a value to a remote node's object dictionary using an SDO.
-
-        Parameters
-        ----------
-        key: Any
-            The dict key for the  node to write to.
-        index: int
-            The index to write to.
-        subindex: int
-            The subindex to write to.
-        value: Any
-            The value to write.
-
-        Raises
-        ------
-        CanNetworkError
-            Cannot send a SDO write message when the network is down.
-        canopen.SdoError
-            Error with the SDO.
-        """
-
-        if self._network.status == CanNetworkState.NETWORK_UP:
-            raise CanNetworkError("network is down cannot send an SDO write message")
-
-        if subindex == 0 and isinstance(self._od_db[key][index], canopen.objectdictionary.Variable):
-            self._remote_nodes[key].sdo[index].raw = value
-        else:
-            self._remote_nodes[key].sdo[index][subindex].raw = value
-
     @property
     def remote_nodes(self) -> dict[Any, canopen.RemoteNode]:
         """dict[Any, canopen.RemoteNode]: All other node as remote node."""
@@ -167,7 +99,7 @@ class MasterNode(Node):
         """dict[Any, canopen.ObjectDictionary]: All other node ODs."""
         return self._od_db
 
-    def sdo_get_obj(
+    def _sdo_get_obj(
         self, key: Any, index: Union[int, str], subindex: Union[int, str, None]
     ) -> [SdoVariable, SdoArray, SdoRecord]:
 
@@ -194,7 +126,7 @@ class MasterNode(Node):
         ------
         NetworkError
             Cannot send a SDO read message when the network is down.
-        SdoError
+        canopen.sdo.exceptions.SdoError
             Error with the SDO.
 
         Returns
@@ -203,7 +135,7 @@ class MasterNode(Node):
             The value read.
         """
 
-        return self.sdo_get_obj(key, index, subindex).phys
+        return self._sdo_get_obj(key, index, subindex).phys
 
     def sdo_read_bitfield(
         self, key: Any, index: Union[int, str], subindex: Union[int, str, None], field: str
@@ -224,7 +156,7 @@ class MasterNode(Node):
         ------
         NetworkError
             Cannot send a SDO read message when the network is down.
-        SdoError
+        canopen.sdo.exceptions.SdoError
             Error with the SDO.
 
         Returns
@@ -233,7 +165,7 @@ class MasterNode(Node):
             The field value.
         """
 
-        obj = self.sdo_get_obj(key, index, subindex)
+        obj = self._sdo_get_obj(key, index, subindex)
         bits = obj.od.bit_definitions[field]
 
         value = 0
@@ -262,7 +194,7 @@ class MasterNode(Node):
         ------
         NetworkError
             Cannot send a SDO read message when the network is down.
-        SdoError
+        canopen.sdo.exceptions.SdoError
             Error with the SDO.
 
         Returns
@@ -271,7 +203,7 @@ class MasterNode(Node):
             The enum str value.
         """
 
-        obj = self.sdo_get_obj(key, index, subindex)
+        obj = self._sdo_get_obj(key, index, subindex)
         obj_value = obj.phys
         return obj.od.value_descriptions[obj_value]
 
@@ -300,11 +232,11 @@ class MasterNode(Node):
         ------
         NetworkError
             Cannot send a SDO write message when the network is down.
-        canopen.SdoError
+        canopen.sdo.exceptions.SdoError
             Error with the SDO.
         """
 
-        obj = self.sdo_get_obj(key, index, subindex)
+        obj = self._sdo_get_obj(key, index, subindex)
         obj.phys = value
 
     def sdo_write_bitfield(
@@ -334,14 +266,12 @@ class MasterNode(Node):
         Raises
         ------
         NetworkError
-            Cannot send a SDO write message when the network is down.
-        SdoError
+            Cannot send a SDO read message when the network is down.
+        canopen.sdo.exceptions.SdoError
             Error with the SDO.
         """
 
-        obj = self.sdo_get_obj(key, index, subindex)
-
-        obj = self.sdo_get_obj(key, index, subindex)
+        obj = self._sdo_get_obj(key, index, subindex)
         bits = obj.od.bit_definitions[field]
         offset = min(bits)
 
@@ -374,12 +304,12 @@ class MasterNode(Node):
         Raises
         ------
         NetworkError
-            Cannot send a SDO write message when the network is down.
-        SdoError
+            Cannot send a SDO read message when the network is down.
+        canopen.sdo.exceptions.SdoError
             Error with the SDO.
         """
 
-        obj = self.sdo_get_obj(key, index, subindex)
+        obj = self._sdo_get_obj(key, index, subindex)
         tmp = {d: v for v, d in obj.od.value_descriptions}
         obj.phys = tmp[value]
 
@@ -396,8 +326,10 @@ class MasterNode(Node):
 
         Raises
         ------
+        ValueError
+            Invalud rpdo value.
         NetworkError
-            Cannot send a RPDO message when the network is down.
+            Cannot send a RPDO read message when the network is down.
         """
 
         if rpdo < 1:

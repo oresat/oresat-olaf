@@ -25,7 +25,7 @@ class MockNode(Node):
 
         self._setup_node()
 
-    def send_tpdo(self, tpdo: int):
+    def send_tpdo(self, tpdo: int, raise_error: bool = True):
         pass  # override to do nothing
 
 
