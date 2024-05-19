@@ -52,25 +52,25 @@
         <td>Value</td>
         <td><span id="varValue"></span></td>
       </tr>
-      <tr>
-        <td>Scale Factor</td>
-        <td><span id="varScaling"></span></td>
-      </tr>
-      <tr>
-        <td>Engineering Value</td>
-        <td><span id="varEngValue"></span></td>
-      </tr>
-      <tr>
+      <tr id="varUnitRow">
         <td>Unit</td>
         <td><span id="varUnit"></span></td>
       </tr>
-      <tr>
+      <tr id="varLowLimitRow">
         <td>Low Limit</td>
         <td><span id="varLowLimit"></span></td>
       </tr>
-      <tr>
+      <tr id="varHighLimitRow">
         <td>High Limit</td>
         <td><span id="varHighLimit"></span></td>
+      </tr>
+      <tr id="varScalingRow">
+        <td>Scale Factor</td>
+      <td><span id="varScaling"></span></td>
+      </tr>
+      <tr id="varEngValueRow">
+        <td>Engineering Value</td>
+        <td><span id="varEngValue"></span></td>
       </tr>
     </table>
     <br/>
@@ -79,7 +79,7 @@
     <button id="setObjectValueButton" onclick="setObjectValue()">Change</button>
     <br/>
     <br/>
-    <small>* Access premissions are be bypassed by REST API for testing/integration purposes. They are inforce over the CAN bus.</small>
+    <small>* Access premissions are be bypassed by REST API for testing/integration purposes. They are inforced over the CAN bus.</small>
   </div>
   <div id="arrayRecordObj">
     <table>
@@ -146,11 +146,24 @@
         document.getElementById("varDataType").textContent = obj.data_type;
         document.getElementById("varAccessType").textContent = obj.access_type;
         document.getElementById("varValue").textContent = obj.value;
-        document.getElementById("varScaling").textContent = obj.scale_factor;
-        document.getElementById("varEngValue").textContent = obj.eng_value;
-        document.getElementById("varUnit").textContent = obj.unit;
-        document.getElementById("varLowLimit").textContent = obj.low_limit;
-        document.getElementById("varHighLimit").textContent = obj.high_limit;
+        if (obj.data_type.startsWith("INTEGER") || obj.data_type.startsWith("UNSIGNED")) {
+          document.getElementById("varScaling").textContent = obj.scale_factor;
+          document.getElementById("varEngValue").textContent = obj.eng_value;
+          document.getElementById("varUnit").textContent = obj.unit;
+          document.getElementById("varLowLimit").textContent = obj.low_limit;
+          document.getElementById("varHighLimit").textContent = obj.high_limit;
+          document.getElementById("varUnitRow").style.display = "";
+          document.getElementById("varEngValueRow").style.display = "";
+          document.getElementById("varScalingRow").style.display = "";
+          document.getElementById("varLowLimitRow").style.display = "";
+          document.getElementById("varHighLimitRow").style.display = "";
+        } else {
+          document.getElementById("varUnitRow").style.display = "none";
+          document.getElementById("varEngValueRow").style.display = "none";
+          document.getElementById("varScalingRow").style.display = "none";
+          document.getElementById("varLowLimitRow").style.display = "none";
+          document.getElementById("varHighLimitRow").style.display = "none";
+        }
         document.getElementById("objNewValue").value = obj.value;
         localStorage.setItem("subindex", obj.name);
       } else {
