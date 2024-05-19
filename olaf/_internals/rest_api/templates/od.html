@@ -52,10 +52,6 @@
         <td>Value</td>
         <td><span id="varValue"></span></td>
       </tr>
-      <tr id="varUnitRow">
-        <td>Unit</td>
-        <td><span id="varUnit"></span></td>
-      </tr>
       <tr id="varLowLimitRow">
         <td>Low Limit</td>
         <td><span id="varLowLimit"></span></td>
@@ -146,23 +142,21 @@
         document.getElementById("varDataType").textContent = obj.data_type;
         document.getElementById("varAccessType").textContent = obj.access_type;
         document.getElementById("varValue").textContent = obj.value;
+        document.getElementById("varEngValueRow").style.display = "none";
+        document.getElementById("varScalingRow").style.display = "none";
+        document.getElementById("varLowLimitRow").style.display = "none";
+        document.getElementById("varHighLimitRow").style.display = "none";
         if (obj.data_type.startsWith("INTEGER") || obj.data_type.startsWith("UNSIGNED")) {
           document.getElementById("varScaling").textContent = obj.scale_factor;
-          document.getElementById("varEngValue").textContent = obj.eng_value;
-          document.getElementById("varUnit").textContent = obj.unit;
+          document.getElementById("varEngValue").textContent = `${obj.eng_value} ${obj.unit}`;
           document.getElementById("varLowLimit").textContent = obj.low_limit;
           document.getElementById("varHighLimit").textContent = obj.high_limit;
-          document.getElementById("varUnitRow").style.display = "";
           document.getElementById("varEngValueRow").style.display = "";
           document.getElementById("varScalingRow").style.display = "";
           document.getElementById("varLowLimitRow").style.display = "";
           document.getElementById("varHighLimitRow").style.display = "";
-        } else {
-          document.getElementById("varUnitRow").style.display = "none";
-          document.getElementById("varEngValueRow").style.display = "none";
-          document.getElementById("varScalingRow").style.display = "none";
-          document.getElementById("varLowLimitRow").style.display = "none";
-          document.getElementById("varHighLimitRow").style.display = "none";
+        } else if (obj.data_type.startsWith("REAL")) {
+          document.getElementById("varValue").textContent = `${obj.value} ${obj.unit}`;
         }
         document.getElementById("objNewValue").value = obj.value;
         localStorage.setItem("subindex", obj.name);
