@@ -138,12 +138,15 @@ class App:
         for resource in self._resources:
             resource.start(self._node)
 
-        if self._node:
-            try:
-                reset = self._node.run()
-            except Exception as e:  # pylint: disable=W0718
-                logger.exception(f"unexpected error was raised by app node: {e}")
-                reset = NodeStop.SOFT_RESET
+        if self.node is None:
+            logger.critical("node was not set")
+            return
+
+        try:
+            reset = self._node.run()
+        except Exception as e:  # pylint: disable=W0718
+            logger.exception(f"unexpected error was raised by app node: {e}")
+            reset = NodeStop.SOFT_RESET
 
         for service in self._services:
             service.stop()
