@@ -7,8 +7,6 @@ from os.path import abspath, basename, isfile
 from pathlib import Path
 from threading import Lock
 
-from natsort import natsorted
-
 from .oresat_file import OreSatFile
 
 
@@ -38,7 +36,7 @@ class OreSatFileCache:
                 self._data.append(oresat_file)
             except Exception:  # pylint: disable=W0718
                 remove(self._dir + f)  # invalid file name
-        self._data = natsorted(self._data)
+        self._data = sorted(self._data)
 
     def __len__(self) -> int:
         with self._lock:
@@ -79,7 +77,7 @@ class OreSatFileCache:
 
             if not overwrite:
                 self._data.append(oresat_file)
-                self._data = natsorted(self._data)
+                self._data = sorted(self._data)
 
     def remove(self, file_name: str):
         """Remove a file from cache

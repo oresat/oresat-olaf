@@ -5,7 +5,6 @@ python-can>=4.3.0
 flask
 isort
 loguru
-natsort
 oresat-configs
 psutil
 pylama[all]

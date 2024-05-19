@@ -7,7 +7,7 @@ from time import time
 
 def new_oresat_file(keyword: str, card: str = "", date: float = -1.0, ext: str = "") -> str:
     """
-    Convience function for making valid oresat file_names
+    Convenience function for making valid oresat file_names
 
     Parameters
     ----------
