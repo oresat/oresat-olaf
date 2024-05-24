@@ -29,7 +29,7 @@ class OsCommandService(Service):
         self.failed = False
 
     def on_start(self):
-        self._set_status_and_reply(OsCommandState.ERROR_NO_REPLY.value, b"")
+        self._set_status_and_reply(OsCommandState.NO_ERROR_NO_REPLY.value, b"")
         self.node.add_sdo_callbacks(
             "os_command", "command", self.on_command_read, self.on_command_write
         )
@@ -72,7 +72,6 @@ class OsCommandService(Service):
 
     def on_command_write(self, command: bytes):
         """SDO write callback for command write."""
-        logger.error("hi")
         if self.node.od_read("os_command", "status") == OsCommandState.EXECUTING.value:
             logger.error("cannot start another os command when one is running")
             return
