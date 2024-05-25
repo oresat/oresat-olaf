@@ -1,5 +1,7 @@
 """Service for interacting with the updater"""
 
+import os
+
 from loguru import logger
 
 from ...common.service import Service
@@ -12,6 +14,8 @@ class UpdaterService(Service):
     def __init__(self, updater: Updater):
         super().__init__()
         self._updater = updater
+        hostname = os.uname()[1]
+        self._hostname = hostname[7:] if hostname.startswith("oresat-") else hostname
 
     def on_start(self):
 
@@ -26,9 +30,10 @@ class UpdaterService(Service):
     def on_loop(self):
         # check for update files in fwrite cache
         for i in self.node.fwrite_cache.files("update"):
-            self._updater.add_update_archive(self.node.fwrite_cache.dir + "/" + i.name)
-            self.node.fwrite_cache.remove(i.name)
-            logger.info(f"updater moved {i.name} into update cache")
+            if i.card == self._hostname:
+                self._updater.add_update_archive(self.node.fwrite_cache.dir + "/" + i.name)
+                self.node.fwrite_cache.remove(i.name)
+                logger.info(f"updater moved {i.name} into update cache")
 
         # check for flag to start a update
         if self.node.od_read("updater", "update"):

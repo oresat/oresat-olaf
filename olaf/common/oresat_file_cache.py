@@ -187,7 +187,7 @@ class OreSatFileCache:
 
         return dest
 
-    def files(self, keyword: str = "") -> list:
+    def files(self, keyword: str = "") -> list[OreSatFile]:
         """Return a list of files in the cache.
 
         Parameters
