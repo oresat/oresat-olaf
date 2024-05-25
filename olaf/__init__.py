@@ -14,6 +14,7 @@ from ._internals.services.logs import logger_tmp_file_setup
 from ._internals.updater import Updater, UpdaterState
 from .board.adc import Adc
 from .board.cpufreq import A8_CPUFREQS, get_cpufreq, get_cpufreq_gov, set_cpufreq, set_cpufreq_gov
+from .board.eeprom import Eeprom
 from .board.gpio import GPIO_HIGH, GPIO_IN, GPIO_LOW, GPIO_OUT, Gpio, GpioError
 from .board.pru import Pru, PruError, PruState
 from .canopen.ecss import scet_int_from_time, scet_int_to_time, utc_int_from_time, utc_int_to_time
@@ -138,8 +139,16 @@ def olaf_setup(name: str, args: Optional[Namespace] = None) -> tuple[Namespace, 
     if args.disable_flight_mode:
         od["flight_mode"].value = False
 
+    version = "0.0"
+    try:
+        eeprom = Eeprom()
+        version = f"{eeprom.major}.{eeprom.minor}"
+        logger.info(f"detected v{version} card")
+    except (PermissionError, FileNotFoundError):
+        logger.warning("could not read hardware info from eeprom")
     if args.hardware_version != "0.0":
-        od["versions"]["hw_version"].value = args.hardware_version
+        version = args.hardware_version
+    od["versions"]["hw_version"].value = version
 
     is_octavo = config.cards[name].processor == "octavo"
     if is_octavo:

@@ -59,14 +59,16 @@ class Eeprom:
         self.major = 0
         self.minor = 0
 
-        if self.nice_name == "pocketbeagle":
-            self.device_tree = "am335x-pocketbeagle.dtb"
-        elif self.nice_name == "boneblack":
-            self.device_tree = "am335x-boneblack.dtb"
-        elif self.nice_name != "unknown":  # aka an oresat card
+        if self.serial_id != "PSAS":
+            if self.nice_name == "pocketbeagle":
+                self.device_tree = "am335x-pocketbeagle.dtb"
+            elif self.nice_name == "boneblack":
+                self.device_tree = "am335x-boneblack.dtb"
+        else:
             self.is_oresat_card = True
-            self.device_tree = f"{self.nice_name}-{self.version}.dtb"
+            if self.nice_name != "unknown":  # aka an oresat card
+                self.device_tree = "unknown"
+            else:
+                self.device_tree = f"{self.nice_name}-{self.version}.dtb"
             self.major = int(data[12:14])
             self.minor = int(data[14:16])
-        else:
-            self.device_tree = "unknown"
