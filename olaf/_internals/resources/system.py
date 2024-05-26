@@ -3,7 +3,6 @@
 from time import monotonic, time
 
 import psutil
-from loguru import logger
 
 from ...canopen.node import NodeStop
 from ...common.resource import Resource
