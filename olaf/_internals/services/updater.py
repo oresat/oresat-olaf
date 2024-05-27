@@ -27,13 +27,14 @@ class UpdaterService(Service):
         self.node.add_sdo_callbacks("updater", "cache_files_json", self.on_read_cache_json, None)
         self.node.add_sdo_callbacks("updater", "cache_length", self.on_read_cache_len, None)
 
-    def on_loop(self):
         # check for update files in fwrite cache
         for i in self.node.fwrite_cache.files("update"):
             if i.card == self._hostname:
                 self._updater.add_update_archive(self.node.fwrite_cache.dir + "/" + i.name)
                 self.node.fwrite_cache.remove(i.name)
                 logger.info(f"updater moved {i.name} into update cache")
+
+    def on_loop(self):
 
         # check for flag to start a update
         if self.node.od_read("updater", "update"):
