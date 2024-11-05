@@ -2,7 +2,7 @@
 
 import unittest
 
-from oresat_configs import OreSatConfig, OreSatId
+from oresat_configs import Consts, OreSatConfig
 
 from olaf import CanNetwork, Node, Resource
 
@@ -23,7 +23,7 @@ class TestResource(unittest.TestCase):
     def test_start_stop(self):
         """All exception should be caught"""
 
-        od = OreSatConfig(OreSatId.ORESAT0).od_db["gps"]
+        od = OreSatConfig(Consts.default()).od_db["gps"]
         network = CanNetwork("virtual", "vcan0")
         node = Node(network, od)
 
