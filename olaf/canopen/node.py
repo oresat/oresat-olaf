@@ -213,7 +213,7 @@ class Node:
                     and event_time != 0
                     and loops % (event_time // delay_ms) == 0
                 ):
-                    self.send_tpdo(i + 1)
+                    self.send_tpdo(i + 1,0)
 
         self._destroy_node()
 
