@@ -25,7 +25,6 @@ from .common.oresat_file import OreSatFile, new_oresat_file
 from .common.oresat_file_cache import OreSatFileCache
 from .common.resource import Resource
 from .common.service import Service, ServiceState
-from .common.timer_loop import TimerLoop
 
 try:
     from ._version import version as __version__  # type: ignore
