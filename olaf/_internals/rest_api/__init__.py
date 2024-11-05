@@ -114,12 +114,7 @@ def render_olaf_template(template: str, name: str):
         Nice name for the template.
     """
 
-    sat = Consts.default()
-    for mission in Consts:
-        if mission.id == app.od["satellite_id"].value:
-            sat = mission
-            break
-
+    sat = Consts.from_id(app.od["satellite_id"].value)
     title = f"{sat} {app.od.device_information.product_name}"
     return render_template(template, title=title, name=name)
 
@@ -161,11 +156,7 @@ def root():
             routes.append(str(rule))
 
     routes = natsorted(routes)
-    sat = Consts.default()
-    for mission in Consts:
-        if mission.id == app.od["satellite_id"].value:
-            sat = mission
-            break
+    sat = Consts.from_id(app.od["satellite_id"].value)
     title = f"{sat} {app.od.device_information.product_name}"
     return render_template("root.html", title=title, routes=routes)
 
