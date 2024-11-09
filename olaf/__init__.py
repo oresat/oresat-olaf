@@ -6,7 +6,7 @@ from logging.handlers import SysLogHandler
 from typing import Optional
 
 from loguru import logger
-from oresat_configs import Consts, OreSatConfig
+from oresat_configs import Mission, OreSatConfig
 
 from ._internals.app import App, app
 from ._internals.rest_api import RestAPI, render_olaf_template, rest_api
@@ -115,7 +115,7 @@ def olaf_setup(name: str, args: Optional[Namespace] = None) -> tuple[Namespace, 
 
     logger_tmp_file_setup(level)
 
-    config = OreSatConfig(Consts.from_string(args.oresat))
+    config = OreSatConfig(Mission.from_string(args.oresat))
 
     if name not in config.cards:
         name += f"_{args.number}"

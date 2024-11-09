@@ -1,7 +1,7 @@
 """Tests for Resources."""
 
 import canopen
-from oresat_configs import Consts, OreSatConfig
+from oresat_configs import Mission, OreSatConfig
 
 from olaf import OreSatFileCache, Resource, logger
 from olaf.canopen.network import CanNetwork
@@ -14,7 +14,7 @@ class MockNode(Node):
     """Mock node for testing Resources."""
 
     def __init__(self):
-        od = OreSatConfig(Consts.default()).od_db["gps"]
+        od = OreSatConfig(Mission.default()).od_db["gps"]
         network = CanNetwork("virtual", "vcan0")
         super().__init__(network, od)
 
