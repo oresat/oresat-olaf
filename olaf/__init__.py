@@ -6,7 +6,7 @@ from logging.handlers import SysLogHandler
 from typing import Optional
 
 from loguru import logger
-from oresat_configs import OreSatConfig, OreSatId
+from oresat_configs import Mission, OreSatConfig
 
 from ._internals.app import App, app
 from ._internals.rest_api import RestAPI, render_olaf_template, rest_api
@@ -26,7 +26,6 @@ from .common.oresat_file import OreSatFile, new_oresat_file
 from .common.oresat_file_cache import OreSatFileCache
 from .common.resource import Resource
 from .common.service import Service, ServiceState
-from .common.timer_loop import TimerLoop
 
 try:
     from ._version import version as __version__  # type: ignore
@@ -117,17 +116,7 @@ def olaf_setup(name: str, args: Optional[Namespace] = None) -> tuple[Namespace, 
 
     logger_tmp_file_setup(level)
 
-    arg_oresat = args.oresat.lower()
-    if arg_oresat in ["oresat0", "0"]:
-        oresat_id = OreSatId.ORESAT0
-    elif arg_oresat in ["oresat0.5", "oresat0_5", "0.5"]:
-        oresat_id = OreSatId.ORESAT0_5
-    elif arg_oresat in ["oresat", "oresat1", "1"]:
-        oresat_id = OreSatId.ORESAT1
-    else:
-        raise ValueError(f"invalid oresat mission {args.oresat}")
-
-    config = OreSatConfig(oresat_id)
+    config = OreSatConfig(Mission.from_string(args.oresat))
 
     if name not in config.cards:
         name += f"_{args.number}"

@@ -11,7 +11,7 @@ from typing import Union
 import canopen
 from flask import Flask, jsonify, render_template, request, send_from_directory
 from loguru import logger
-from oresat_configs import OreSatId
+from oresat_configs import Mission
 from werkzeug.serving import make_server
 
 from ...common import natsorted
@@ -114,9 +114,8 @@ def render_olaf_template(template: str, name: str):
         Nice name for the template.
     """
 
-    os_id = app.od["satellite_id"].value
-    os_ver_str = OreSatId(os_id).name[6:].replace("_", ".")
-    title = f"OreSat{os_ver_str} {app.od.device_information.product_name}"
+    sat = Mission.from_id(app.od["satellite_id"].value)
+    title = f"{sat} {app.od.device_information.product_name}"
     return render_template(template, title=title, name=name)
 
 
@@ -157,10 +156,8 @@ def root():
             routes.append(str(rule))
 
     routes = natsorted(routes)
-
-    os_id = app.od["satellite_id"].value
-    os_ver_str = OreSatId(os_id).name[6:].replace("_", ".")
-    title = f"OreSat{os_ver_str} {app.od.device_information.product_name}"
+    sat = Mission.from_id(app.od["satellite_id"].value)
+    title = f"{sat} {app.od.device_information.product_name}"
     return render_template("root.html", title=title, routes=routes)
 
 

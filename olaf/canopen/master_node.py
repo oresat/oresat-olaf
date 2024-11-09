@@ -246,7 +246,7 @@ class MasterNode(Node):
         subindex: Union[int, str, None],
         field: str,
         value: int,
-    ):
+    ):  # pylint: disable=R0917
         """
         Write a field from a object to another node's OD using a SDO.
 
