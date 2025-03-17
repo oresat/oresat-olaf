@@ -27,6 +27,7 @@ class Eeprom:
         """
 
         i2c_path = "/sys/bus/i2c/devices/"
+        eeprom_path = ""
         for file in os.listdir(i2c_path):
             eeprom_path = f"/sys/bus/i2c/devices/{file}/eeprom"
             if not os.path.exists(eeprom_path):
