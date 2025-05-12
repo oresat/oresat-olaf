@@ -129,12 +129,13 @@ def olaf_setup(name: str, args: Optional[Namespace] = None) -> tuple[Namespace, 
         od["flight_mode"].value = False
 
     version = "0.0"
-    try:
-        eeprom = Eeprom()
-        version = f"{eeprom.major}.{eeprom.minor}"
-        logger.info(f"detected v{version} card")
-    except (PermissionError, FileNotFoundError, OSError):
-        logger.warning("could not read hardware info from eeprom")
+    if not args.mock_hw:
+        try:
+            eeprom = Eeprom()
+            version = f"{eeprom.major}.{eeprom.minor}"
+            logger.info(f"detected v{version} card")
+        except (PermissionError, FileNotFoundError, OSError, UnicodeDecodeError):
+            logger.warning("could not read hardware info from eeprom")
     if args.hardware_version != "0.0":
         version = args.hardware_version
     od["versions"]["hw_version"].value = version
