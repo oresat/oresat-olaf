@@ -15,26 +15,39 @@ class PipManagementDialog(tk.Toplevel):
         self._create_widgets()
         master._safe_grab(self)
 
-
     def _create_widgets(self):
-        frame = ttk.LabelFrame(self, text="PIP_UNINSTALL")
-        frame.pack(fill="x", padx=10, pady=10)
+        self.pip_uninstall = self._create_list_section("PIP_UNINSTALL", 0)
 
-        self.left = tk.Listbox(frame, selectmode="extended", exportselection=False, width=40, height=10)
-        self.right = tk.Listbox(frame, selectmode="extended", exportselection=False, width=40, height=10)
+        btn = ttk.Button(self, text="Apply", command=self._on_apply)
+        btn.pack(side="right", padx=10, pady=10)
 
-        self.left.grid(row=0, column=0, padx=5, pady=5)
-        self.right.grid(row=0, column=2, padx=5, pady=5)
 
-        for btn_text, f, t in [(">>", self.left, self.right), ("<<", self.right, self.left)]:
-            ttk.Button(frame, text=btn_text, command=lambda f=f, t=t: 
-                    self._move_items(f, t)).grid(row=0, column=1, pady=2, padx=2, sticky="n")
+    def _create_list_section(self, title, row):
+        frame = ttk.LabelFrame(self, text=title)
+        frame.pack(fill="x", padx=10, pady=5)
 
+        frame.grid_columnconfigure(0, weight=1)
+        frame.grid_columnconfigure(2, weight=1)
+
+        left = tk.Listbox(frame, selectmode="extended", exportselection=False, width=40, height=10)
+        right = tk.Listbox(frame, selectmode="extended", exportselection=False, width=40, height=10)
+
+        left.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
+        right.grid(row=0, column=2, padx=5, pady=5, sticky="nsew")
+
+        # Add vertical buttons properly
+        button_frame = ttk.Frame(frame)
+        button_frame.grid(row=0, column=1, padx=5, pady=5)
+
+        ttk.Button(button_frame, text=">>", command=lambda: self._move_items(left, right)).pack(pady=(0, 5))
+        ttk.Button(button_frame, text="<<", command=lambda: self._move_items(right, left)).pack()
+
+        # Populate installed packages
         pkgs = self._get_pip_list()
         for p in pkgs:
-            self.left.insert(tk.END, p)
+            left.insert(tk.END, p)
 
-        ttk.Button(self, text="Apply", command=self._on_apply).pack(pady=10)
+        return right
 
 
     def _move_items(self, from_listbox, to_listbox):
@@ -55,8 +68,11 @@ class PipManagementDialog(tk.Toplevel):
 
 
     def _on_apply(self):
-        items = self.right.get(0, tk.END)
-        if items:
-            self.on_apply([{"type": "PIP_UNINSTALL", "items": list(items)}])
+        result = []
+        for action, box in [("PIP_UNINSTALL", self.pip_uninstall)]:
+            items = box.get(0, tk.END)
+            if items:
+                result.append({"type": action, "items": list(items)})
+        if result:
+            self.on_apply(result)
         self.destroy()
-
