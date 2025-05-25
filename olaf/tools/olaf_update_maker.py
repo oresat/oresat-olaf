@@ -1,3 +1,5 @@
+from package_management_dialog import PackageManagementDialog
+from pip_management_dialog import PipManagementDialog
 from tkinter import ttk, filedialog
 import csv
 import io
@@ -19,8 +21,6 @@ VALID_TYPES = [
     "PIP_UNINSTALL",
     "UNKNOWN"
 ]
-
-DANGEROUS_PACKAGES = {"systemd", "kmod", "libc6", "udev", "grub-common"}
 
 class OlafInstructionEditor(tk.Tk):
     def __init__(self):
@@ -45,15 +45,22 @@ class OlafInstructionEditor(tk.Tk):
         self.card_dropdown['values'] = ["Friendly Name (real-card-name)"]
         self.card_dropdown.current(0)
 
+        # Row 2: Add, update, remove packages and files
         action_row = ttk.Frame(self, padding=(10, 5))
         action_row.pack(fill="x")
 
         ttk.Button(action_row, text="Load Archive", command=self._load_archive).pack(side="left", padx=(0, 5))
         ttk.Button(action_row, text="Add File", command=self._browse_files).pack(side="left", padx=(0, 5))
-        ttk.Button(action_row, text="Remove Package", command=self._add_remove_package).pack(side="left", padx=(0, 5))
-        ttk.Button(action_row, text="Purge Package", command=self._add_purge_package).pack(side="left", padx=(0, 5))
-        ttk.Button(action_row, text="Uninstall Python Package", command=self._add_pip_uninstall).pack(side="left", padx=(0, 5))
 
+        pkg_row = ttk.Frame(self, padding=(10, 5))
+        pkg_row.pack(fill="x")
+
+        ttk.Label(pkg_row, text="Package:", width=10).pack(side="left")
+
+        ttk.Button(pkg_row, text="System Package Management", command=self._open_sys_pkg_mgmt).pack(side="left", padx=(0, 5))
+        ttk.Button(pkg_row, text="PIP Package Management", command=self._open_pip_pkg_mgmt).pack(side="left", padx=(0, 5))
+
+        # Row 3: Display instructions.txt content
         self.tree = ttk.Treeview(self, columns=("type", "items"), show="headings", selectmode="browse")
         self.tree.heading("type", text="Type")
         self.tree.heading("items", text="Items")
@@ -62,6 +69,7 @@ class OlafInstructionEditor(tk.Tk):
         self.tree.pack(fill="both", expand=True, padx=10, pady=10)
         self.tree.bind("<Double-1>", self._on_double_click)
 
+        # Row 4: 
         button_row = ttk.Frame(self, padding=10)
         button_row.pack(fill="x")
 
@@ -69,7 +77,6 @@ class OlafInstructionEditor(tk.Tk):
         ttk.Button(button_row, text="Down", command=self._move_down).pack(side=tk.LEFT, padx=(5, 20))
         ttk.Button(button_row, text="Delete", command=self._delete_selected).pack(side=tk.LEFT)
         ttk.Button(button_row, text="Generate", command=self._on_generate).pack(side=tk.RIGHT)
-
 
     def _add_purge_package(self):
         print("🚧 Purge Package clicked (function not implemented yet)")
@@ -332,39 +339,53 @@ class OlafInstructionEditor(tk.Tk):
             window.after(10, lambda: self._safe_grab(window) if window.winfo_exists() else None)
 
 
-    def _select_installed_package(self, index):
-        try:
-            result = subprocess.run(["apt", "list", "--installed"], capture_output=True, text=True, check=True)
-            lines = result.stdout.splitlines()
-            packages = sorted(set(
-                line.split('/')[0] for line in lines
-                if '[automatic]' not in line and '/' in line and line.split('/')[0] not in DANGEROUS_PACKAGES
-            ))
-        except Exception as e:
-            print(f"❌ Failed to get package list: {e}")
-            return
-
-        popup = tk.Toplevel(self)
-        popup.title("Select Package to Remove")
-        popup.geometry("400x300")
-        popup.transient(self)
-
-        listbox = tk.Listbox(popup, selectmode=tk.SINGLE)
-        listbox.pack(fill="both", expand=True, padx=10, pady=10)
-        for pkg in packages:
-            listbox.insert(tk.END, pkg)
-
-        def apply():
-            selection = listbox.curselection()
-            if selection:
-                selected_pkg = listbox.get(selection[0])
-                self.instructions[index]["items"] = [selected_pkg]
-                self._render_tree()
-            popup.destroy()
-
-        ttk.Button(popup, text="OK", command=apply).pack(pady=(0, 10))
-        self._safe_grab(popup)
+#    def _select_installed_package(self, index):
+#        try:
+#            result = subprocess.run(["apt", "list", "--installed"], capture_output=True, text=True, check=True)
+#            lines = result.stdout.splitlines()
+#            packages = sorted(set(
+#                line.split('/')[0] for line in lines
+#                if '[automatic]' not in line and '/' in line and line.split('/')[0] not in DANGEROUS_PACKAGES
+#            ))
+#        except Exception as e:
+#            print(f"❌ Failed to get package list: {e}")
+#            return
+#
+#        popup = tk.Toplevel(self)
+#        popup.title("Select Package to Remove")
+#        popup.geometry("400x300")
+#        popup.transient(self)
+#
+#        listbox = tk.Listbox(popup, selectmode=tk.SINGLE)
+#        listbox.pack(fill="both", expand=True, padx=10, pady=10)
+#        for pkg in packages:
+#            listbox.insert(tk.END, pkg)
+#
+#        def apply():
+#            selection = listbox.curselection()
+#            if selection:
+#                selected_pkg = listbox.get(selection[0])
+#                self.instructions[index]["items"] = [selected_pkg]
+#                self._render_tree()
+#            popup.destroy()
+#
+#        ttk.Button(popup, text="OK", command=apply).pack(pady=(0, 10))
+#        self._safe_grab(popup)
             
+
+    def _open_sys_pkg_mgmt(self):
+        def apply(instructions):
+            self.instructions.extend(instructions)
+            self._render_tree()
+        PackageManagementDialog(self, on_apply=apply)
+
+
+    def _open_pip_pkg_mgmt(self):
+        def apply(instructions):
+            self.instructions.extend(instructions)
+            self._render_tree()
+        PipManagementDialog(self, on_apply=apply)
+
 
 if __name__ == "__main__":
     app = OlafInstructionEditor()
