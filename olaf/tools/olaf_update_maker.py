@@ -38,40 +38,40 @@ class OlafInstructionEditor(tk.Tk):
         card_row = ttk.Frame(self, padding=(10, 10))
         card_row.pack(fill="x")
 
-        ttk.Label(card_row, text="Select a Card:", width=15).pack(side="left")
+        ttk.Label(card_row, text="Select a Card:", width=15).pack(side=tk.LEFT)
         self.card_var = tk.StringVar()
         self.card_dropdown = ttk.Combobox(card_row, textvariable=self.card_var, width=30, state="readonly")
-        self.card_dropdown.pack(side="left", padx=(0, 10))
-        self.card_dropdown['values'] = ["Friendly Name (real-card-name)"]
-        self.card_dropdown.current(0)
+        self.card_dropdown.pack(side=tk.LEFT, padx=(0, 10))
+        self._populate_card_list()
 
         # Row 2: Add, update, remove packages and files
         action_row = ttk.Frame(self, padding=(10, 5))
         action_row.pack(fill="x")
 
-        ttk.Button(action_row, text="Load Archive", command=self._load_archive).pack(side="left", padx=(0, 5))
-        ttk.Button(action_row, text="Add File", command=self._browse_files).pack(side="left", padx=(0, 5))
+        ttk.Button(action_row, text="Load Archive", command=self._load_archive).pack(side=tk.LEFT, padx=(0, 5))
+        ttk.Button(action_row, text="Add File", command=self._browse_files).pack(side=tk.LEFT, padx=(0, 5))
 
         button_group = ttk.LabelFrame(action_row, text="Package Management")
-        button_group.pack(side="right")
+        button_group.pack(side=tk.RIGHT)
 
-        ttk.Button(button_group, text="System Packages", command=self._open_sys_pkg_mgmt).pack(side="left", padx=5, pady=5)
-        ttk.Button(button_group, text="PIP Packages", command=self._open_pip_pkg_mgmt).pack(side="left", padx=5, pady=5)
+        ttk.Button(button_group, text="System Packages", command=self._open_sys_pkg_mgmt).pack(side=tk.LEFT, padx=5, pady=5)
+        ttk.Button(button_group, text="PIP Packages", command=self._open_pip_pkg_mgmt).pack(side=tk.LEFT, padx=5, pady=5)
 
         # Row 3: Display instructions.txt content
-        tree_row = ttk.Frame(self)
-        tree_row.pack(fill="both", expand=True, padx=10, pady=5)
+        # Tree section with title
+        tree_frame = ttk.LabelFrame(self, text="Instructions")
+        tree_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
         # Left: Up/Down buttons stacked vertically
-        nav_col = ttk.Frame(tree_row)
-        nav_col.pack(side="left", fill="y", padx=(0, 5))
+        nav_col = ttk.Frame(tree_frame)
+        nav_col.pack(side=tk.LEFT, fill="y", padx=(5, 2), pady=50)
 
-        ttk.Button(nav_col, text="↑", command=self._move_up, width=3).pack(pady=2)
-        ttk.Button(nav_col, text="↓", command=self._move_down, width=3).pack(pady=2)
+        ttk.Button(nav_col, text="↑", command=self._move_up, width=2).pack(pady=2)
+        ttk.Button(nav_col, text="↓", command=self._move_down, width=2).pack(pady=2)
 
         # Right: Treeview
-        tree_container = ttk.Frame(tree_row)
-        tree_container.pack(side="left", fill="both", expand=True)
+        tree_container = ttk.Frame(tree_frame)
+        tree_container.pack(side=tk.LEFT, fill="both", expand=True)
 
         self.tree = ttk.Treeview(tree_container, columns=("type", "items", "action"), show="headings", selectmode="browse")
         self.tree.heading("type", text="Type")
@@ -87,9 +87,7 @@ class OlafInstructionEditor(tk.Tk):
         button_row = ttk.Frame(self, padding=10)
         button_row.pack(fill="x")
 
-        ttk.Button(button_row, text="Up", command=self._move_up).pack(side=tk.LEFT)
-        ttk.Button(button_row, text="Down", command=self._move_down).pack(side=tk.LEFT, padx=(5, 20))
-        ttk.Button(button_row, text="Delete", command=self._delete_selected).pack(side=tk.LEFT)
+        ttk.Button(button_row, text="Preview", command=self._preview_json).pack(side=tk.RIGHT, padx=(0, 5))
         ttk.Button(button_row, text="Generate", command=self._on_generate).pack(side=tk.RIGHT)
 
 
@@ -187,6 +185,35 @@ class OlafInstructionEditor(tk.Tk):
         self.tree.selection_set(str(idx + 1))
 
 
+    def _preview_json(self):
+        flat = [{"type": instr["type"], "item": instr["items"][0]} for instr in self.instructions]
+        grouped = []
+        current_group = None
+
+        for entry in flat:
+            if not current_group or current_group["type"] != entry["type"]:
+                current_group = {"type": entry["type"], "items": [entry["item"]]}
+                grouped.append(current_group)
+            else:
+                current_group["items"].append(entry["item"])
+
+        # Show in popup
+        popup = tk.Toplevel(self)
+        popup.title("Instructions JSON Preview")
+        popup.geometry("700x500")
+        popup.transient(self)
+
+        text_widget = tk.Text(popup, wrap="word", font=("Courier", 10))
+        text_widget.pack(fill="both", expand=True, padx=10, pady=10)
+
+        text_widget.insert("1.0", json.dumps(grouped, indent=4))
+        text_widget.config(state="disabled")
+
+        ttk.Button(popup, text="Close", command=popup.destroy).pack(pady=(0, 10))
+
+        self._safe_grab(popup)
+
+
     def _on_generate(self):
 
         # 🧱 Step 1: Flatten the instruction rows
@@ -256,10 +283,8 @@ class OlafInstructionEditor(tk.Tk):
             return "BASH_SCRIPT"
         elif lower.endswith(".deb"):
             return "DPKG_INSTALL"
-        elif "requirements.txt" in lower or lower.endswith(".pip"):
+        elif "requirements.txt" in lower or lower.endswith(".pip") or lower.endswith(".whl"):
             return "PIP_INSTALL"
-        elif lower.endswith(".uninstall.pip"):
-            return "PIP_UNINSTALL"
         else:
             return "UNKNOWN"
 
@@ -316,8 +341,8 @@ class OlafInstructionEditor(tk.Tk):
         button_frame = ttk.Frame(popup)
         button_frame.pack(pady=(5, 10), padx=10, anchor="e")
 
-        ttk.Button(button_frame, text="Save", command=lambda: self._save_type_edit(popup, index, type_var)).pack(side="right", padx=(5, 0))
-        ttk.Button(button_frame, text="Cancel", command=lambda: self._cancel_popup(popup)).pack(side="right")
+        ttk.Button(button_frame, text="Save", command=lambda: self._save_type_edit(popup, index, type_var)).pack(side=tk.RIGHT, padx=(5, 0))
+        ttk.Button(button_frame, text="Cancel", command=lambda: self._cancel_popup(popup)).pack(side=tk.RIGHT)
 
         self._safe_grab(popup)
 
