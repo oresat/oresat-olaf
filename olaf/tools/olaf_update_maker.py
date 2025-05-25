@@ -52,20 +52,34 @@ class OlafInstructionEditor(tk.Tk):
         ttk.Button(action_row, text="Load Archive", command=self._load_archive).pack(side="left", padx=(0, 5))
         ttk.Button(action_row, text="Add File", command=self._browse_files).pack(side="left", padx=(0, 5))
 
-        pkg_row = ttk.Frame(self, padding=(10, 5))
-        pkg_row.pack(fill="x")
+        button_group = ttk.LabelFrame(action_row, text="Package Management")
+        button_group.pack(side="right")
 
-        ttk.Label(pkg_row, text="Package:", width=10).pack(side="left")
-
-        ttk.Button(pkg_row, text="System Package Management", command=self._open_sys_pkg_mgmt).pack(side="left", padx=(0, 5))
-        ttk.Button(pkg_row, text="PIP Package Management", command=self._open_pip_pkg_mgmt).pack(side="left", padx=(0, 5))
+        ttk.Button(button_group, text="System Packages", command=self._open_sys_pkg_mgmt).pack(side="left", padx=5, pady=5)
+        ttk.Button(button_group, text="PIP Packages", command=self._open_pip_pkg_mgmt).pack(side="left", padx=5, pady=5)
 
         # Row 3: Display instructions.txt content
-        self.tree = ttk.Treeview(self, columns=("type", "items"), show="headings", selectmode="browse")
+        tree_row = ttk.Frame(self)
+        tree_row.pack(fill="both", expand=True, padx=10, pady=5)
+
+        # Left: Up/Down buttons stacked vertically
+        nav_col = ttk.Frame(tree_row)
+        nav_col.pack(side="left", fill="y", padx=(0, 5))
+
+        ttk.Button(nav_col, text="↑", command=self._move_up, width=3).pack(pady=2)
+        ttk.Button(nav_col, text="↓", command=self._move_down, width=3).pack(pady=2)
+
+        # Right: Treeview
+        tree_container = ttk.Frame(tree_row)
+        tree_container.pack(side="left", fill="both", expand=True)
+
+        self.tree = ttk.Treeview(tree_container, columns=("type", "items", "action"), show="headings", selectmode="browse")
         self.tree.heading("type", text="Type")
         self.tree.heading("items", text="Items")
+        self.tree.heading("action", text="")
         self.tree.column("type", width=150)
         self.tree.column("items", width=500)
+        self.tree.column("action", width=40, anchor="center")
         self.tree.pack(fill="both", expand=True, padx=10, pady=10)
         self.tree.bind("<Double-1>", self._on_double_click)
 
@@ -77,14 +91,6 @@ class OlafInstructionEditor(tk.Tk):
         ttk.Button(button_row, text="Down", command=self._move_down).pack(side=tk.LEFT, padx=(5, 20))
         ttk.Button(button_row, text="Delete", command=self._delete_selected).pack(side=tk.LEFT)
         ttk.Button(button_row, text="Generate", command=self._on_generate).pack(side=tk.RIGHT)
-
-    def _add_purge_package(self):
-        print("🚧 Purge Package clicked (function not implemented yet)")
-
-
-
-    def _add_pip_uninstall(self):
-        print("🚧 Uninstall Python Package clicked (function not implemented yet)")
 
 
     def _add_remove_package(self):
@@ -145,7 +151,7 @@ class OlafInstructionEditor(tk.Tk):
         self.tree.delete(*self.tree.get_children())
         for i, instr in enumerate(self.instructions):
             items_text = ", ".join(instr["items"])
-            self.tree.insert("", "end", iid=str(i), values=(instr["type"], items_text))
+            self.tree.insert("", "end", iid=str(i), values=(instr["type"], items_text, "❌"))
 
 
     def _delete_selected(self):
@@ -287,8 +293,14 @@ class OlafInstructionEditor(tk.Tk):
     def _on_double_click(self, event):
         item_id = self.tree.identify_row(event.y)
         col = self.tree.identify_column(event.x)
+
+        if not item_id:
+            return  # clicked empty space, do nothing
+
         if col == '#1' and item_id:
             self._edit_type_popup(int(item_id))
+        if col == '#3':  # delete column
+            self._delete_instruction(int(item_id))
 
 
     def _edit_type_popup(self, index):
@@ -308,6 +320,12 @@ class OlafInstructionEditor(tk.Tk):
         ttk.Button(button_frame, text="Cancel", command=lambda: self._cancel_popup(popup)).pack(side="right")
 
         self._safe_grab(popup)
+
+
+    def _delete_instruction(self, index):
+        if 0 <= index < len(self.instructions):
+            del self.instructions[index]
+            self._render_tree()
 
 
     def _cancel_popup(self, popup):
@@ -337,40 +355,6 @@ class OlafInstructionEditor(tk.Tk):
             window.grab_set()
         except tk.TclError:
             window.after(10, lambda: self._safe_grab(window) if window.winfo_exists() else None)
-
-
-#    def _select_installed_package(self, index):
-#        try:
-#            result = subprocess.run(["apt", "list", "--installed"], capture_output=True, text=True, check=True)
-#            lines = result.stdout.splitlines()
-#            packages = sorted(set(
-#                line.split('/')[0] for line in lines
-#                if '[automatic]' not in line and '/' in line and line.split('/')[0] not in DANGEROUS_PACKAGES
-#            ))
-#        except Exception as e:
-#            print(f"❌ Failed to get package list: {e}")
-#            return
-#
-#        popup = tk.Toplevel(self)
-#        popup.title("Select Package to Remove")
-#        popup.geometry("400x300")
-#        popup.transient(self)
-#
-#        listbox = tk.Listbox(popup, selectmode=tk.SINGLE)
-#        listbox.pack(fill="both", expand=True, padx=10, pady=10)
-#        for pkg in packages:
-#            listbox.insert(tk.END, pkg)
-#
-#        def apply():
-#            selection = listbox.curselection()
-#            if selection:
-#                selected_pkg = listbox.get(selection[0])
-#                self.instructions[index]["items"] = [selected_pkg]
-#                self._render_tree()
-#            popup.destroy()
-#
-#        ttk.Button(popup, text="OK", command=apply).pack(pady=(0, 10))
-#        self._safe_grab(popup)
             
 
     def _open_sys_pkg_mgmt(self):

@@ -9,7 +9,7 @@ class PackageManagementDialog(tk.Toplevel):
     def __init__(self, master, on_apply):
         super().__init__(master)
         self.title("System Package Management")
-        self.geometry("800x400")
+        self.geometry("800x500")
         self.transient(master)
         self.on_apply = on_apply
         self._create_widgets()
@@ -21,7 +21,7 @@ class PackageManagementDialog(tk.Toplevel):
         self.dpkg_purge_left = self._create_list_section("DPKG_PURGE", 1)
 
         btn = ttk.Button(self, text="Apply", command=self._on_apply)
-        btn.pack(pady=10)
+        btn.pack(side="right", padx=10, pady=10)
 
 
     def _create_list_section(self, title, row):
