@@ -5,7 +5,7 @@ python-can>=4.3.0
 flask
 isort
 loguru
-oresat-configs>=0.8.0
+oresat-configs>=0.8.0,<1.0.0
 psutil
 pylama[all]
 pylama[toml]
