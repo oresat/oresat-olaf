@@ -1,0 +1,11 @@
+name,nice_name,node_id,processor,opd_address,opd_always_on,child
+c3,C3,0x1,octavo,0x0,false,
+battery_1,Battery 1,0x4,stm32,0x18,true,
+solar_1,Solar 1,0xC,stm32,0x0,false,
+solar_2,Solar 2,0x10,stm32,0x0,false,
+solar_3,Solar 3,0x14,stm32,0x0,false,
+solar_4,Solar 4,0x18,stm32,0x0,false,
+star_tracker_1,Star Tracker 1,0x2C,octavo,0x1C,false,
+gps,GPS,0x34,octavo,0x19,false,
+adcs,ADCS,0x38,stm32,0x1A,false,
+dxwifi,DxWiFi,0x4C,octavo,0x1B,false,

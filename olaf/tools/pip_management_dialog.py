@@ -6,14 +6,39 @@ import tkinter as tk
 
 class PipManagementDialog(tk.Toplevel):
 
-    def __init__(self, master, on_apply):
+    def __init__(self, master, on_apply, existing_instructions=None):
         super().__init__(master)
         self.title("PIP Package Management")
         self.geometry("700x300")
         self.transient(master)
         self.on_apply = on_apply
+        self.existing_instructions = existing_instructions or []
+
+        self.available_packages = self._get_pip_list()
+        self.selected_packages_uninstall = []
+
+        self._preload_selected_packages()
         self._create_widgets()
-        master._safe_grab(self)
+
+
+    def _preload_selected_packages(self):
+        uninstall_set = set()
+
+        for instr in self.existing_instructions:
+            if instr.get("type") == "PIP_UNINSTALL":
+                uninstall_set.update(instr.get("items", []))
+
+        self.selected_packages_uninstall.extend([
+            pkg for pkg in self.available_packages if pkg in uninstall_set
+        ])
+
+        # Remove from available
+        self.available_packages = [
+            pkg for pkg in self.available_packages if pkg not in uninstall_set
+        ]
+
+        print("Preloaded PIP_UNINSTALL:", self.selected_packages_uninstall)
+
 
     def _create_widgets(self):
         self.pip_uninstall = self._create_list_section("PIP_UNINSTALL", 0)
@@ -42,10 +67,12 @@ class PipManagementDialog(tk.Toplevel):
         ttk.Button(button_frame, text=">>", command=lambda: self._move_items(left, right)).pack(pady=(0, 5))
         ttk.Button(button_frame, text="<<", command=lambda: self._move_items(right, left)).pack()
 
-        # Populate installed packages
-        pkgs = self._get_pip_list()
-        for p in pkgs:
+        # ✅ Use preloaded lists
+        for p in self.available_packages:
             left.insert(tk.END, p)
+
+        for p in self.selected_packages_uninstall:
+            right.insert(tk.END, p)
 
         return right
 
@@ -69,10 +96,19 @@ class PipManagementDialog(tk.Toplevel):
 
     def _on_apply(self):
         result = []
-        for action, box in [("PIP_UNINSTALL", self.pip_uninstall)]:
-            items = box.get(0, tk.END)
-            if items:
-                result.append({"type": action, "items": list(items)})
+
+        existing_set = set()
+        for instr in self.existing_instructions:
+            if instr.get("type") == "PIP_UNINSTALL":
+                existing_set.update(instr.get("items", []))
+
+        # Compare current selected packages to existing ones
+        current_items = self.pip_uninstall.get(0, tk.END)
+        new_items = [pkg for pkg in current_items if pkg not in existing_set]
+
+        if new_items:
+            result.append({"type": "PIP_UNINSTALL", "items": new_items})
+
         if result:
             self.on_apply(result)
         self.destroy()

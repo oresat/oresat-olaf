@@ -6,25 +6,32 @@ import tkinter as tk
 DANGEROUS_PACKAGES = {"systemd", "kmod", "libc6", "udev", "grub-common"}
 
 class PackageManagementDialog(tk.Toplevel):
-    def __init__(self, master, on_apply):
+
+    def __init__(self, master, on_apply, existing_instructions=None):
         super().__init__(master)
         self.title("System Package Management")
         self.geometry("800x500")
         self.transient(master)
         self.on_apply = on_apply
+        self.existing_instructions = existing_instructions or []
+
+        self.available_packages = self._get_dpkg_list()
+        self.selected_packages_remove = []
+        self.selected_packages_purge = []
+
+        self._preload_selected_packages()
         self._create_widgets()
-        master._safe_grab(self)
 
 
     def _create_widgets(self):
-        self.dpkg_remove_left = self._create_list_section("DPKG_REMOVE", 0)
-        self.dpkg_purge_left = self._create_list_section("DPKG_PURGE", 1)
+        self.dpkg_remove_left = self._create_list_section("DPKG_REMOVE", 0, self.selected_packages_remove)
+        self.dpkg_purge_left = self._create_list_section("DPKG_PURGE", 1, self.selected_packages_purge)
 
         btn = ttk.Button(self, text="Apply", command=self._on_apply)
         btn.pack(side="right", padx=10, pady=10)
 
 
-    def _create_list_section(self, title, row):
+    def _create_list_section(self, title, row, selected_packages):
         frame = ttk.LabelFrame(self, text=title)
         frame.pack(fill="x", padx=10, pady=5)
 
@@ -41,22 +48,30 @@ class PackageManagementDialog(tk.Toplevel):
         button_frame = ttk.Frame(frame)
         button_frame.grid(row=0, column=1, padx=5, pady=5)
 
-        ttk.Button(button_frame, text=">>", command=lambda: self._move_items(left, right)).pack(pady=(0, 5))
-        ttk.Button(button_frame, text="<<", command=lambda: self._move_items(right, left)).pack()
+        ttk.Button(button_frame, text=">>", command=lambda: self._move_items(left, right, selected_packages)).pack(pady=(0, 5))
+        ttk.Button(button_frame, text="<<", command=lambda: self._move_items(right, left, selected_packages)).pack()
 
         # Populate installed packages
-        pkgs = self._get_dpkg_list()
-        for p in pkgs:
-            left.insert(tk.END, p)
+        for p in self.available_packages:
+            if p not in selected_packages:
+                left.insert(tk.END, p)
+
+        for p in selected_packages:
+            right.insert(tk.END, p)
 
         return right
 
 
-    def _move_items(self, from_listbox, to_listbox):
+    def _move_items(self, from_listbox, to_listbox, target_list):
         for i in reversed(from_listbox.curselection()):
             item = from_listbox.get(i)
             to_listbox.insert(tk.END, item)
             from_listbox.delete(i)
+            if to_listbox is not from_listbox:
+                if item not in target_list:
+                    target_list.append(item)
+                else:
+                    target_list.remove(item)
 
 
     def _get_dpkg_list(self):
@@ -74,10 +89,32 @@ class PackageManagementDialog(tk.Toplevel):
 
     def _on_apply(self):
         result = []
-        for action, box in [("DPKG_REMOVE", self.dpkg_remove_left), ("DPKG_PURGE", self.dpkg_purge_left)]:
-            items = box.get(0, tk.END)
-            if items:
-                result.append({"type": action, "items": list(items)})
+        if self.selected_packages_remove:
+            result.append({"type": "DPKG_REMOVE", "items": list(self.selected_packages_remove)})
+        if self.selected_packages_purge:
+            result.append({"type": "DPKG_PURGE", "items": list(self.selected_packages_purge)})
         if result:
             self.on_apply(result)
         self.destroy()
+
+
+    def _preload_selected_packages(self):
+        remove_set = set()
+        purge_set = set()
+
+        for instr in self.existing_instructions:
+            if instr.get("type") == "DPKG_REMOVE":
+                remove_set.update(instr.get("items", []))
+            elif instr.get("type") == "DPKG_PURGE":
+                purge_set.update(instr.get("items", []))
+
+        self.selected_packages_remove.extend([pkg for pkg in self.available_packages if pkg in remove_set])
+        self.selected_packages_purge.extend([pkg for pkg in self.available_packages if pkg in purge_set])
+
+        # Remove already selected packages from available list to avoid duplicates
+        self.available_packages = [pkg for pkg in self.available_packages if pkg not in remove_set and pkg not in purge_set]
+
+        print("Preloaded REMOVE:", self.selected_packages_remove)
+#        print("Preloaded PURGE:", self.selected_packages_purge)
+#        print("Remaining AVAILABLE:", self.available_packages)
+

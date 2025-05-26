@@ -23,12 +23,16 @@ VALID_TYPES = [
 ]
 
 class OlafInstructionEditor(tk.Tk):
+
+
     def __init__(self):
         super().__init__()
         self.title("OreSat OLAF Instruction Editor")
         self.geometry("800x600")
         self.instructions = []
+
         self._create_widgets()
+
 
     def _create_widgets(self):
         top_row = ttk.Frame(self, padding=10)
@@ -382,18 +386,43 @@ class OlafInstructionEditor(tk.Tk):
             window.after(10, lambda: self._safe_grab(window) if window.winfo_exists() else None)
             
 
+    def _apply_pkg_mgmt_instructions(self, new_instructions):
+        # Avoid duplicates by replacing same-type instructions
+        new_types = {instr['type'] for instr in new_instructions}
+        self.instructions = [
+            instr for instr in self.instructions
+            if instr['type'] not in new_types
+        ]
+        self.instructions.extend(new_instructions)
+        self._render_tree()
+
+
+    def _apply_pip_mgmt_instructions(self, new_instructions):
+        for new_instr in new_instructions:
+            matched = False
+            for existing_instr in self.instructions:
+                if existing_instr['type'] == new_instr['type']:
+                    # Merge items into existing instruction
+                    for item in new_instr['items']:
+                        if item not in existing_instr['items']:
+                            existing_instr['items'].append(item)
+                    matched = True
+                    break
+            if not matched:
+                self.instructions.append(new_instr)
+        self._render_tree()
+
+
     def _open_sys_pkg_mgmt(self):
-        def apply(instructions):
-            self.instructions.extend(instructions)
-            self._render_tree()
-        PackageManagementDialog(self, on_apply=apply)
+        dialog = PackageManagementDialog(self, on_apply=self._apply_pkg_mgmt_instructions,
+                existing_instructions=self.instructions)
+        self._safe_grab(dialog)
 
 
     def _open_pip_pkg_mgmt(self):
-        def apply(instructions):
-            self.instructions.extend(instructions)
-            self._render_tree()
-        PipManagementDialog(self, on_apply=apply)
+        dialog = PipManagementDialog(self, on_apply=self._apply_pip_mgmt_instructions,
+                existing_instructions=self.instructions)
+        self._safe_grab(dialog)
 
 
 if __name__ == "__main__":
