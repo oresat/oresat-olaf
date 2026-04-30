@@ -94,6 +94,7 @@ class Updater:
         self._instruction_index = 0
         self._instruction_percent = 0
         self._command = ""
+        self._archive_name = ""
 
         self._has_dpkg = isfile("/usr/bin/dpkg")
         if not self._has_dpkg:
@@ -247,6 +248,7 @@ class Updater:
         """
 
         file_name = basename(file_path)
+        self._archive_name = file_name[:-7]
 
         if not is_update_archive(file_path):
             raise UpdaterError(file_name + " does not follow OreSat file name standards")
@@ -257,7 +259,7 @@ class Updater:
         except tarfile.TarError:
             raise UpdaterError(file_name + " is a invalid .tar.xz")
 
-        instructions_file_path = self._work_dir + "/" + INSTRUCTIONS_FILE
+        instructions_file_path = self._work_dir + "/" + self._archive_name + "/" + INSTRUCTIONS_FILE
         if not isfile(instructions_file_path):
             raise UpdaterError(file_name + " is missing an instructions file")
 
@@ -284,7 +286,7 @@ class Updater:
 
         commands = []
 
-        instructions_file_path = self._work_dir + "/" + INSTRUCTIONS_FILE
+        instructions_file_path = self._work_dir + "/" + self._archive_name + "/" + INSTRUCTIONS_FILE
         if not isfile(instructions_file_path):
             raise UpdaterError(f"cannot find {INSTRUCTIONS_FILE}")
 
@@ -308,10 +310,10 @@ class Updater:
             if i_type in INSTRUCTIONS_WITH_FILES:
                 # make sure all file exist
                 for j in i_items:
-                    if not isfile(self._work_dir + "/" + j):
+                    if not isfile(self._work_dir + "/" + self._archive_name + "/" + j):
                         raise UpdaterError(f"{i_type} is missing file {j}")
 
-                i_items_with_paths = [self._work_dir + "/" + i for i in i_items]
+                i_items_with_paths = [self._work_dir + "/" + self._archive_name + "/" + i for i in i_items]
                 command = INSTRUCTIONS[i_type] + " " + " ".join(i_items_with_paths)
             else:
                 command = INSTRUCTIONS[i_type] + " " + " ".join(i_items)
