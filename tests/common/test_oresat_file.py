@@ -1,69 +1,57 @@
 """Test the OreSat file class."""
 
-import os
-import unittest
+from pathlib import Path
+
+import pytest
 
 from olaf.common.oresat_file import OreSatFile, new_oresat_file
 
 
-class TestOreSatFile(unittest.TestCase):
-    """Test the OreSat file class."""
-
-    def test_new_oresat_file(self):
-        """Test the new_oresat_file functions."""
-
+class TestOreSatFile:
+    def test_new_oresat_file(self) -> None:
         file = new_oresat_file("keyword", "test", 100)
-        self.assertEqual(file, "test_keyword_100000")
+        assert file == "test_keyword_100000"
 
         file = new_oresat_file("keyword", "test", 100, "txt")
-        self.assertEqual(file, "test_keyword_100000.txt")
+        assert file == "test_keyword_100000.txt"
 
         file = new_oresat_file("keyword", "test", 100, ".txt")
-        self.assertEqual(file, "test_keyword_100000.txt")
+        assert file == "test_keyword_100000.txt"
 
-        self.assertIsNotNone(new_oresat_file("test"))
+        assert new_oresat_file("test") is not None
 
-    def test_oresat_file(self):
-        """Test the OreSatFile class constructor."""
-
+    def test_oresat_file(self) -> None:
         name = "name_test_12345.txt"
         file = OreSatFile(name)
-        self.assertEqual(file.card, "name")
-        self.assertEqual(file.keyword, "test")
-        self.assertEqual(file.date, 12.345)
-        self.assertEqual(file.extension, ".txt")
-        self.assertEqual(file.name, name)
+        assert file.card == "name"
+        assert file.keyword == "test"
+        assert file.date == 12.345
+        assert file.extension == ".txt"
+        assert file.name == name
 
         name = "name_test_12345.tar.xz"
         file = OreSatFile(name)
-        self.assertEqual(file.date, 12.345)
-        self.assertEqual(file.extension, ".tar.xz")
+        assert file.date == 12.345
+        assert file.extension == ".tar.xz"
 
-        name = "/this/is/test/name_test_123"
-        file = OreSatFile(name)
-        self.assertEqual(file.card, "name")
-        self.assertEqual(file.keyword, "test")
-        self.assertEqual(file.date, 0.123)
-        self.assertEqual(file.extension, "")
-        self.assertEqual(file.name, os.path.basename(name))
+        path = Path("/this/is/test/name_test_123")
+        file = OreSatFile(path)
+        assert file.card == "name"
+        assert file.keyword == "test"
+        assert file.date == 0.123
+        assert file.extension == ""
+        assert file.name == path.name
 
-        with self.assertRaises(ValueError):
-            OreSatFile("nametest12345")
+        for name in [
+            "nametest12345",
+            "__",
+            "__12345",
+            "_test_12345",
+            "name__12345",
+            "name_test_",
+        ]:
+            with pytest.raises(ValueError, match='invalid'):
+                OreSatFile(name)
 
-        with self.assertRaises(ValueError):
-            OreSatFile("__")
-
-        with self.assertRaises(ValueError):
-            OreSatFile("__12345")
-
-        with self.assertRaises(ValueError):
-            OreSatFile("_test_12345")
-
-        with self.assertRaises(ValueError):
-            OreSatFile("name__12345")
-
-        with self.assertRaises(ValueError):
-            OreSatFile("name_test_")
-
-        self.assertLess(OreSatFile("name_test_12345.txt"), OreSatFile("name_test_23456.txt"))
-        self.assertGreater(OreSatFile("name_test_23456.txt"), OreSatFile("name_test_12345.txt"))
+        assert OreSatFile("name_test_12345.txt") < OreSatFile("name_test_23456.txt")
+        assert OreSatFile("name_test_23456.txt") > OreSatFile("name_test_12345.txt")

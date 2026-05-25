@@ -1,4 +1,5 @@
 """File cache class for OreSat files."""
+from __future__ import annotations
 
 import shutil
 from copy import deepcopy
@@ -13,7 +14,7 @@ from .oresat_file import OreSatFile
 class OreSatFileCache:
     """File cache for OreSat files (by use of :py:class:`OresatFile`). Thread safe."""
 
-    def __init__(self, dir_path: str):
+    def __init__(self, dir_path: str | Path) -> None:
         """
         Parameters
         ----------
@@ -44,7 +45,7 @@ class OreSatFileCache:
 
         return length
 
-    def add(self, file_path: str, consume: bool = False):
+    def add(self, file_path: str | Path, consume: bool = False):
         """Add file to cache
 
         Parameters
@@ -111,7 +112,7 @@ class OreSatFileCache:
 
         return oldest_file
 
-    def pop(self, dir_path: str, copy: bool = False) -> str:
+    def pop(self, dir_path: str | Path, copy: bool = False) -> str:
         """Pop the oldest file from the cache
 
         Parameters
@@ -128,6 +129,7 @@ class OreSatFileCache:
             File path of the file now in `dir_path` or an empty string if the cache is empty.
         """
 
+        dir_path = str(dir_path)
         if dir_path[-1] != "/":
             dir_path += "/"
 
@@ -145,7 +147,7 @@ class OreSatFileCache:
 
         return dest
 
-    def get(self, file_name: str, dir_path: str, copy: bool = False) -> str:
+    def get(self, file_name: str, dir_path: str | Path, copy: bool = False) -> str:
         """Get the file from the cache and move it a specific directory.
 
         Parameters
@@ -169,6 +171,7 @@ class OreSatFileCache:
             File path of the file now in `dir_path` or an empty string if the cache is empty.
         """
 
+        dir_path = str(dir_path)
         if dir_path[-1] != "/":
             dir_path += "/"
 

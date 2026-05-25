@@ -1,4 +1,5 @@
 """OreSat Linux updater"""
+from __future__ import annotations
 
 import json
 import subprocess
@@ -66,7 +67,7 @@ class Updater:
     for easy to get status info while updating.
     """
 
-    def __init__(self, work_dir: str, cache_dir: str):
+    def __init__(self, work_dir: str | Path, cache_dir: str | Path):
         """
         Parameters
         ----------
@@ -106,7 +107,7 @@ class Updater:
         rmtree(self._work_dir, ignore_errors=True)
         Path(self._work_dir).mkdir(parents=True, exist_ok=True)
 
-    def add_update_archive(self, file_path: str) -> bool:
+    def add_update_archive(self, file_path: str | Path) -> bool:
         """Copies update archive into the update archive cache.
 
         Parameters
@@ -227,7 +228,7 @@ class Updater:
 
         self._state = UpdaterState.UPDATE_SUCCESSFUL
 
-    def _extract_update_archive(self, file_path: str) -> str:
+    def _extract_update_archive(self, file_path: str | Path) -> str:
         """Open the update archive file.
 
         Parameters

@@ -7,9 +7,8 @@ name = "oresat-olaf"
 description = "Application framework for all OreSat Linux boards"
 readme = "README.rst"
 requires-python = ">=3.9"
-license = {text = "GPL-3.0"}
+license = "GPL-3.0-or-later"
 classifiers = [
-    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
@@ -24,9 +23,25 @@ dependencies = [
     "loguru",
     "psutil",
     "python-can>=4.3.0",
-    "oresat-configs<1.0.0",
+    "oresat-configs>=0.8.0,<1.0.0",
 ]
+
 dynamic = ["version"]
+
+[dependency-groups]
+dev = [
+    "build",
+    "ruff",
+    "mypy",
+    "types-pywin32",
+    "types-psutil",
+    "types-colorama",
+    "pytest",
+    "pytest-cov",
+    "sphinx",
+    "sphinx-rtd-theme",
+    "sphinxcontrib-mermaid"
+]
 
 [tool.setuptools.packages.find]
 exclude = ["docs*", "tests*"]
@@ -37,55 +52,58 @@ exclude = ["docs*", "tests*"]
 [tool.setuptools_scm]
 write_to = "olaf/_version.py"
 
-[tool.black]
-line_length = 100
+[tool.ruff]
+line-length = 100
 
-[tool.pylama]
-format = "pylint"
-skip = "*/.tox/*,*/.env/,*/.git/*,*/.github/*,*/build/*"
-linters = "pycodestyle,pyflakes,pylint,mccabe,mypy,radon"
-# E402:     Module level import not at top of file
-# C901:     Function is too complex
-# C0103:    Arguments are not snake_case naming style or too short
-# E203:     Whitespace before ':' (black does this)
-# R0912:    Too many branches
-# R0915:    Too many statements
-# R0901:    Function is too complex
-# R0914:    Too many local variables
-# R1716:    Simplify chained comparison between the operands
-# C0413:    Imports not at top of module
-# C0206:    Consider iterating dictionaries with .items()
-# R1716:    Simplify chained comparison between the operands
-# W1514:    Using open without explicitly specifying an encoding
-# R0902:    Too many instance attributes
-# R0913:    Too many arguments
-# W0707:    Consider explicitly re-raising
-# W0102:    Dangerous default value as argument
-# W0107:    Unnecessary pass statement
-# R0903:    Too few public methods
-# R0904:    Too many public methods
-ignore = "E402,C901,C0103,E203,R0912,R0915,R901,R901,R0914,C0413,C0206,R1716,W1514,R0902,R0913,W0707,W0102,W0107,R0903,R0904"
-max_line_length = 100
+[tool.ruff.format]
+quote-style = "preserve"
 
-[[tool.pylama.files]]
-path = "*/__init__.py"
-# W0611:    Imported but unused
-ignore = "W0611"
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    # D203 and D213 conflict with D211 and D212. Prefer the latter which follow
+    # PEP257
+    "D203",
+    "D213",
+    # Conflicts with formatter
+    "COM812", # missing-trailing-comma
+    # Stylistic choices for quote-style = preserve
+    "Q000",  # Single quotes found but double quotes preferred
+    "Q002",  # Single quote docstring found but double quotes preferred
+    "D300",  # Use triple double quotes
+    # FIXME: These should be turned back on but take effort
+    "D102",  # Missing docstring in public method
+    "D107",  # Missing docstring in `__init__`
+    # These are the opposite of what I want
+    "D413",  # Missing blank line after last section
+    "EM101", # Exception must not use a string literal
+    "EM102", # Exception must not use an f-string literal
+    "FIX",  # flake8-fixme
+    "TD",  # flake8-todos
+    # This might be good to turn on later, right now I'm on the fence about it
+    "TRY003",  # Avoid specifying long messages outside the exception class
+    # Another one that might be good later but for now is too argessive. Many of
+    # the numbers it flags are obvious from context.
+    "PLR2004",  # Magic value used in comparison
+    "TID252",  # Prefer absolute imports over relative imports from parent modules
+]
 
-[[tool.pylama.files]]
-path = "tests/*"
-# W0212:    Access to a protected member of a class
-ignore = "W0212"
+[tool.ruff.lint.per-file-ignores]
+# Test specific lint ignores. These files are not part of the main
+# pass-commander application
+"tests/**/{test_*,__init__,conftest}.py" = [
+    "S101",  # assert - pytest prefers plain assert
+    "S311",
+    "SLF001", # Private member accessed - the tests should only access the
+              # public interface but lots of things would have to be redesigned
+    "PLR0915",
+    "D100",
+    "D101",
+    "D103",
+    "D104",
+]
 
-[[tool.pylama.files]]
-path = "*/_version.py"
-# C0114:    Missing module docstring
-ignore = "C0114"
-
-[[tool.mypy.overrides]]
-module = "canopen,oresat_configs,psutil,canopen.sdo,canopen.sdo.exceptions,canopen.objectdictionary"
-ignore_missing_imports = true
-
-[tool.isort]
-profile = "black"
-line_length = 100
+[tool.pytest.ini_options]
+markers = [
+    "olaf_resource(res): for passing the resource under test to the MockApp fixture",
+]
