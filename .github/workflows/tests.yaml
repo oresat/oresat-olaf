@@ -39,9 +39,12 @@ jobs:
       if: always() && steps.dependencies.conclusion == 'success'
       run: ruff format --check --diff tests
 
-    # - name: Type check with mypy
-    #   if: always() && steps.dependencies.conclusion == 'success'
-    #   run: mypy tests
+    - name: Type check with mypy
+      if: always() && steps.dependencies.conclusion == 'success'
+      # FIXME: Remove flags once typing is more generally applied. This turns
+      # almost every type into Any but it's probably better to have this check
+      # run at all than not.
+      run: mypy tests --disable-error-code=import-untyped --follow-imports=skip
 
     - name: Run unittests
       if: always() && steps.dependencies.conclusion == 'success'
