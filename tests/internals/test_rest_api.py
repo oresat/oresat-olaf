@@ -1,69 +1,86 @@
 """Test the REST API."""
 
-import unittest
+from collections.abc import Generator
 
-from oresat_configs import Mission, OreSatConfig
+import pytest
+from oresat_configs import OreSatConfig
+from werkzeug.test import Client
 
 from olaf import CanNetwork, app, rest_api
 
 
-class TestRestApi(unittest.TestCase):
-    """Test the REST API."""
+@pytest.fixture
+def client() -> Generator[Client]:
+    # Setup OLAF for unit testing.
+    config = OreSatConfig()
+    od = config.od_db["gps"]
+    network = CanNetwork("virtual", "vcan0")
 
-    @classmethod
-    def setUpClass(cls):
-        # Setup OLAF for unit testing.
-        config = OreSatConfig(Mission.default())
-        od = config.od_db["gps"]
-        network = CanNetwork("virtual", "vcan0")
-        app.setup(network, od, None, False)
-        rest_api.setup(address="localhost", port=8000)
+    app.setup(network, od, None, load_core=False)
+    rest_api.setup(address="localhost", port=8000)
 
-        cls.client = rest_api.app.test_client()
+    app.node._setup_node()
 
-        app.node._setup_node()
+    for i in app._resources:
+        i.start(app._node)
 
-        for i in app._resources:
-            i.start(app._node)
+    yield rest_api.app.test_client()
 
-    @classmethod
-    def tearDownClass(cls):
-        for i in app._resources:
-            i.end()
+    for i in app._resources:
+        i.end()
 
-        app.node._destroy_node()
-        app.stop()
+    rest_api._server.server_close()
+    app.node._destroy_node()
+    app.stop()
 
-    def test_read(self):
-        """Test reading a value from an object."""
 
+class TestRestApi:
+    def test_read(self, client: Client) -> None:
         # valid
-        self.assertNotIn("error", self.client.get("/od/0x1000").json)  # 0x1000 is manditory
-        self.assertNotIn("error", self.client.get("/od/4096").json)  # aka 0x1000
-        self.assertNotIn("error", self.client.get("/od/0x1018/0x1").json)  # 0x1018 is manditory
+        res = client.get("/od/0x1000").json  # 0x1000 is manditory
+        assert res is not None
+        assert "error" not in res
+        res = client.get("/od/4096").json  # aka 0x1000
+        assert res is not None
+        assert "error" not in res
+        res = client.get("/od/0x1018/0x1").json  # 0x1018 is manditory
+        assert res is not None
+        assert "error" not in res
 
         # invalid
-        self.assertIn("error", self.client.get("/od/0x1000/0x1").json)  # 0x1000 is manditory
-        self.assertIn("error", self.client.get("/od/apples").json)  # invalid index
-        self.assertIn("error", self.client.get("/od/0x1010/apples").json)  # invalid subindex
-        self.assertIn("error", self.client.get("/od/0x10").json)  # invalid index
-        self.assertIn("error", self.client.get("/od/0xFFFFFF").json)  # invalid index
+        res = client.get("/od/0x1000/0x1").json  # 0x1000 is manditory
+        assert res is not None
+        assert "error" in res
+        res = client.get("/od/apples").json  # invalid index
+        assert res is not None
+        assert "error" in res
+        res = client.get("/od/0x1010/apples").json  # invalid subindex
+        assert res is not None
+        assert "error" in res
+        res = client.get("/od/0x10").json  # invalid index
+        assert res is not None
+        assert "error" in res
+        res = client.get("/od/0xFFFFFF").json  # invalid index
+        assert res is not None
+        assert "error" in res
 
-    def test_write(self):
-        """Test writing a value to an object."""
-
+    def test_write(self, client: Client) -> None:
         # valid
-        self.client.put("/od/0x1000", json={"value": 1})
-        res = self.client.get("/od/0x1000")
-        self.assertNotIn("error", res.json)
-        self.assertEqual(res.json["value"], 1)
-        self.client.put("/od/0x1018/0x1", json={"value": 1})
-        res = self.client.get("/od/0x1018/0x1")
-        self.assertNotIn("error", res.json)
-        self.assertEqual(res.json["value"], 1)
+        client.put("/od/0x1000", json={"value": 1})
+        res = client.get("/od/0x1000").json
+        assert res is not None
+        assert "error" not in res
+        assert res["value"] == 1
+        client.put("/od/0x1018/0x1", json={"value": 1})
+        res = client.get("/od/0x1018/0x1").json
+        assert res is not None
+        assert "error" not in res
+        assert res["value"] == 1
 
         # invalid
-        res = self.client.put("/od/apples", json={"value": 0})
-        self.assertIn("error", res.json)
-        res = self.client.put("/od/0x1018/apples", json={"value": 0})
-        self.assertIn("error", res.json)
+        res = client.put("/od/apples", json={"value": 0}).json
+        assert res is not None
+        assert "error" in res
+        res = client.put("/od/0x1018/apples", json={"value": 0}).json
+        assert res is not None
+        assert "error" in res

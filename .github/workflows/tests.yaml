@@ -15,32 +15,46 @@ jobs:
 
     steps:
     - name: Clone this repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Set up Python 3.9
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: "3.9"
 
-    - name: Install dependencies
+    - name: Install Dependencies
+      id: dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install . --group dev
 
-    - name: Lint with Pylama
-      run: pylama
+    # always() && ... is so that all checks get run (but only if deps install)
+    # otherwise it'd stop on the first failed check
 
-    - name: Check format with Black
-      run: black --check --diff .
+    - name: Lint with Ruff
+      if: always() && steps.dependencies.conclusion == 'success'
+      run: ruff check tests
 
-    - name: Check format with isort
-      run: isort --check --diff .
+    - name: Check format with Ruff
+      if: always() && steps.dependencies.conclusion == 'success'
+      run: ruff format --check --diff tests
 
-    - name: Test with Python's unittest
-      run: python -m unittest
+    - name: Type check with mypy
+      if: always() && steps.dependencies.conclusion == 'success'
+      # FIXME: Remove flags once typing is more generally applied. This turns
+      # almost every type into Any but it's probably better to have this check
+      # run at all than not.
+      run: mypy tests --disable-error-code=import-untyped --follow-imports=skip
+
+    - name: Run unittests
+      if: always() && steps.dependencies.conclusion == 'success'
+      run: pytest
 
     - name: Test building pypi package
+      if: always() && steps.dependencies.conclusion == 'success'
       run: python -m build
 
     - name: Test building sphinx docs
-      run: make -C docs html
+      if: always() && steps.dependencies.conclusion == 'success'
+      # TZ=UTC fixes a crash when running sphinx inside nektos/act
+      run: TZ=UTC make -C docs html

@@ -1,5 +1,7 @@
 """File name format for OreSat files"""
+from __future__ import annotations
 
+from pathlib import Path
 from os import uname
 from os.path import basename
 from time import time
@@ -29,29 +31,24 @@ def new_oresat_file(keyword: str, card: str = "", date: float = -1.0, ext: str =
     """
 
     if not card:
-        card = uname()[1]
-
-    if card.startswith("oresat-"):
-        card = card[7:]  # remove 'oresat-'
+        card = uname().nodename
+    card = card.removeprefix('oresat-')
 
     if date < 0:
-        date_str = str(int(time() * 1000))
-    else:
-        date_str = str(int(date * 1000))
+        date = time()
+    date = int(date * 1000)
 
     # make sure the extension starts with a '.'
-    if len(ext) > 0 and ext[0] != ".":
+    if ext and not ext.startswith("."):
         ext = "." + ext
 
-    name = card + "_" + keyword + "_" + date_str + ext
-
-    return name.lower()
+    return f'{card}_{keyword}_{date}{ext}'.lower()
 
 
 class OreSatFile:
     """A class that follows the OreSat file format."""
 
-    def __init__(self, file: str):
+    def __init__(self, file: str | Path) -> None:
         """
         Parameters
         ----------
@@ -84,17 +81,17 @@ class OreSatFile:
             self._date = float(temp) / 1000
             self._extension = ""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__} {self._name}"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self._name
 
-    def __lt__(self, archive_file2):
-        return self._date < archive_file2.date
+    def __lt__(self, other: 'OreSatFile') -> bool:
+        return self._date < other.date
 
-    def __gt__(self, archive_file2):
-        return self._date > archive_file2.date
+    def __gt__(self, other: 'OreSatFile') -> bool:
+        return self._date > other.date
 
     @property
     def name(self) -> str:

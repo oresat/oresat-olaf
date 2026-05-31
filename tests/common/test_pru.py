@@ -1,18 +1,18 @@
 """Test the PRU class."""
 
-import unittest
-from os.path import isdir
+from pathlib import Path
+
+import pytest
 
 from olaf.board.pru import Pru, PruError, PruState
 
-PRU_EXIST = isdir("/dev/remoteproc/pruss-core0") and isdir("/dev/remoteproc/pruss-core1")
+PRU0 = Path("/dev/remoteproc/pruss-core0").is_dir()
+PRU1 = Path("/dev/remoteproc/pruss-core1").is_dir()
 
 
-class TestPru(unittest.TestCase):
-    """Test the PRU class."""
-
-    @unittest.skipUnless(PRU_EXIST, "requires PRU hardware")
-    def test_pru(self):
+class TestPru:
+    @pytest.mark.skipif(not (PRU0 and PRU1), reason="requires PRU hardware")
+    def test_pru(self) -> None:
         """Test the PRU class constructor."""
         pru0 = Pru(0)
         pru0.firmware = "am335x-pru0-fw"
@@ -20,30 +20,28 @@ class TestPru(unittest.TestCase):
         pru1.firmware = "/lib/firmware/am335x-pru1-fw"
 
         # invalid firmware path
-        with self.assertRaises(PruError):
+        with pytest.raises(PruError):
             pru1.firmware = "file-that-does-not-exist"
-        with self.assertRaises(PruError):
+        with pytest.raises(PruError):
             pru1.firmware = "/lib/firmware/file-that-does-not-exist"
 
+    def test_pru_invalid(self) -> None:
         # invalid pru number
-        with self.assertRaises(PruError):
+        with pytest.raises(PruError):
             Pru(2)
-
-        with self.assertRaises(PruError):
+        with pytest.raises(PruError):
             Pru(-1)
 
-    @unittest.skipUnless(PRU_EXIST, "requires PRU hardware")
-    def test_pru_control(self):
+    @pytest.mark.skipif(not PRU0, reason="requires PRU hardware")
+    def test_pru_control(self) -> None:
         """Test the PRU class methods."""
-
         pru0 = Pru(0)
-
-        self.assertEqual(pru0.state, PruState.OFFLINE)
+        assert pru0.state == PruState.OFFLINE
         pru0.start()
-        self.assertEqual(pru0.state, PruState.RUNNING)
+        assert pru0.state == PruState.RUNNING
         pru0.stop()
-        self.assertEqual(pru0.state, PruState.OFFLINE)
+        assert pru0.state == PruState.OFFLINE
         pru0.restart()
-        self.assertEqual(pru0.state, PruState.RUNNING)
+        assert pru0.state == PruState.RUNNING
         pru0.stop()
-        self.assertEqual(pru0.state, PruState.OFFLINE)
+        assert pru0.state == PruState.OFFLINE

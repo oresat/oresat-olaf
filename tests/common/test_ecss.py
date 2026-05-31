@@ -1,7 +1,8 @@
 """Test the ECSS functions."""
 
-import unittest
 from time import time
+
+import pytest
 
 from olaf.canopen.ecss import (
     scet_int_from_time,
@@ -11,21 +12,15 @@ from olaf.canopen.ecss import (
 )
 
 
-class TestEcss(unittest.TestCase):
-    """Test the ECSS functions."""
-
-    def test_scet_time(self):
-        """Test the ECSS SCET time functions."""
-
+class TestEcss:
+    def test_scet_time(self) -> None:
         now = time()
         scet = scet_int_from_time(now)
         now2 = scet_int_to_time(scet)
-        self.assertAlmostEqual(now, now2, 1)
+        assert now2 == pytest.approx(now)
 
-    def test_utc_time(self):
-        """Test the ECSS UTC time functions."""
-
+    def test_utc_time(self) -> None:
         now = time()
         utc = utc_int_from_time(now)
         now2 = utc_int_to_time(utc)
-        self.assertAlmostEqual(now, now2, 1)
+        assert now2 == pytest.approx(now)

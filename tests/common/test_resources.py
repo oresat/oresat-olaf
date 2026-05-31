@@ -1,8 +1,6 @@
 """Test the Resource class."""
 
-import unittest
-
-from oresat_configs import Mission, OreSatConfig
+from oresat_configs import OreSatConfig
 
 from olaf import CanNetwork, Node, Resource
 
@@ -10,20 +8,17 @@ from olaf import CanNetwork, Node, Resource
 class BadResource(Resource):
     """Bad Resource for testing."""
 
-    def on_start(self):
-        raise Exception("a random exception")  # pylint: disable=W0719
+    def on_start(self) -> None:
+        raise RuntimeError("a random exception")
 
-    def on_end(self):
-        raise Exception("a random exception")  # pylint: disable=W0719
+    def on_end(self) -> None:
+        raise RuntimeError("a random exception")
 
 
-class TestResource(unittest.TestCase):
-    """Test the Resource class."""
-
-    def test_start_stop(self):
-        """All exception should be caught"""
-
-        od = OreSatConfig(Mission.default()).od_db["gps"]
+class TestResource:
+    def test_start_stop(self) -> None:
+        """All exception should be caught."""
+        od = OreSatConfig().od_db["gps"]
         network = CanNetwork("virtual", "vcan0")
         node = Node(network, od)
 
