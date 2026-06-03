@@ -10,6 +10,7 @@ from ...canopen.master_node import MasterNode
 
 class UpdaterService(Service):
     """Service for interacting with the updater"""
+    INACTIVE_TIMEOUT = 5
 
     def __init__(self, updater: Updater):
         super().__init__()
@@ -67,11 +68,27 @@ class UpdaterService(Service):
                 self._updater.add_update_archive(self.node.fwrite_cache.dir + "/" + i.name)
                 self.node.fwrite_cache.remove(i.name)
                 logger.info(f"updater moved {i.name} into update cache")
-            elif isinstance(self.node, MasterNode):  # Find out if the update is for a valid card.
+            elif isinstance(self.node, MasterNode):
                 try:
                     remote_node_id = self.node.od_db[i.card_underscore].node_id
                 except KeyError:
                     logger.error(f"Could not find update archive's remote node {i.card_underscore}, in object dictionary database")
                     continue # we may want to try to rename the file here so that this warning doesn't keep occuring.
+
+                if self.node.od_db[i.card_underscore][0x3002][0x4].name != "sw_version":
+                    logger.warning(f"Update archive is for {i.card_underscore}, which is not OLAF.")
+                    continue
+
+                if (  # Has a heartbeat saying that it is alive, and less than INACTIVE_TIMEOUT since last heartbeat.
+                    self.node.node_status[i.card_underscore][0] != b"0x05" or
+                    self.node.node_status[i.card_underscore][2] + INACTIVE_TIMEOUT < monotonic()
+                ):
+                    logger.warning(f"Update archive is for {i.card_underscore}, which is not on.")
+                    continue
+
+                # get the file data
+                
+
                 # transfer the file
-                logger.error(f"Found the node id for card {i.card_underscore}: {remote_node_id}")
+                node.sdo_write(i.card_underscore, "fwrite_cache", "file_data", i.name)
+                node.sdo_write(i.card_underscore, "fwrite_cache", "file_data", VSAINSFbon)
