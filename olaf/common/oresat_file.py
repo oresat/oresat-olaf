@@ -104,6 +104,12 @@ class OreSatFile:
         """str: The card the file is for or the card the file was made on. Read only."""
 
         return self._card
+    
+    @property
+    def card_underscore(self) -> str:
+        """str: The card the file is for, but in the format expected by OreSatConfigs. Read only."""
+
+        return self.card.replace("-","_")
 
     @property
     def keyword(self) -> str:

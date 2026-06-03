@@ -6,7 +6,7 @@ from loguru import logger
 
 from ...common.service import Service
 from ..updater import Updater, UpdaterError
-
+from ...canopen.master_node import MasterNode
 
 class UpdaterService(Service):
     """Service for interacting with the updater"""
@@ -28,11 +28,7 @@ class UpdaterService(Service):
         self.node.add_sdo_callbacks("updater", "cache_length", self.on_read_cache_len, None)
 
         # check for update files in fwrite cache
-        for i in self.node.fwrite_cache.files("update"):
-            if i.card == self._hostname:
-                self._updater.add_update_archive(self.node.fwrite_cache.dir + "/" + i.name)
-                self.node.fwrite_cache.remove(i.name)
-                logger.info(f"updater moved {i.name} into update cache")
+        self.check_for_updates()
 
     def on_loop(self):
 
@@ -63,3 +59,19 @@ class UpdaterService(Service):
     def on_read_cache_json(self) -> str:
         """SDO read callback to get list of updates cached as str"""
         return " ".join([i.name for i in self._updater.updates_cached])
+
+    def check_for_updates(self) -> None:
+        """Check for updates in the fwrite cache. Transfer updates for remote cards if any are present"""
+        for i in self.node.fwrite_cache.files("update"):
+            if i.card == self._hostname:
+                self._updater.add_update_archive(self.node.fwrite_cache.dir + "/" + i.name)
+                self.node.fwrite_cache.remove(i.name)
+                logger.info(f"updater moved {i.name} into update cache")
+            elif isinstance(self.node, MasterNode):  # Find out if the update is for a valid card.
+                try:
+                    remote_node_id = self.node.od_db[i.card_underscore].node_id
+                except KeyError:
+                    logger.error(f"Could not find update archive's remote node {i.card_underscore}, in object dictionary database")
+                    continue # we may want to try to rename the file here so that this warning doesn't keep occuring.
+                # transfer the file
+                logger.error(f"Found the node id for card {i.card_underscore}: {remote_node_id}")
