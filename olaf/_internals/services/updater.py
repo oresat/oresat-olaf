@@ -1,8 +1,11 @@
 """Service for interacting with the updater"""
 
 import os
+from os.path import abspath
 
 from loguru import logger
+
+from time import monotonic
 
 from ...common.service import Service
 from ..updater import Updater, UpdaterError
@@ -27,6 +30,7 @@ class UpdaterService(Service):
         self.node.add_sdo_callbacks("updater", "status", self.on_read_status, None)
         self.node.add_sdo_callbacks("updater", "cache_files_json", self.on_read_cache_json, None)
         self.node.add_sdo_callbacks("updater", "cache_length", self.on_read_cache_len, None)
+        self.node.add_sdo_callbacks("updater", "check_for_updates", None, self.check_for_updates)
 
         # check for update files in fwrite cache
         self.check_for_updates()
@@ -66,18 +70,18 @@ class UpdaterService(Service):
             remote_node_id = self.node.od_db[i.card_underscore].node_id
         except KeyError:
             logger.error(f"Could not find update archive's remote node {i.card_underscore}, in object dictionary database")
-            continue  # we may want to try to rename the file here so that this warning doesn't keep occuring.
+            return  # we may want to try to rename the file here so that this warning doesn't keep occuring.
 
         if self.node.od_db[i.card_underscore][0x3002][0x4].name != "sw_version":
             logger.warning(f"Update archive is for {i.card_underscore}, which is not OLAF.")
-            continue
+            return
 
         if (  # Has a heartbeat saying that it is alive, and less than INACTIVE_TIMEOUT since last heartbeat.
-            self.node.node_status[i.card_underscore][0] != b"0x05" or
-            self.node.node_status[i.card_underscore][2] + INACTIVE_TIMEOUT < monotonic()
+            self.node.node_status[i.card_underscore][0] != 0x05 or
+            self.node.node_status[i.card_underscore][2] + self.INACTIVE_TIMEOUT < monotonic()
         ):
             logger.warning(f"Update archive is for {i.card_underscore}, which is not on.")
-            continue
+            return
 
         # get the file data
         path = abspath(self.node.fwrite_cache.dir + "/" + i.name)
@@ -85,13 +89,13 @@ class UpdaterService(Service):
             data = f.read()
 
         # transfer the file
-        self.node.sdo_write(i.card_underscore, "fwrite_cache", "file_data", i.name)
+        self.node.sdo_write(i.card_underscore, "fwrite_cache", "file_name", i.name)
         self.node.sdo_write(i.card_underscore, "fwrite_cache", "file_data", data)
 
         # delete the update file
         self.node.fwrite_cache.remove(i.name)
 
-    def check_for_updates(self) -> None:
+    def check_for_updates(self, value: bool = True) -> None:
         """Check for updates in the fwrite cache. Transfer updates for remote cards if any are present"""
         for i in self.node.fwrite_cache.files("update"):
             if i.card == self._hostname:
