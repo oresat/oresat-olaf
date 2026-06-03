@@ -61,6 +61,36 @@ class UpdaterService(Service):
         """SDO read callback to get list of updates cached as str"""
         return " ".join([i.name for i in self._updater.updates_cached])
 
+    def send_update(self, i: OreSatFile) -> None:
+        try:
+            remote_node_id = self.node.od_db[i.card_underscore].node_id
+        except KeyError:
+            logger.error(f"Could not find update archive's remote node {i.card_underscore}, in object dictionary database")
+            continue  # we may want to try to rename the file here so that this warning doesn't keep occuring.
+
+        if self.node.od_db[i.card_underscore][0x3002][0x4].name != "sw_version":
+            logger.warning(f"Update archive is for {i.card_underscore}, which is not OLAF.")
+            continue
+
+        if (  # Has a heartbeat saying that it is alive, and less than INACTIVE_TIMEOUT since last heartbeat.
+            self.node.node_status[i.card_underscore][0] != b"0x05" or
+            self.node.node_status[i.card_underscore][2] + INACTIVE_TIMEOUT < monotonic()
+        ):
+            logger.warning(f"Update archive is for {i.card_underscore}, which is not on.")
+            continue
+
+        # get the file data
+        path = abspath(self.node.fwrite_cache.dir + "/" + i.name)
+        with open(path, "rb") as f:
+            data = f.read()
+
+        # transfer the file
+        self.node.sdo_write(i.card_underscore, "fwrite_cache", "file_data", i.name)
+        self.node.sdo_write(i.card_underscore, "fwrite_cache", "file_data", data)
+
+        # delete the update file
+        self.node.fwrite_cache.remove(i.name)
+
     def check_for_updates(self) -> None:
         """Check for updates in the fwrite cache. Transfer updates for remote cards if any are present"""
         for i in self.node.fwrite_cache.files("update"):
@@ -68,27 +98,6 @@ class UpdaterService(Service):
                 self._updater.add_update_archive(self.node.fwrite_cache.dir + "/" + i.name)
                 self.node.fwrite_cache.remove(i.name)
                 logger.info(f"updater moved {i.name} into update cache")
+
             elif isinstance(self.node, MasterNode):
-                try:
-                    remote_node_id = self.node.od_db[i.card_underscore].node_id
-                except KeyError:
-                    logger.error(f"Could not find update archive's remote node {i.card_underscore}, in object dictionary database")
-                    continue # we may want to try to rename the file here so that this warning doesn't keep occuring.
-
-                if self.node.od_db[i.card_underscore][0x3002][0x4].name != "sw_version":
-                    logger.warning(f"Update archive is for {i.card_underscore}, which is not OLAF.")
-                    continue
-
-                if (  # Has a heartbeat saying that it is alive, and less than INACTIVE_TIMEOUT since last heartbeat.
-                    self.node.node_status[i.card_underscore][0] != b"0x05" or
-                    self.node.node_status[i.card_underscore][2] + INACTIVE_TIMEOUT < monotonic()
-                ):
-                    logger.warning(f"Update archive is for {i.card_underscore}, which is not on.")
-                    continue
-
-                # get the file data
-                
-
-                # transfer the file
-                node.sdo_write(i.card_underscore, "fwrite_cache", "file_data", i.name)
-                node.sdo_write(i.card_underscore, "fwrite_cache", "file_data", VSAINSFbon)
+                self.send_update(i)
