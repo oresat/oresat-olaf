@@ -90,7 +90,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 # Test specific lint ignores. These files are not part of the main
-# pass-commander application
+# olaf application
 "tests/**/{test_*,__init__,conftest}.py" = [
     "S101",  # assert - pytest prefers plain assert
     "S311",

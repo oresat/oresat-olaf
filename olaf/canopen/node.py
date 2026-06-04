@@ -1,12 +1,14 @@
 """OreSat CANopen Node"""
 
+from __future__ import annotations
+
 import os
 import struct
 from enum import IntEnum
 from pathlib import Path
 from threading import Event
 from time import monotonic
-from typing import Any, Callable, Dict, Union
+from typing import TYPE_CHECKING, Any
 
 from canopen import LocalNode, ObjectDictionary
 from canopen.objectdictionary import (
@@ -25,6 +27,9 @@ from ..canopen.network import CanNetwork, CanNetworkState
 from ..common.daemon import Daemon
 from ..common.oresat_file_cache import OreSatFileCache
 from . import EmcyCode
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class NodeStop(IntEnum):
@@ -61,7 +66,7 @@ class Node:
     basic API for CANopen things.
     """
 
-    def __init__(self, network: CanNetwork, od: ObjectDictionary):
+    def __init__(self, network: CanNetwork, od: ObjectDictionary) -> None:
         """
         Parameters
         ----------
@@ -73,13 +78,13 @@ class Node:
 
         self._event = Event()
         self._od = od
-        self._node: LocalNode = None
+        self._node: LocalNode | None = None
         self._network: CanNetwork = network
-        self._read_cbs = {}  # type: ignore
-        self._write_cbs = {}  # type: ignore
+        self._read_cbs: dict[tuple[str, str | None], Callable[[], Any]] = {}
+        self._write_cbs: dict[tuple[str, str | None], Callable[[Any], None]] = {}
         self._syncs = 0
         self._reset = NodeStop.SOFT_RESET
-        self._daemons = {}  # type: ignore
+        self._daemons: dict[str, Daemon] = {}
 
         if os.geteuid() == 0:  # running as root
             self.work_base_dir = "/var/lib/oresat"
@@ -109,12 +114,12 @@ class Node:
             self._rpdo_cobid_to_num[cob_id] = i
             self._network.subscribe(cob_id, self._on_pdo)
 
-    def __del__(self):
+    def __del__(self) -> None:
         # stop the monitor thread if it is running
         if not self._event.is_set():
             self.stop()
 
-    def _on_sync(self, cob_id: int, data: bytes, timestamp: float):  # pylint: disable=W0613
+    def _on_sync(self, cob_id: int, data: bytes, timestamp: float) -> None:
         """On SYNC message send TPDOs configured to be SYNC-based"""
 
         self._syncs += 1
@@ -126,7 +131,7 @@ class Node:
             if self._syncs % transmission_type == 0:
                 self.send_tpdo(i)
 
-    def _on_pdo(self, cob_id: int, data: bytes, timestamp: float):  # pylint: disable=W0613
+    def _on_pdo(self, cob_id: int, data: bytes, timestamp: float) -> None:
         rpdo = self._rpdo_cobid_to_num[cob_id]
         maps = self.od[0x1600 + rpdo][0].value
 
@@ -149,7 +154,7 @@ class Node:
 
             offset += size
 
-    def _setup_node(self):
+    def _setup_node(self) -> None:
         """Create the CANopen node."""
 
         if self._od.node_id is None:
@@ -167,7 +172,7 @@ class Node:
         else:
             self._first_network_reset = False
 
-    def _destroy_node(self):
+    def _destroy_node(self) -> None:
         """Destroy the CANopen node."""
 
         self._node = None
@@ -220,14 +225,14 @@ class Node:
         logger.info(f"{self.name} node has ended")
         return self._reset
 
-    def stop(self, reset: Union[NodeStop, None] = None):
+    def stop(self, reset: NodeStop | None = None) -> None:
         """End the run loop"""
 
         if reset is not None:
             self._reset = reset
         self._event.set()
 
-    def add_daemon(self, name: str):
+    def add_daemon(self, name: str) -> None:
         """Add a daemon for the node to monitor and/or control"""
 
         self._daemons[name] = Daemon(name)
@@ -235,20 +240,20 @@ class Node:
     def add_sdo_callbacks(
         self,
         index: str,
-        subindex: str,
-        read_cb: Callable[[None], Any],
-        write_cb: Callable[[Any], None],
-    ):
+        subindex: str | None,
+        read_cb: Callable[[], Any] | None,
+        write_cb: Callable[[Any], None] | None,
+    ) -> None:
         """
         Add an SDO read callback for a variable at index and optional subindex.
 
         Parameters
         ----------
-        index: int or str
+        index: str
             The index to call the callback on.
-        subindex: int or str
+        subindex: str
             The subindex to call the callback on.
-        read_cb: Callable[[None], Any]
+        read_cb: Callable[[], Any]
             The SDO read callback. Allows overriding the data being sent on a SDO read. If
             overriding read data return the value or return :py:data:`None` to use the the value
             from the od. Set to :py:data:`None` for no read_cb.
@@ -279,7 +284,7 @@ class Node:
         if write_cb is not None:
             self._write_cbs[index, subindex] = write_cb
 
-    def _send_pdo(self, comm_index: int, map_index: int, raise_error: bool = True):
+    def _send_pdo(self, comm_index: int, map_index: int, raise_error: bool = True) -> None:
         """Send a PDO. Will not be sent if not node is not in operational state."""
 
         # PDOs should not be sent if CANopen node not in 'OPERATIONAL' state
@@ -316,7 +321,7 @@ class Node:
 
         self._network.send_message(cob_id, data, raise_error)
 
-    def send_tpdo(self, tpdo: int, raise_error: bool = True):
+    def send_tpdo(self, tpdo: int, raise_error: bool = True) -> None:
         """
         Send a TPDO. Will not be sent if not node is not in operational state.
 
@@ -340,7 +345,7 @@ class Node:
         map_index = 0x1A00 + tpdo
         self._send_pdo(comm_index, map_index, raise_error)
 
-    def send_emcy(self, code: Union[EmcyCode, int], data: bytes = b"", raise_error: bool = True):
+    def send_emcy(self, code: EmcyCode | int, data: bytes = b"", raise_error: bool = True) -> None:
         """
         Send a EMCY message.
 
@@ -370,7 +375,9 @@ class Node:
         self._network.send_message(self.od.node_id + 0x80, frame, raise_error)
         logger.error(f"sent emcy 0x{code:04X} {data.hex()}")
 
-    def _on_sdo_read(self, index: int, subindex: int, od: ODVariable):
+    def _on_sdo_read(
+        self, index: int, subindex: int, od: ODVariable
+    ) -> int | str | float | bytes | bool:
         """
         SDO read callback function. Allows overriding the data being sent on a SDO read. Return
         valid datatype for object, if overriding read data, or :py:data:`None` to use the the value
@@ -395,14 +402,14 @@ class Node:
 
         # convert any ints to strs
         if isinstance(self.od[index], ODVariable) and od == self.od[index]:
-            index = od.name
-            subindex = None  # type: ignore
+            index_name = od.name
+            subindex_name: str | None = None
         else:
-            index = self.od[index].name
-            subindex = od.name
+            index_name = self.od[index].name
+            subindex_name = od.name
 
-        if (index, subindex) in self._read_cbs:
-            ret = self._read_cbs[index, subindex]()
+        if (index_name, subindex_name) in self._read_cbs:
+            ret = self._read_cbs[index_name, subindex_name]()
 
         # get value from OD
         if ret is None:
@@ -410,7 +417,13 @@ class Node:
 
         return ret
 
-    def _on_sdo_write(self, index: int, subindex: int, od: ODVariable, data: bytes):
+    def _on_sdo_write(
+        self,
+        index: int | str,
+        subindex: int | str | None,
+        od: ODVariable,
+        data: str | float | bytes | bool,
+    ) -> None:
         """
         SDO write callback function. Gives access to the data being received on a SDO write.
 
@@ -418,34 +431,35 @@ class Node:
 
         Parameters
         ----------
-        index: int
+        index:
             The index the SDO being written to.
-        subindex: int
+        subindex:
             The subindex the SDO being written to.
-        od: canopen.objectdictionary.ODVariable
+        od:
             The variable object being written to. Badly named.
-        data: bytes
+        data:
             The raw data being written.
         """
 
         binary_types = [DOMAIN, OCTET_STRING]
+        obj = od
 
         # set value in OD before callback
-        if od.data_type in binary_types:
-            od.value = data
+        if obj.data_type in binary_types:
+            obj.value = data
         else:
-            od.value = od.decode_raw(data)
+            obj.value = obj.decode_raw(data)
 
         # convert any ints to strs
-        if isinstance(self.od[index], ODVariable) and od == self.od[index]:
-            index = od.name
-            subindex = None  # type: ignore
+        if isinstance(self.od[index], ODVariable) and obj == self.od[index]:
+            index = obj.name
+            subindex = None
         else:
             index = self.od[index].name
-            subindex = od.name
+            subindex = obj.name
 
         if (index, subindex) in self._write_cbs:
-            self._write_cbs[index, subindex](od.value)
+            self._write_cbs[index, subindex](obj.value)
 
     @property
     def bus(self) -> str:
@@ -490,14 +504,14 @@ class Node:
         return not self._event.is_set()
 
     @property
-    def daemons(self) -> Dict[str, Daemon]:
+    def daemons(self) -> dict[str, Daemon]:
         """dict: The dictionary of external daemons that are monitored and/or controllable"""
 
         return self._daemons
 
     def od_get_obj(
-        self, index: Union[int, str], subindex: Union[int, str, None] = None
-    ) -> Union[ODVariable, ODArray, ODRecord]:
+        self, index: int | str, subindex: int | str | None = None
+    ) -> ODVariable | ODArray | ODRecord:
         """
         Quick helper function to get an object from the od.
 
@@ -512,8 +526,8 @@ class Node:
         return self._od[index][subindex]
 
     def od_read(
-        self, index: Union[int, str], subindex: Union[int, str, None]
-    ) -> Union[int, str, float, bytes, bool]:
+        self, index: int | str, subindex: int | str | None
+    ) -> int | str | float | bytes | bool:
         """
         Read a value from the OD.
 
@@ -533,9 +547,7 @@ class Node:
         obj = self.od_get_obj(index, subindex)
         return obj.value
 
-    def od_read_bitfield(
-        self, index: Union[int, str], subindex: Union[int, str, None], field: str
-    ) -> int:
+    def od_read_bitfield(self, index: int | str, subindex: int | str | None, field: str) -> int:
         """
         Read a field from a object from the OD.
 
@@ -561,7 +573,7 @@ class Node:
             value |= tmp >> bits[i]
         return value
 
-    def od_read_enum(self, index: Union[int, str], subindex: Union[int, str, None]) -> str:
+    def od_read_enum(self, index: int | str, subindex: int | str | None) -> str:
         """
         Read a enum str from the OD.
 
@@ -581,15 +593,12 @@ class Node:
         obj = self.od_get_obj(index, subindex)
         return obj.value_descriptions[obj.value]
 
-    def _var_write(self, obj: ODVariable, value: Union[int, str, float, bytes, bool]):
-
-        value_type = type(value)
-
-        def make_error_value(data_type) -> str:
+    def _var_write(self, obj: ODVariable, value: str | float | bytes | bool) -> None:
+        def make_error_value(data_type: str) -> str:
             return f"cannot write {value!r} ({data_type}) to object {obj.name} ({obj.data_type})"
 
         if obj.data_type in INTEGER_TYPES:
-            if value_type != int:
+            if not isinstance(value, int):
                 raise TypeError(make_error_value("int"))
             if obj.max is not None and value > obj.max:
                 raise ValueError(f"value {value!r} too high (high limit {obj.max})")
@@ -611,10 +620,10 @@ class Node:
 
     def od_write(
         self,
-        index: Union[int, str],
-        subindex: Union[int, str, None],
-        value: Union[int, str, float, bytes, bool],
-    ):
+        index: int | str,
+        subindex: int | str | None,
+        value: str | float | bytes | bool,
+    ) -> None:
         """
         Write an value to the OD.
 
@@ -637,8 +646,8 @@ class Node:
         self._var_write(obj, value)
 
     def od_write_bitfield(
-        self, index: Union[int, str], subindex: Union[int, str, None], field: str, value: int
-    ):
+        self, index: int | str, subindex: int | str | None, field: str, value: int
+    ) -> None:
         """
         Write a bit field value to a object to the OD.
 
@@ -672,7 +681,7 @@ class Node:
         new_value |= value << offset
         obj.value = new_value
 
-    def od_write_enum(self, index: Union[int, str], subindex: Union[int, str, None], value: str):
+    def od_write_enum(self, index: int | str, subindex: int | str | None, value: str) -> None:
         """
         Write a enum str to the OD.
 
@@ -687,5 +696,5 @@ class Node:
         """
 
         obj = self.od_get_obj(index, subindex)
-        tmp = {d: v for v, d in obj.value_descriptions}
+        tmp = {d: v for v, d in obj.value_descriptions.items()}
         obj.value = tmp[value.lower()]

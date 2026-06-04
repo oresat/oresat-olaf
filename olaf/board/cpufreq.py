@@ -25,7 +25,7 @@ def get_cpufreq() -> int:
     return value
 
 
-def set_cpufreq(value: int):
+def set_cpufreq(value: int) -> None:
     """
     Set the current CPU frequency. Must be running as root to use this function.
 
@@ -62,7 +62,7 @@ def get_cpufreq_gov() -> str:
     return gov
 
 
-def set_cpufreq_gov(cpufreq_gov: str):
+def set_cpufreq_gov(cpufreq_gov: str) -> None:
     """
     Set the current cpu governor.
 

@@ -22,7 +22,7 @@ class DaemonState(Enum):
 class Daemon:
     """Quick class to control a systemd daemon."""
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         """
         Parameters
         ----------
@@ -32,17 +32,17 @@ class Daemon:
 
         self._name = name
 
-    def start(self):
+    def start(self) -> None:
         """Start the daemon."""
 
         subprocess.run(f"systemctl start {self._name}", shell=True, check=False)
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the daemon."""
 
         subprocess.run(f"systemctl stop {self._name}", shell=True, check=False)
 
-    def restart(self):
+    def restart(self) -> None:
         """Restart the daemon."""
 
         subprocess.run(f"systemctl restart {self._name}", shell=True, check=False)

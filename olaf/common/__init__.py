@@ -1,5 +1,7 @@
 """Common OLAF class and functions."""
 
+from __future__ import annotations
+
 import re
 
 
@@ -23,15 +25,14 @@ def natsorted(data: list[str], ignore_case: bool = False) -> list[str]:
     if not data:
         return []
 
-    def convert(text):
-        r = text
+    def convert(text: str) -> int | str:
         if text.isdigit():
-            r = int(text)
-        elif ignore_case:
-            text.lower()
-        return r
+            return int(text)
+        if ignore_case:
+            return text.lower()
+        return text
 
-    def alphanum_key(key):
+    def alphanum_key(key: str) -> list[int | str]:
         return [convert(c) for c in re.split("([0-9]+)", str(key))]
 
     return sorted(data, key=alphanum_key)

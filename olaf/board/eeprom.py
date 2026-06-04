@@ -16,7 +16,7 @@ class Eeprom:
         "A335OCFC": "cfc",
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Raises
         ------

@@ -25,7 +25,7 @@ class Pru:
     resources with the core processor.
     """
 
-    def __init__(self, pru_num: int):
+    def __init__(self, pru_num: int) -> None:
         """
         Parameters
         ----------
@@ -48,7 +48,7 @@ class Pru:
         self._pru_state_path = self._pru_dir_path + "/state"
         self._pru_fw_path = self._pru_dir_path + "/firmware"
 
-    def start(self):
+    def start(self) -> None:
         """
         Starts the PRU.
 
@@ -66,7 +66,7 @@ class Pru:
         with open(self._pru_state_path, "w") as f:
             f.write("start")
 
-    def stop(self):
+    def stop(self) -> None:
         """
         Stops the PRU.
 
@@ -84,7 +84,7 @@ class Pru:
             with open(self._pru_state_path, "w") as f:
                 f.write("stop")
 
-    def restart(self):
+    def restart(self) -> None:
         """Restarts the PRU."""
 
         self.stop()
@@ -137,7 +137,7 @@ class Pru:
         return fw_file
 
     @firmware.setter
-    def firmware(self, fw_path: str):
+    def firmware(self, fw_path: str) -> None:
         if self.state != PruState.OFFLINE:
             raise PruError(f"PRU{self._pru_num} must be in OFFLINE state to set firmware")
 

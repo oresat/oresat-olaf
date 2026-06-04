@@ -1,17 +1,25 @@
 """OreSat CANopen Master Node class to support the C3"""
 
-from collections import namedtuple
+from __future__ import annotations
+
 from time import monotonic
-from typing import Any, Dict, Union
+from typing import TYPE_CHECKING, NamedTuple
 
 import canopen
-from canopen.sdo import SdoArray, SdoRecord, SdoVariable
 from loguru import logger
 
-from ..canopen.network import CanNetwork
 from .node import Node
 
-NodeHeartbeatInfo = namedtuple("NodeHeartbeatInfo", ["state", "timestamp", "time_since_boot"])
+if TYPE_CHECKING:
+    from canopen.sdo import SdoArray, SdoRecord, SdoVariable
+
+    from ..canopen.network import CanNetwork
+
+
+class NodeHeartbeatInfo(NamedTuple):
+    state: int
+    timestamp: float
+    time_since_boot: float
 
 
 class MasterNode(Node):
@@ -21,8 +29,8 @@ class MasterNode(Node):
         self,
         network: CanNetwork,
         od: canopen.ObjectDictionary,
-        od_db: Dict[Any, canopen.ObjectDictionary],
-    ):
+        od_db: dict[str, canopen.ObjectDictionary],
+    ) -> None:
         """
         Parameters
         ----------
@@ -30,7 +38,7 @@ class MasterNode(Node):
             The CAN network
         od: canopen.ObjectDictionary
             The CANopen ObjectDictionary
-        od_db: Dict[Any, canopen.ObjectDictionary]
+        od_db: dict[str, canopen.ObjectDictionary]
             Database of other nodes's ODs. The dict key will be used by class fields and methods.
         """
 
@@ -56,7 +64,7 @@ class MasterNode(Node):
 
         self._network.add_reset_callback(self._restart_network)
 
-    def _restart_network(self):
+    def _restart_network(self) -> None:
         """Restart the CANopen network"""
 
         for key, od in self._od_db.items():
@@ -67,7 +75,7 @@ class MasterNode(Node):
         for remote_node in self._remote_nodes.values():
             self._network.add_node(remote_node)
 
-    def _on_heartbeat(self, cob_id: int, data: bytes, timestamp: float):
+    def _on_heartbeat(self, cob_id: int, data: bytes, timestamp: float) -> None:
         """Callback on node hearbeat messages."""
 
         node_id = cob_id - 0x700
@@ -75,14 +83,14 @@ class MasterNode(Node):
         key = self._node_id_to_key[node_id]
         self.node_status[key] = NodeHeartbeatInfo(status, timestamp, monotonic())
 
-    def _on_emergency(self, cob_id: int, data: bytes, timestamp: float):  # pylint: disable=W0613
+    def _on_emergency(self, cob_id: int, data: bytes, timestamp: float) -> None:
         """Callback on node emergency messages."""
 
         node_id = cob_id - 0x80
         value_str = data.hex(sep=" ")
         logger.error(f"node {node_id:02X} raised emergency: {value_str}")
 
-    def send_sync(self):
+    def send_sync(self) -> None:
         """
         Send a CANopen SYNC message.
         """
@@ -90,32 +98,32 @@ class MasterNode(Node):
         self._network.send_message(0x80, b"", False)
 
     @property
-    def remote_nodes(self) -> dict[Any, canopen.RemoteNode]:
-        """dict[Any, canopen.RemoteNode]: All other node as remote node."""
+    def remote_nodes(self) -> dict[str, canopen.RemoteNode]:
+        """All other node as remote node."""
         return self._remote_nodes
 
     @property
-    def od_db(self) -> dict[Any, canopen.ObjectDictionary]:
-        """dict[Any, canopen.ObjectDictionary]: All other node ODs."""
+    def od_db(self) -> dict[str, canopen.ObjectDictionary]:
+        """All other node ODs."""
         return self._od_db
 
     def _sdo_get_obj(
-        self, key: Any, index: Union[int, str], subindex: Union[int, str, None]
-    ) -> [SdoVariable, SdoArray, SdoRecord]:
+        self, key: str, index: int | str, subindex: int | str | None
+    ) -> SdoVariable | SdoArray | SdoRecord:
 
         if subindex is None:
             return self._remote_nodes[key].sdo[index]
         return self._remote_nodes[key].sdo[index][subindex]
 
     def sdo_read(
-        self, key: Any, index: Union[int, str], subindex: Union[int, str, None]
-    ) -> Union[int, str, float, bytes, bool]:
+        self, key: str, index: int | str, subindex: int | str | None
+    ) -> str | float | bytes | bool:
         """
         Read a value from a remote node's object dictionary using an SDO.
 
         Parameters
         ----------
-        key: Any
+        key: str
             The dict key for the node to read from.
         index: int | str
             The index to read from.
@@ -138,14 +146,14 @@ class MasterNode(Node):
         return self._sdo_get_obj(key, index, subindex).phys
 
     def sdo_read_bitfield(
-        self, key: Any, index: Union[int, str], subindex: Union[int, str, None], field: str
+        self, key: str, index: int | str, subindex: int | str | None, field: str
     ) -> int:
         """
         Read an field from a object from another node's OD using a SDO.
 
         Parameters
         ----------
-        key: Any
+        key: str
             The dict key for the node to read from.
         index: int | str
             The index to read from.
@@ -175,15 +183,13 @@ class MasterNode(Node):
             value |= tmp >> bits[i]
         return value
 
-    def sdo_read_enum(
-        self, key: Any, index: Union[int, str], subindex: Union[int, str, None]
-    ) -> str:
+    def sdo_read_enum(self, key: str, index: int | str, subindex: int | str | None) -> str:
         """
         Read an enum str from another node's OD using a SDO.
 
         Parameters
         ----------
-        key: Any
+        key: str
             The dict key for the node to read from.
         index: int | str
             The index to read from.
@@ -209,17 +215,17 @@ class MasterNode(Node):
 
     def sdo_write(
         self,
-        key: Any,
-        index: Union[int, str],
-        subindex: Union[int, str, None],
-        value: Union[int, str, float, bytes, bool],
-    ):
+        key: str,
+        index: int | str,
+        subindex: int | str | None,
+        value: str | float | bytes | bool,
+    ) -> None:
         """
         Write a value to a remote node's object dictionary using an SDO.
 
         Parameters
         ----------
-        key: Any
+        key: str
             The dict key for the  node to write to.
         index: int | int
             The index to write to.
@@ -241,18 +247,18 @@ class MasterNode(Node):
 
     def sdo_write_bitfield(
         self,
-        key: Any,
-        index: Union[int, str],
-        subindex: Union[int, str, None],
+        key: str,
+        index: int | str,
+        subindex: int | str | None,
         field: str,
         value: int,
-    ):  # pylint: disable=R0917
+    ) -> None:
         """
         Write a field from a object to another node's OD using a SDO.
 
         Parameters
         ----------
-        key: Any
+        key: str
             The dict key for the  node to write to.
         index: int | int
             The index to write to.
@@ -285,14 +291,14 @@ class MasterNode(Node):
         obj.phys = new_value
 
     def sdo_write_enum(
-        self, key: Any, index: Union[int, str], subindex: Union[int, str, None], value: str
-    ):
+        self, key: str, index: int | str, subindex: int | str | None, value: str
+    ) -> None:
         """
         Write a enum str to another node's OD using a SDO.
 
         Parameters
         ----------
-        key: Any
+        key: str
             The dict key for the  node to write to.
         index: int | int
             The index to write to.
@@ -313,7 +319,7 @@ class MasterNode(Node):
         tmp = {d: v for v, d in obj.od.value_descriptions}
         obj.phys = tmp[value]
 
-    def send_rpdo(self, rpdo: int, raise_error: bool = True):
+    def send_rpdo(self, rpdo: int, raise_error: bool = True) -> None:
         """
         Send a RPDO. Will not be sent if not node is not in operational state.
 

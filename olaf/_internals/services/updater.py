@@ -11,13 +11,13 @@ from ..updater import Updater, UpdaterError
 class UpdaterService(Service):
     """Service for interacting with the updater"""
 
-    def __init__(self, updater: Updater):
+    def __init__(self, updater: Updater) -> None:
         super().__init__()
         self._updater = updater
         hostname = os.uname()[1]
         self._hostname = hostname[7:] if hostname.startswith("oresat-") else hostname
 
-    def on_start(self):
+    def on_start(self) -> None:
 
         # make sure defaults are set correctly
         self.node.od_write("updater", "update", False)
@@ -34,7 +34,7 @@ class UpdaterService(Service):
                 self.node.fwrite_cache.remove(i.name)
                 logger.info(f"updater moved {i.name} into update cache")
 
-    def on_loop(self):
+    def on_loop(self) -> None:
 
         # check for flag to start a update
         if self.node.od_read("updater", "update"):

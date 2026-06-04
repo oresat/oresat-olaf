@@ -1,4 +1,5 @@
 """OreSat Linux updater"""
+
 from __future__ import annotations
 
 import json
@@ -67,7 +68,7 @@ class Updater:
     for easy to get status info while updating.
     """
 
-    def __init__(self, work_dir: str | Path, cache_dir: str | Path):
+    def __init__(self, work_dir: str | Path, cache_dir: str | Path) -> None:
         """
         Parameters
         ----------
@@ -100,7 +101,7 @@ class Updater:
         if not self._has_dpkg:
             logger.warning("dpkg is not installed, updates will not start")
 
-    def _clear_work_dir(self):
+    def _clear_work_dir(self) -> None:
         """Clear the working directory."""
 
         logger.info("clearing working directory")
@@ -133,7 +134,7 @@ class Updater:
 
         return ret
 
-    def update(self):
+    def update(self) -> None:
         """Run a update.
 
         If there are file aleady in the working directory, it will try to find
@@ -264,7 +265,7 @@ class Updater:
 
         return instructions_file_path
 
-    def _read_instructions(self) -> list:
+    def _read_instructions(self) -> list[str]:
         """Read the instructions file, validates the instructions, and makes the commands.
 
         Parameters
@@ -321,7 +322,7 @@ class Updater:
 
         return commands
 
-    def _run_instructions(self, commands: list):
+    def _run_instructions(self, commands: list[str]) -> None:
         """Run the instructions made by `_read_instructions.
 
         Parameters
@@ -402,7 +403,7 @@ class Updater:
 
         return olu_tar
 
-    def clear_cache(self):
+    def clear_cache(self) -> None:
         """Clear the update cache."""
 
         self._cache.clear()
@@ -420,7 +421,7 @@ class Updater:
         return self._state
 
     @property
-    def updates_cached(self) -> list:
+    def updates_cached(self) -> list[OreSatFile]:
         """list: The list of update archives in cache."""
 
         return self._cache.files()
@@ -462,7 +463,7 @@ class Updater:
         return self._command
 
 
-def is_update_archive(file_path: str) -> bool:
+def is_update_archive(file_path: str | Path) -> bool:
     """Check to see if the input is a valid update archive.
 
     Parameters

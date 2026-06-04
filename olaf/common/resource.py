@@ -12,11 +12,11 @@ class Resource:
     All the ``on_*`` members can be overridden as needed.
     """
 
-    def __init__(self):
-        self.node = None
+    def __init__(self) -> None:
+        self.node: Node = None
         """Node or MasterNode: The app's CANopen node. Set to None until start() is called."""
 
-    def start(self, node: Node):
+    def start(self, node: Node) -> None:
         """
         App will call this to start the resource. This will call `self.on_start()`.
         """
@@ -28,10 +28,10 @@ class Resource:
             self.on_start()
         except Exception as e:  # pylint: disable=W0718
             logger.exception(
-                f"{self.__class__.__name__}'s on_start raised an uncaught exception:" f"{e}"
+                f"{self.__class__.__name__}'s on_start raised an uncaught exception:{e}"
             )
 
-    def end(self):
+    def end(self) -> None:
         """
         App will call this to stop the resource. This will call `self.on_end()`.
         """
@@ -41,9 +41,7 @@ class Resource:
         try:
             self.on_end()
         except Exception as e:  # pylint: disable=W0718
-            logger.exception(
-                f"{self.__class__.__name__}'s on_end raised an uncaught exception:" f"{e}"
-            )
+            logger.exception(f"{self.__class__.__name__}'s on_end raised an uncaught exception:{e}")
 
     def on_start(self) -> None:
         """

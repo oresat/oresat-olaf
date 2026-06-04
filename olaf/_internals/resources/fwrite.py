@@ -14,7 +14,7 @@ from ...common.resource import Resource
 class FwriteResource(Resource):
     """Resource for writing oresat files over the CAN bus"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.file_path = ""
@@ -25,7 +25,7 @@ class FwriteResource(Resource):
         for i in listdir(self.tmp_dir):
             remove(f"{self.tmp_dir}/{i}")
 
-    def on_start(self):
+    def on_start(self) -> None:
         self.node.add_sdo_callbacks("fwrite_cache", "length", self.on_read_cache_len, None)
         self.node.add_sdo_callbacks("fwrite_cache", "files_json", self.on_read_cache_json, None)
         self.node.add_sdo_callbacks(
@@ -49,7 +49,7 @@ class FwriteResource(Resource):
 
         return basename(self.file_path)
 
-    def on_write_file_name(self, file_name: str):
+    def on_write_file_name(self, file_name: str) -> None:
         """SDO write callback to select the file to write."""
 
         try:
@@ -59,7 +59,7 @@ class FwriteResource(Resource):
             logger.error(f"{file_name} is not a valid file name format")
             self.file_path = ""
 
-    def on_write_file_data(self, data: bytes):
+    def on_write_file_data(self, data: bytes) -> None:
         """SDO write callback to write the selected file's data."""
 
         if not self.file_path:
@@ -77,7 +77,7 @@ class FwriteResource(Resource):
         # clear file data OD obj value to not waste memory
         self.node.od_write("fwrite_cache", "file_data", b"")
 
-    def on_write_delete(self, value: bool):
+    def on_write_delete(self, value: bool) -> None:
         """SDO read callback to delete the selected file."""
 
         if not value:

@@ -11,7 +11,7 @@ from ...common.service import Service
 TMP_LOGS_FILE = "/tmp/olaf.log"
 
 
-def logger_tmp_file_setup(level: str):
+def logger_tmp_file_setup(level: str) -> None:
     """Get the boot log file handler and clean up temp log file used by LogsService."""
     if os.path.isfile(TMP_LOGS_FILE):
         os.remove(TMP_LOGS_FILE)
@@ -21,17 +21,17 @@ def logger_tmp_file_setup(level: str):
 class LogsService(Service):
     """Service for getting system logs"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.logs_dir_path = "/var/log/journal/"
 
-    def on_start(self):
+    def on_start(self) -> None:
         self.node.od_write("logs", "make_file", False)  # make sure this is False by default
 
         self.node.add_sdo_callbacks("logs", "since_boot", self.on_read_since_boot, None)
 
-    def on_loop(self):
+    def on_loop(self) -> None:
         if self.node.od_read("logs", "make_file"):
             logger.info("Making a copy of logs")
 

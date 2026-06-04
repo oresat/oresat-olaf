@@ -12,9 +12,9 @@ class Adc:
 
     ADC_VIN = 1.8  # volts
     ADC_BITS = 12
-    ADC_MAX_VALUE = (2**ADC_BITS) - 1
+    ADC_MAX_VALUE: int = (2**ADC_BITS) - 1
 
-    def __init__(self, pin: int, mock: bool = False):
+    def __init__(self, pin: int, mock: bool = False) -> None:
         """
         Parameters
         ----------

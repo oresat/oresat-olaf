@@ -1,4 +1,5 @@
 """File cache class for OreSat files."""
+
 from __future__ import annotations
 
 import shutil
@@ -45,7 +46,7 @@ class OreSatFileCache:
 
         return length
 
-    def add(self, file_path: str | Path, consume: bool = False):
+    def add(self, file_path: str | Path, consume: bool = False) -> None:
         """Add file to cache
 
         Parameters
@@ -80,7 +81,7 @@ class OreSatFileCache:
                 self._data.append(oresat_file)
                 self._data = sorted(self._data)
 
-    def remove(self, file_name: str):
+    def remove(self, file_name: str) -> None:
         """Remove a file from cache
 
         Parameters
@@ -214,7 +215,7 @@ class OreSatFileCache:
 
         return files
 
-    def clear(self):
+    def clear(self) -> None:
         """Clear all file in the cache"""
 
         with self._lock:

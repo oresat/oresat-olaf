@@ -13,7 +13,7 @@ from ...common.resource import Resource
 class FreadResource(Resource):
     """Resource for readings oresat files over the CAN bus"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.file_path = ""
@@ -23,7 +23,7 @@ class FreadResource(Resource):
         for i in listdir(self.tmp_dir):
             remove(f"{self.tmp_dir}/{i}")
 
-    def on_start(self):
+    def on_start(self) -> None:
         self.node.add_sdo_callbacks("fread_cache", "length", self.on_read_cache_len, None)
         self.node.add_sdo_callbacks("fread_cache", "files_json", self.on_read_cache_json, None)
         self.node.add_sdo_callbacks(
@@ -47,7 +47,7 @@ class FreadResource(Resource):
 
         return basename(self.file_path)
 
-    def on_write_file_name(self, file_name: str):
+    def on_write_file_name(self, file_name: str) -> None:
         """SDO write callback to select the file to read."""
 
         try:
@@ -71,7 +71,7 @@ class FreadResource(Resource):
             logger.error(f"file {self.file_path} does not exist")
         return ret
 
-    def on_write_delete(self, value: bool):
+    def on_write_delete(self, value: bool) -> None:
         """SDO read callback to delete the selected file."""
 
         if not value:

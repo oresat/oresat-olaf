@@ -1,18 +1,16 @@
 """OLAF App."""
 
+from __future__ import annotations
+
 import os
 import signal
 import subprocess
-from typing import Union
+from typing import TYPE_CHECKING
 
-import canopen
 from loguru import logger
 
 from ..canopen.master_node import MasterNode
-from ..canopen.network import CanNetwork
 from ..canopen.node import Node, NodeStop
-from ..common.resource import Resource
-from ..common.service import Service
 from .resources.ecss import EcssResource
 from .resources.fread import FreadResource
 from .resources.fwrite import FwriteResource
@@ -22,6 +20,16 @@ from .services.os_command import OsCommandService
 from .services.updater import UpdaterService
 from .updater import Updater
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from types import FrameType
+
+    import canopen
+
+    from ..canopen.network import CanNetwork
+    from ..common.resource import Resource
+    from ..common.service import Service
+
 
 class App:
     """
@@ -30,18 +38,18 @@ class App:
     Use the global ``olaf.app`` obect.
     """
 
-    def __init__(self):
-        self._od = None
-        self._resources = []
-        self._services = []
-        self._node = None
-        self._updater = None
-        self._factory_reset_cb = None
+    def __init__(self) -> None:
+        self._od: canopen.ObjectDictionary | None = None
+        self._resources: list[Resource] = []
+        self._services: list[Service] = []
+        self._node: Node | None = None
+        self._updater: Updater | None = None
+        self._factory_reset_cb: Callable[[], None] | None = None
 
-    def __del__(self):
+    def __del__(self) -> None:
         self.stop()
 
-    def _quit(self, signo, _frame):
+    def _quit(self, signo: int, _frame: FrameType | None) -> None:
         """Called when signals are caught"""
 
         logger.debug(f"signal {signal.Signals(signo).name} was caught")
@@ -51,9 +59,9 @@ class App:
         self,
         network: CanNetwork,
         od: canopen.ObjectDictionary,
-        master_od_db: Union[dict, None] = None,
+        master_od_db: dict[str, canopen.ObjectDictionary] | None = None,
         load_core: bool = True,
-    ):
+    ) -> None:
         """
         Setup the app. Will be called by ``olaf_setup`` automatically.
 
@@ -99,7 +107,7 @@ class App:
             self.add_resource(FwriteResource())
             # self.add_resource(DaemonsResource())
 
-    def add_resource(self, resource: Resource):
+    def add_resource(self, resource: Resource) -> None:
         """
         Add a resource for the app
 
@@ -111,7 +119,7 @@ class App:
 
         self._resources.append(resource)
 
-    def add_service(self, service: Service):
+    def add_service(self, service: Service) -> None:
         """
         Add a resource for the app
 
@@ -123,8 +131,10 @@ class App:
 
         self._services.append(service)
 
-    def run(self):
+    def run(self) -> None:
         """Run the app."""
+        if self._node is None or self._updater is None:
+            raise RuntimeError("setup() must be called first")
 
         # setup event
         for sig in ["SIGTERM", "SIGHUP", "SIGINT"]:
@@ -190,25 +200,25 @@ class App:
             else:
                 logger.error("not running as root, cannot power off the system")
 
-    def stop(self):
+    def stop(self) -> None:
         """End the run loop"""
 
         if self._node:
             self._node.stop()
 
     @property
-    def node(self) -> Node:
+    def node(self) -> Node | None:
         """Node: The CANopen node."""
 
         return self._node
 
-    def set_factory_reset_callback(self, cb_func):
+    def set_factory_reset_callback(self, cb_func: Callable[[], None]) -> None:
         """Set a custom factory reset callback function."""
 
         self._factory_reset_cb = cb_func
 
     @property
-    def od(self) -> canopen.ObjectDictionary:
+    def od(self) -> canopen.ObjectDictionary | None:
         """canopen.ObjectDictionary: The node's Object Dictionary."""
 
         return self._od
