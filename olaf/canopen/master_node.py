@@ -95,7 +95,7 @@ class MasterNode(Node):
         Send a CANopen SYNC message.
         """
 
-        self._network.send_message(0x80, b"", False)
+        self._network.send_message(0x80, b"", raise_error=False)
 
     @property
     def remote_nodes(self) -> dict[str, canopen.RemoteNode]:

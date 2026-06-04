@@ -20,9 +20,8 @@ def get_cpufreq() -> int:
         The current cpufreq in MHz.
     """
 
-    with open(f"{_CPU0_PATH}/scaling_cur_freq", "r") as f:
-        value = int(f.read()) // 1000
-    return value
+    with open(f"{_CPU0_PATH}/scaling_cur_freq") as f:
+        return int(f.read()) // 1000
 
 
 def set_cpufreq(value: int) -> None:
@@ -56,10 +55,8 @@ def get_cpufreq_gov() -> str:
         The current CPU governor.
     """
 
-    with open(f"{_CPU0_PATH}/scaling_governor", "r") as f:
-        gov = f.read().strip()
-
-    return gov
+    with open(f"{_CPU0_PATH}/scaling_governor") as f:
+        return f.read().strip()
 
 
 def set_cpufreq_gov(cpufreq_gov: str) -> None:

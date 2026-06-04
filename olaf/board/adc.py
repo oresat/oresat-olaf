@@ -43,10 +43,8 @@ class Adc:
         if not os.path.isfile(self._adc_path):
             raise AdcError(f"could not find ADC file {self._adc_path}")
 
-        with open(self._adc_path, "r") as f:
-            value = int(f.read())
-
-        return value
+        with open(self._adc_path) as f:
+            return int(f.read())
 
     @property
     def value(self) -> float:

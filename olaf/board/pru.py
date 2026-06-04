@@ -96,7 +96,7 @@ class Pru:
 
         self.exists(raise_exception=True)
 
-        with open(self._pru_state_path, "r") as f:
+        with open(self._pru_state_path) as f:
             state = f.read()[:-1]  # drop the NULL terminator
 
         return PruState[state.upper()]
@@ -131,10 +131,8 @@ class Pru:
     def firmware(self) -> str:
         """str: Firmware file name selected. Must be in `/lib/firmware/`."""
 
-        with open(self._pru_fw_path, "r") as f:
-            fw_file = f.read()[:-1]  # drop the NULL terminator
-
-        return fw_file
+        with open(self._pru_fw_path) as f:
+            return f.read()[:-1]  # drop the NULL terminator
 
     @firmware.setter
     def firmware(self, fw_path: str) -> None:

@@ -71,8 +71,6 @@ class Service:
         Should be used to add SDO read/write callbacks to app.
         """
 
-        pass
-
     def _loop(self) -> None:
         """
         Loop until a exception is thrown or the app stops.
@@ -143,8 +141,6 @@ class Service:
         Will be called reguardless if `self.on_loop_error()` was called or not when the app stops.
         """
 
-        pass
-
     def on_stop(self) -> None:
         """
         Called when the app stops after the thread has stopped. Should be used to stop any hardware
@@ -152,8 +148,6 @@ class Service:
 
         Will be called reguardless if `self.on_loop_error()` was called or not when the app stops.
         """
-
-        pass
 
     def sleep(self, timeout: float) -> None:
         """

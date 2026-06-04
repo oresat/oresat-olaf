@@ -147,10 +147,7 @@ def olaf_setup(name: str, args: Namespace | None = None) -> tuple[Namespace, Ore
         parser = ArgumentParser(parents=[olaf_parser])
         args = parser.parse_args()
 
-    if args.verbose:
-        level = "DEBUG"
-    else:
-        level = "INFO"
+    level = "DEBUG" if args.verbose else "INFO"
 
     logger.remove()  # remove default logger
     if args.log:

@@ -42,9 +42,7 @@ class OreSatFileCache:
 
     def __len__(self) -> int:
         with self._lock:
-            length = len(self._data)
-
-        return length
+            return len(self._data)
 
     def add(self, file_path: str | Path, consume: bool = False) -> None:
         """Add file to cache
@@ -106,12 +104,7 @@ class OreSatFileCache:
         """
 
         with self._lock:
-            if len(self._data) > 0:
-                oldest_file = self._data[0].name
-            else:
-                oldest_file = ""
-
-        return oldest_file
+            return self._data[0].name if len(self._data) > 0 else ""
 
     def pop(self, dir_path: str | Path, copy: bool = False) -> str:
         """Pop the oldest file from the cache

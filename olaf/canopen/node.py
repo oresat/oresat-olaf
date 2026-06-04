@@ -205,7 +205,7 @@ class Node:
             # send heartbeat
             event_time = self.od[0x1017].value
             if loops % (event_time // delay_ms) == 0:
-                self._network.send_message(0x700 + self.od.node_id, b"\x05", False)
+                self._network.send_message(0x700 + self.od.node_id, b"\x05", raise_error=False)
 
             # send all timer-based TPDOs
             for i in range(self._od.device_information.nr_of_TXPDO):
@@ -316,7 +316,7 @@ class Node:
             data += value_bytes
 
         if len(data) > 8:
-            self.send_emcy(EmcyCode.PROTOCOL_PDO_LEN_EXCEEDED, b"", False)
+            self.send_emcy(EmcyCode.PROTOCOL_PDO_LEN_EXCEEDED, b"", raise_error=False)
             return
 
         self._network.send_message(cob_id, data, raise_error)

@@ -250,8 +250,8 @@ def od_index(index: str) -> Response:
             value = _json_value_to_value(obj.data_type, json_value)
             raw = obj.encode_raw(value)
 
-            app.node._on_sdo_write(idx, None, obj, raw)
-        except Exception as e:  # pylint: disable=W0718
+            app.node._on_sdo_write(idx, None, obj, raw)  # noqa: SLF001
+        except Exception as e:
             logger.error(f"REST API error: {e}")
             return make_error_json(str(e))
 
@@ -294,12 +294,8 @@ def od_subindex(index: str, subindex: str) -> Response:
 
             # convert value from JSON to bytes for SDO callback
             value = _json_value_to_value(obj.data_type, json_value)
-            if obj.data_type in BYTES_TYPES:
-                raw = value
-            else:
-                raw = obj.encode_raw(value)
-
-            app.node._on_sdo_write(idx, subidx, obj, raw)
+            raw = value if obj.data_type in BYTES_TYPES else obj.encode_raw(value)
+            app.node._on_sdo_write(idx, subidx, obj, raw)  # noqa: SLF001
         except Exception as e:  # pylint: disable=W0718
             logger.exception(f"REST API error: {e}")
             return make_error_json(str(e))
@@ -333,20 +329,20 @@ def _object_to_dict(
     if subindex is None:
         try:
             obj = app.node.od[index]
-        except KeyError:
+        except KeyError as e:
             msg = f"0x{index:04X} is not a valid index"
             logger.debug("REST API error: " + msg)
-            raise KeyError(msg)
+            raise KeyError(msg) from e
     else:
         try:
             obj = app.node.od[index][subindex]
-        except KeyError:
+        except KeyError as e:
             msg = f"0x{subindex:02X} not a valid subindex for index 0x{index:04X}"
             logger.debug("REST API error: " + msg)
-            raise KeyError(msg)
+            raise KeyError(msg) from e
 
     if isinstance(obj, canopen.objectdictionary.Variable):
-        value = app.node._on_sdo_read(index, subindex, obj)  # pylint: disable=W0212
+        value = app.node._on_sdo_read(index, subindex, obj)  # noqa: SLF001
         if obj.data_type in BYTES_TYPES and value is not None:
             # encode bytes data types for JSON
             try:
@@ -394,7 +390,7 @@ def get_all_object() -> dict[int, [dict[str, Any]]]:
     for index in app.od:
         if index < 0x3000:
             continue
-        data[index] = _object_to_dict(index, None, False)
+        data[index] = _object_to_dict(index, None, add_values=False)
     return data
 
 

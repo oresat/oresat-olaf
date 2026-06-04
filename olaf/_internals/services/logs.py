@@ -27,7 +27,7 @@ class LogsService(Service):
         self.logs_dir_path = "/var/log/journal/"
 
     def on_start(self) -> None:
-        self.node.od_write("logs", "make_file", False)  # make sure this is False by default
+        self.node.od_write("logs", "make_file", value=False)  # make sure this is False by default
 
         self.node.add_sdo_callbacks("logs", "since_boot", self.on_read_since_boot, None)
 
@@ -42,7 +42,7 @@ class LogsService(Service):
                     t.add(self.logs_dir_path + "/" + i, arcname=i)
 
             self.node.fread_cache.add(tar_file_path, consume=True)
-            self.node.od_write("logs", "make_file", False)
+            self.node.od_write("logs", "make_file", value=False)
 
         self.sleep(0.1)
 
@@ -52,7 +52,5 @@ class LogsService(Service):
         if not os.path.isfile(TMP_LOGS_FILE):
             return "no logs"
 
-        with open(TMP_LOGS_FILE, "r") as f:
-            ret = "".join(reversed(f.readlines()[-500:]))
-
-        return ret
+        with open(TMP_LOGS_FILE) as f:
+            return "".join(reversed(f.readlines()[-500:]))

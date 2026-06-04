@@ -256,8 +256,8 @@ class Updater:
         try:
             with tarfile.open(file_path, "r:xz") as t:
                 t.extractall(self._work_dir)
-        except tarfile.TarError:
-            raise UpdaterError(file_name + " is a invalid .tar.xz")
+        except tarfile.TarError as e:
+            raise UpdaterError(file_name + " is a invalid .tar.xz") from e
 
         instructions_file_path = self._work_dir + "/" + INSTRUCTIONS_FILE
         if not isfile(instructions_file_path):
@@ -290,13 +290,13 @@ class Updater:
         if not isfile(instructions_file_path):
             raise UpdaterError(f"cannot find {INSTRUCTIONS_FILE}")
 
-        with open(instructions_file_path, "r") as f:
+        with open(instructions_file_path) as f:
             instructions_str = f.read()
 
         try:
             instructions = json.loads(instructions_str)
-        except json.JSONDecodeError:
-            raise UpdaterError("instructions file was mising or did not contain a valid json")
+        except json.JSONDecodeError as e:
+            raise UpdaterError("instructions file was mising or did not contain valid json") from e
 
         # valid instructions and make commands
         for i in instructions:
@@ -482,7 +482,4 @@ def is_update_archive(file_path: str | Path) -> bool:
     except Exception:  # pylint: disable=W0718
         return False
 
-    if oresat_file.keyword == "update" and oresat_file.extension == ".tar.xz":
-        return True
-
-    return False
+    return oresat_file.keyword == "update" and oresat_file.extension == ".tar.xz"

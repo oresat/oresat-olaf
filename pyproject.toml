@@ -74,6 +74,21 @@ ignore = [
     # FIXME: These should be turned back on but take effort
     "D102",  # Missing docstring in public method
     "D107",  # Missing docstring in `__init__`
+    "PLR0915", # Too many statements
+    "S202",  # Uses of `tarfile.extractall()`
+    "S108",  # Insecure usage of temporary directory
+    "S602",  # `subprocess` call with `shell=True
+    "S607",  # Starting a process with a partial executable path
+    "RUF012",# Mutable default value for class attribute
+    "PLR0912",# Too many branches
+    "ARG002", # Unused method argument
+    "C901", # Function is too complex
+    "FBT001",
+    "FBT002",
+    "PTH",
+    "PERF203",
+    "BLE001",
+    "D",
     # These are the opposite of what I want
     "D413",  # Missing blank line after last section
     "EM101", # Exception must not use a string literal
@@ -86,6 +101,7 @@ ignore = [
     # the numbers it flags are obvious from context.
     "PLR2004",  # Magic value used in comparison
     "TID252",  # Prefer absolute imports over relative imports from parent modules
+    "ERA001",  # Remove commented out code. Nice but too many false positives
 ]
 
 [tool.ruff.lint.per-file-ignores]

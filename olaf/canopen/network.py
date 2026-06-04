@@ -90,8 +90,8 @@ class CanNetwork:
         if self._network is not None:
             try:
                 self._network.disconnect()
-            except Exception:  # pylint: disable=W0718
-                pass
+            except Exception as e:  # pylint: disable=W0718
+                logger.info(f"Error when disconnecting: {e}")
             del self._network
             self._network = None
 
@@ -179,12 +179,12 @@ class CanNetwork:
 
     def send_message(self, cob_id: int, data: bytes, raise_error: bool = True) -> None:
         """Send a CAN message."""
-
-        try:
-            if self._bus is not None:
-                self._bus.send(can.Message(arbitration_id=cob_id, data=data, is_extended_id=False))
-            elif raise_error:
+        if self._bus is None:
+            if raise_error:
                 raise CanNetworkError("can network is down")
+            return
+        try:
+            self._bus.send(can.Message(arbitration_id=cob_id, data=data, is_extended_id=False))
         except Exception as e:  # pylint: disable=W0718
             if raise_error:
                 raise CanNetworkError(str(e)) from e
