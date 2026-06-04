@@ -57,7 +57,7 @@ olaf_parser.add_argument(
     help="disable flight mode on start, defaults to flight mode enabled",
 )
 olaf_parser.add_argument(
-    "-o", "--oresat", default="oresat0.5", help="oresat mission; oresat0, oresat0.5, etc"
+    "-o", "--oresat", default=str(Mission.default()), help="oresat mission; oresat0, oresat0.5, etc"
 )
 olaf_parser.add_argument(
     "-w", "--hardware-version", default="0.0", help="override the hardware version"
