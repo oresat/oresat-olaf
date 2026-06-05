@@ -1,9 +1,10 @@
 """OLAF (OreSat Linux App Framework)"""
 
+from __future__ import annotations
+
 import sys
 from argparse import ArgumentParser, Namespace
 from logging.handlers import SysLogHandler
-from typing import Optional
 
 from loguru import logger
 from oresat_configs import Mission, OreSatConfig
@@ -28,9 +29,52 @@ from .common.resource import Resource
 from .common.service import Service, ServiceState
 
 try:
-    from ._version import version as __version__  # type: ignore
+    from ._version import version as __version__
 except ImportError:
     __version__ = "0.0.0"  # package is not installed
+
+__all__ = [
+    "A8_CPUFREQS",
+    "GPIO_HIGH",
+    "GPIO_IN",
+    "GPIO_LOW",
+    "GPIO_OUT",
+    "Adc",
+    "App",
+    "CanNetwork",
+    "CanNetworkError",
+    "CanNetworkState",
+    "Daemon",
+    "DaemonState",
+    "Eeprom",
+    "Gpio",
+    "GpioError",
+    "MasterNode",
+    "NetworkError",
+    "Node",
+    "NodeStop",
+    "OreSatFile",
+    "OreSatFileCache",
+    "Pru",
+    "PruError",
+    "PruState",
+    "Resource",
+    "RestAPI",
+    "Service",
+    "ServiceState",
+    "Updater",
+    "UpdaterState",
+    "get_cpufreq",
+    "get_cpufreq_gov",
+    "new_oresat_file",
+    "render_olaf_template",
+    "scet_int_from_time",
+    "scet_int_to_time",
+    "set_cpufreq",
+    "set_cpufreq_gov",
+    "utc_int_from_time",
+    "utc_int_to_time",
+]
 
 olaf_parser = ArgumentParser(prog="OLAF", add_help=False)
 olaf_parser.add_argument("-b", "--bus", default="vcan0", help="CAN bus to use, defaults to vcan0")
@@ -80,7 +124,7 @@ olaf_parser.add_argument(
 )
 
 
-def olaf_setup(name: str, args: Optional[Namespace] = None) -> tuple[Namespace, dict]:
+def olaf_setup(name: str, args: Namespace | None = None) -> tuple[Namespace, OreSatConfig]:
     """
     Parse runtime args and setup the app and REST API.
 
@@ -103,10 +147,7 @@ def olaf_setup(name: str, args: Optional[Namespace] = None) -> tuple[Namespace, 
         parser = ArgumentParser(parents=[olaf_parser])
         args = parser.parse_args()
 
-    if args.verbose:
-        level = "DEBUG"
-    else:
-        level = "INFO"
+    level = "DEBUG" if args.verbose else "INFO"
 
     logger.remove()  # remove default logger
     if args.log:
@@ -153,7 +194,7 @@ def olaf_setup(name: str, args: Optional[Namespace] = None) -> tuple[Namespace, 
     return args, config
 
 
-def olaf_run():
+def olaf_run() -> None:
     """Start the app and REST API."""
 
     rest_api.start()

@@ -33,11 +33,11 @@ jobs:
 
     - name: Lint with Ruff
       if: always() && steps.dependencies.conclusion == 'success'
-      run: ruff check tests
+      run: ruff check olaf tests
 
     - name: Check format with Ruff
       if: always() && steps.dependencies.conclusion == 'success'
-      run: ruff format --check --diff tests
+      run: ruff format --check --diff
 
     - name: Type check with mypy
       if: always() && steps.dependencies.conclusion == 'success'
@@ -46,7 +46,7 @@ jobs:
       # run at all than not.
       run: mypy tests --disable-error-code=import-untyped --follow-imports=skip
 
-    - name: Run unittests
+    - name: Run unit tests
       if: always() && steps.dependencies.conclusion == 'success'
       run: pytest
 

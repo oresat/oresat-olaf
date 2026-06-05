@@ -1,10 +1,14 @@
 """File name format for OreSat files"""
+
 from __future__ import annotations
 
-from pathlib import Path
 from os import uname
 from os.path import basename
 from time import time
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def new_oresat_file(keyword: str, card: str = "", date: float = -1.0, ext: str = "") -> str:
@@ -87,10 +91,10 @@ class OreSatFile:
     def __str__(self) -> str:
         return self._name
 
-    def __lt__(self, other: 'OreSatFile') -> bool:
+    def __lt__(self, other: OreSatFile) -> bool:
         return self._date < other.date
 
-    def __gt__(self, other: 'OreSatFile') -> bool:
+    def __gt__(self, other: OreSatFile) -> bool:
         return self._date > other.date
 
     @property
