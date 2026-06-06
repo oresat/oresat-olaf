@@ -11,6 +11,8 @@ from ...common.service import Service
 from ..updater import Updater, UpdaterError
 from ...canopen.master_node import MasterNode
 
+from ...common.OreSatFile import OreSatFile
+
 class UpdaterService(Service):
     """Service for interacting with the updater"""
     INACTIVE_TIMEOUT = 5
