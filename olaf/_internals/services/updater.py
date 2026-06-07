@@ -7,11 +7,10 @@ from loguru import logger
 
 from time import monotonic
 
+from ...common.oresat_file import OreSatFile
 from ...common.service import Service
 from ..updater import Updater, UpdaterError
 from ...canopen.master_node import MasterNode
-
-from ...common.oresat_file import OreSatFile
 
 
 class UpdaterService(Service):
@@ -68,18 +67,18 @@ class UpdaterService(Service):
 
     def send_update(self, i: OreSatFile) -> None:
         try:
-            remote_node_id = self.node.od_db[i.card_underscore].node_id
+            self.node.od_db[i.card_underscore].node_id
         except KeyError:
             logger.error(
-                f"Could not find update archive's remote node {i.card_underscore} in object dictionary database"
+                f"Could not find node for update {i.card_underscore} in object dictionary db"
             )
-            return  # we may want to try to rename the file here so that this warning doesn't keep occuring.
+            return
 
         if self.node.od_db[i.card_underscore][0x3002][0x4].name != "sw_version":
             logger.warning(f"Update archive is for {i.card_underscore}, which is not OLAF.")
             return
 
-        if (  # Has a heartbeat saying that it is alive, and less than INACTIVE_TIMEOUT since last heartbeat.
+        if (
             self.node.node_status[i.card_underscore][0] != 0x05
             or self.node.node_status[i.card_underscore][2] + self.INACTIVE_TIMEOUT < monotonic()
         ):
@@ -99,7 +98,7 @@ class UpdaterService(Service):
         self.node.fwrite_cache.remove(i.name)
 
     def check_for_updates(self, value: bool = True) -> None:
-        """Check for updates in the fwrite cache. Transfer updates for remote cards if any are present"""
+        """Check for updates in the fwrite cache. Send updates to other cards if they are on"""
         for i in self.node.fwrite_cache.files("update"):
             if i.card == self._hostname:
                 self._updater.add_update_archive(self.node.fwrite_cache.dir + "/" + i.name)
