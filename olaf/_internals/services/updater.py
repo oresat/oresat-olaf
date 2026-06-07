@@ -2,15 +2,14 @@
 
 import os
 from os.path import abspath
+from time import monotonic
 
 from loguru import logger
 
-from time import monotonic
-
-from ...common.service import Service
-from ...common.oresat_file import OreSatFile
-from ..updater import Updater, UpdaterError
 from ...canopen.master_node import MasterNode
+from ...common.oresat_file import OreSatFile
+from ...common.service import Service
+from ..updater import Updater, UpdaterError
 
 
 class UpdaterService(Service):
