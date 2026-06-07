@@ -31,10 +31,10 @@ class Gpio:
         for i in os.listdir(_GPIO_DIR_PATH):
             if i.startswith("gpiochip") or i in ["export", "unexport"]:
                 continue
-            with open(f"{_GPIO_DIR_PATH}/{i}/label", "r") as f:
+            with open(f"{_GPIO_DIR_PATH}/{i}/label") as f:
                 _LABELS[f.read()[:-1]] = int(i[4:])  # remove the trailing '\n'
 
-    def __init__(self, pin: str, mock: bool = False):
+    def __init__(self, pin: str, mock: bool = False) -> None:
         """
         Parameters
         ----------
@@ -69,9 +69,9 @@ class Gpio:
             if not os.path.isdir(self._gpio_dir_path):
                 raise GpioError(f"gpio pin {self._name} (gpio{self._pin}) does not exist")
 
-            with open(f"{self._gpio_dir_path}/direction", "r") as f:
+            with open(f"{self._gpio_dir_path}/direction") as f:
                 self._mode = f.read()
-            with open(f"{self._gpio_dir_path}/label", "r") as f:
+            with open(f"{self._gpio_dir_path}/label") as f:
                 self._name = f.read()
 
     @property
@@ -81,7 +81,7 @@ class Gpio:
         return self._mode
 
     @mode.setter
-    def mode(self, new_mode: str):
+    def mode(self, new_mode: str) -> None:
         if new_mode == self._mode:
             return  # already in the correct mode
 
@@ -97,13 +97,11 @@ class Gpio:
         if self._mock:
             return self._mock_value
 
-        with open(f"{self._gpio_dir_path}/value", "r") as f:
-            value = int(f.read())
-
-        return value
+        with open(f"{self._gpio_dir_path}/value") as f:
+            return int(f.read())
 
     @value.setter
-    def value(self, new_value: int):
+    def value(self, new_value: int) -> None:
         if self._mode == "in":
             raise GpioError(f"Cannot set GPIO {self.number} value, it is in input mode")
 
@@ -113,12 +111,12 @@ class Gpio:
             with open(f"{self._gpio_dir_path}/value", "w") as f:
                 f.write(str(new_value))
 
-    def high(self):
+    def high(self) -> None:
         """Set the GPIO high."""
 
         self.value = 1
 
-    def low(self):
+    def low(self) -> None:
         """Set the GPIO low."""
 
         self.value = 0

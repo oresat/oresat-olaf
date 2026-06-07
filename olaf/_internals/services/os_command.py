@@ -21,20 +21,20 @@ class OsCommandState(Enum):
 class OsCommandService(Service):
     """Service for running OS commands over CAN bus as defined by CiA 301 specs."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.command = ""  # internal to prevent overwriting it when running a command
         self.reply_obj_max_len = 10000
         self.failed = False
 
-    def on_start(self):
+    def on_start(self) -> None:
         self._set_status_and_reply(OsCommandState.NO_ERROR_NO_REPLY.value, b"")
         self.node.add_sdo_callbacks(
             "os_command", "command", self.on_command_read, self.on_command_write
         )
 
-    def on_loop(self):
+    def on_loop(self) -> None:
         if self.node.od_read("os_command", "status") == OsCommandState.EXECUTING.value:
             logger.info("running os command: " + self.command)
 
@@ -58,7 +58,7 @@ class OsCommandService(Service):
 
         self.sleep(0.1)
 
-    def on_loop_error(self, error: Exception):
+    def on_loop_error(self, error: Exception) -> None:
         """On loop error set obj back to default."""
 
         self.failed = True
@@ -70,7 +70,7 @@ class OsCommandService(Service):
         """SDO read callback for command read."""
         return self.command.encode()
 
-    def on_command_write(self, command: bytes):
+    def on_command_write(self, command: bytes) -> None:
         """SDO write callback for command write."""
         if self.node.od_read("os_command", "status") == OsCommandState.EXECUTING.value:
             logger.error("cannot start another os command when one is running")
@@ -82,6 +82,6 @@ class OsCommandService(Service):
         self.command = command.decode()
         self._set_status_and_reply(OsCommandState.EXECUTING.value, b"")
 
-    def _set_status_and_reply(self, status: int, reply: bytes):
+    def _set_status_and_reply(self, status: int, reply: bytes) -> None:
         self.node.od_write("os_command", "status", status)
         self.node.od_write("os_command", "reply", reply)

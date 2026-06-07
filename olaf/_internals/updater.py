@@ -1,4 +1,5 @@
 """OreSat Linux updater"""
+
 from __future__ import annotations
 
 import json
@@ -67,7 +68,7 @@ class Updater:
     for easy to get status info while updating.
     """
 
-    def __init__(self, work_dir: str | Path, cache_dir: str | Path):
+    def __init__(self, work_dir: str | Path, cache_dir: str | Path) -> None:
         """
         Parameters
         ----------
@@ -100,7 +101,7 @@ class Updater:
         if not self._has_dpkg:
             logger.warning("dpkg is not installed, updates will not start")
 
-    def _clear_work_dir(self):
+    def _clear_work_dir(self) -> None:
         """Clear the working directory."""
 
         logger.info("clearing working directory")
@@ -133,7 +134,7 @@ class Updater:
 
         return ret
 
-    def update(self):
+    def update(self) -> None:
         """Run a update.
 
         If there are file aleady in the working directory, it will try to find
@@ -255,8 +256,8 @@ class Updater:
         try:
             with tarfile.open(file_path, "r:xz") as t:
                 t.extractall(self._work_dir)
-        except tarfile.TarError:
-            raise UpdaterError(file_name + " is a invalid .tar.xz")
+        except tarfile.TarError as e:
+            raise UpdaterError(file_name + " is a invalid .tar.xz") from e
 
         instructions_file_path = self._work_dir + "/" + INSTRUCTIONS_FILE
         if not isfile(instructions_file_path):
@@ -264,7 +265,7 @@ class Updater:
 
         return instructions_file_path
 
-    def _read_instructions(self) -> list:
+    def _read_instructions(self) -> list[str]:
         """Read the instructions file, validates the instructions, and makes the commands.
 
         Parameters
@@ -289,13 +290,13 @@ class Updater:
         if not isfile(instructions_file_path):
             raise UpdaterError(f"cannot find {INSTRUCTIONS_FILE}")
 
-        with open(instructions_file_path, "r") as f:
+        with open(instructions_file_path) as f:
             instructions_str = f.read()
 
         try:
             instructions = json.loads(instructions_str)
-        except json.JSONDecodeError:
-            raise UpdaterError("instructions file was mising or did not contain a valid json")
+        except json.JSONDecodeError as e:
+            raise UpdaterError("instructions file was mising or did not contain valid json") from e
 
         # valid instructions and make commands
         for i in instructions:
@@ -321,7 +322,7 @@ class Updater:
 
         return commands
 
-    def _run_instructions(self, commands: list):
+    def _run_instructions(self, commands: list[str]) -> None:
         """Run the instructions made by `_read_instructions.
 
         Parameters
@@ -402,7 +403,7 @@ class Updater:
 
         return olu_tar
 
-    def clear_cache(self):
+    def clear_cache(self) -> None:
         """Clear the update cache."""
 
         self._cache.clear()
@@ -420,7 +421,7 @@ class Updater:
         return self._state
 
     @property
-    def updates_cached(self) -> list:
+    def updates_cached(self) -> list[OreSatFile]:
         """list: The list of update archives in cache."""
 
         return self._cache.files()
@@ -462,7 +463,7 @@ class Updater:
         return self._command
 
 
-def is_update_archive(file_path: str) -> bool:
+def is_update_archive(file_path: str | Path) -> bool:
     """Check to see if the input is a valid update archive.
 
     Parameters
@@ -481,7 +482,4 @@ def is_update_archive(file_path: str) -> bool:
     except Exception:  # pylint: disable=W0718
         return False
 
-    if oresat_file.keyword == "update" and oresat_file.extension == ".tar.xz":
-        return True
-
-    return False
+    return oresat_file.keyword == "update" and oresat_file.extension == ".tar.xz"

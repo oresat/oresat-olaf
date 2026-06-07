@@ -28,7 +28,7 @@ class MockNode(Node):
 
         self._setup_node()
 
-    def send_tpdo(self, tpdo: int, raise_error: bool = True) -> None:  # noqa: FBT001,FBT002
+    def send_tpdo(self, tpdo: int, raise_error: bool = True) -> None:
         pass  # override to do nothing
 
 
@@ -63,7 +63,7 @@ class MockApp:
         self,
         index: int | str,
         subindex: None | int | str,
-        value: bool | str | bytes,  # noqa: FBT001
+        value: bool | str | bytes,
     ) -> None:
         co_node = self.node._node
         domain = canopen.objectdictionary.DOMAIN

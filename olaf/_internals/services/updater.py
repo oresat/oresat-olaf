@@ -17,19 +17,16 @@ from ...common.oresat_file import OreSatFile
 class UpdaterService(Service):
     """Service for interacting with the updater"""
 
-    INACTIVE_TIMEOUT = 5
-
-    def __init__(self, updater: Updater):
+    def __init__(self, updater: Updater) -> None:
         super().__init__()
         self._updater = updater
-        hostname = os.uname()[1]
-        self._hostname = hostname[7:] if hostname.startswith("oresat-") else hostname
+        self._hostname = os.uname()[1].removeprefix("oresat-")
 
-    def on_start(self):
+    def on_start(self) -> None:
 
         # make sure defaults are set correctly
-        self.node.od_write("updater", "update", False)
-        self.node.od_write("updater", "make_status_file", False)
+        self.node.od_write("updater", "update", value=False)
+        self.node.od_write("updater", "make_status_file", value=False)
 
         self.node.add_sdo_callbacks("updater", "status", self.on_read_status, None)
         self.node.add_sdo_callbacks("updater", "cache_files_json", self.on_read_cache_json, None)
@@ -39,7 +36,7 @@ class UpdaterService(Service):
         # check for update files in fwrite cache
         self.check_for_updates()
 
-    def on_loop(self):
+    def on_loop(self) -> None:
 
         # check for flag to start a update
         if self.node.od_read("updater", "update"):
@@ -47,13 +44,13 @@ class UpdaterService(Service):
                 self._updater.update()
             except UpdaterError as e:
                 logger.exception(e)
-            self.node.od_write("updater", "update", False)
+            self.node.od_write("updater", "update", value=False)
 
         # check for flag to make a status archive
         if self.node.od_read("updater", "make_status_file"):
             status_archive_file_path = self._updater.make_status_archive()
             self.node.fread_cache.add(status_archive_file_path, consume=True)
-            self.node.od_write("updater", "make_status_file", False)
+            self.node.od_write("updater", "make_status_file", value=False)
 
         self.sleep(0.1)
 

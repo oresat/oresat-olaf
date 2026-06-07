@@ -12,9 +12,9 @@ class Adc:
 
     ADC_VIN = 1.8  # volts
     ADC_BITS = 12
-    ADC_MAX_VALUE = (2**ADC_BITS) - 1
+    ADC_MAX_VALUE: int = (2**ADC_BITS) - 1
 
-    def __init__(self, pin: int, mock: bool = False):
+    def __init__(self, pin: int, mock: bool = False) -> None:
         """
         Parameters
         ----------
@@ -43,10 +43,8 @@ class Adc:
         if not os.path.isfile(self._adc_path):
             raise AdcError(f"could not find ADC file {self._adc_path}")
 
-        with open(self._adc_path, "r") as f:
-            value = int(f.read())
-
-        return value
+        with open(self._adc_path) as f:
+            return int(f.read())
 
     @property
     def value(self) -> float:

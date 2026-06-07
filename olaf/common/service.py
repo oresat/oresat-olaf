@@ -30,8 +30,8 @@ class Service:
     All the ``on_*`` members can be overridden as needed.
     """
 
-    def __init__(self):
-        self.node = None
+    def __init__(self) -> None:
+        self.node: Node = None
         """Node or MasterNode: The app's CANopen node. Set to None until start() is called."""
 
         self._event = Event()
@@ -39,14 +39,14 @@ class Service:
         self._status = ServiceState.STOPPED
         self._error = False
 
-    def __del__(self):
+    def __del__(self) -> None:
         if not self._event.is_set():
             self._event.set()
 
         if self._thread.is_alive():
             self._thread.join()
 
-    def start(self, node: Node):
+    def start(self, node: Node) -> None:
         """
         App will call this to start the service. This will call `self.on_start()` start a thread
         that will call `self.on_loop()`.
@@ -64,16 +64,14 @@ class Service:
             logger.critical(f"{self.__class__.__name__}'s thread is being skipped")
             self._status = ServiceState.FAILED
 
-    def on_start(self):
+    def on_start(self) -> None:
         """
         Called when the service starts.
 
         Should be used to add SDO read/write callbacks to app.
         """
 
-        pass
-
-    def _loop(self):
+    def _loop(self) -> None:
         """
         Loop until a exception is thrown or the app stops.
         """
@@ -91,14 +89,14 @@ class Service:
 
         self._status = ServiceState.STOPPING
 
-    def on_loop(self):
+    def on_loop(self) -> None:
         """
         Called when in a while loop.
         """
 
         self.sleep(1)
 
-    def on_loop_error(self, error: Exception):
+    def on_loop_error(self, error: Exception) -> None:
         """
         Called when on_loop raises an exception before the thread stops.
 
@@ -107,7 +105,7 @@ class Service:
 
         logger.exception(f"{self.__class__.__name__} on_loop raised: {error}")
 
-    def stop(self):
+    def stop(self) -> None:
         """
         App will call this to stop the service when the app stops. This will call `self.on_stop()`.
         """
@@ -135,7 +133,7 @@ class Service:
 
         self._status = ServiceState.FAILED if self._error else ServiceState.STOPPED
 
-    def on_stop_before(self):
+    def on_stop_before(self) -> None:
         """
         Called when the app stops before the thread is stopped. Should be used to stop any blocking
         calls in the thread loop.
@@ -143,9 +141,7 @@ class Service:
         Will be called reguardless if `self.on_loop_error()` was called or not when the app stops.
         """
 
-        pass
-
-    def on_stop(self):
+    def on_stop(self) -> None:
         """
         Called when the app stops after the thread has stopped. Should be used to stop any hardware
         the service controls.
@@ -153,9 +149,7 @@ class Service:
         Will be called reguardless if `self.on_loop_error()` was called or not when the app stops.
         """
 
-        pass
-
-    def sleep(self, timeout: float):
+    def sleep(self, timeout: float) -> None:
         """
         Sleep for X seconds, that can be interupted if `stop()` is called.
 
@@ -167,7 +161,7 @@ class Service:
 
         self._event.wait(timeout)
 
-    def sleep_ms(self, timeout: float):
+    def sleep_ms(self, timeout: float) -> None:
         """
         Sleep for X milliseconds, that can be interupted if `stop()` is called.
 
@@ -179,7 +173,7 @@ class Service:
 
         self._event.wait(timeout / 1000)
 
-    def cancel(self):
+    def cancel(self) -> None:
         """Cancel the service. Can be used to stop the service from `self.on_loop()`."""
 
         self._event.set()
