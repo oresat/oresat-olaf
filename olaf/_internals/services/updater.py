@@ -13,8 +13,10 @@ from ...canopen.master_node import MasterNode
 
 from ...common.oresat_file import OreSatFile
 
+
 class UpdaterService(Service):
     """Service for interacting with the updater"""
+
     INACTIVE_TIMEOUT = 5
 
     def __init__(self, updater: Updater):
@@ -71,7 +73,9 @@ class UpdaterService(Service):
         try:
             remote_node_id = self.node.od_db[i.card_underscore].node_id
         except KeyError:
-            logger.error(f"Could not find update archive's remote node {i.card_underscore}, in object dictionary database")
+            logger.error(
+                f"Could not find update archive's remote node {i.card_underscore} in object dictionary database"
+            )
             return  # we may want to try to rename the file here so that this warning doesn't keep occuring.
 
         if self.node.od_db[i.card_underscore][0x3002][0x4].name != "sw_version":
@@ -79,8 +83,8 @@ class UpdaterService(Service):
             return
 
         if (  # Has a heartbeat saying that it is alive, and less than INACTIVE_TIMEOUT since last heartbeat.
-            self.node.node_status[i.card_underscore][0] != 0x05 or
-            self.node.node_status[i.card_underscore][2] + self.INACTIVE_TIMEOUT < monotonic()
+            self.node.node_status[i.card_underscore][0] != 0x05
+            or self.node.node_status[i.card_underscore][2] + self.INACTIVE_TIMEOUT < monotonic()
         ):
             logger.warning(f"Update archive is for {i.card_underscore}, which is not on.")
             return
