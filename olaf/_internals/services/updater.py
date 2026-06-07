@@ -11,7 +11,7 @@ from ...common.service import Service
 from ..updater import Updater, UpdaterError
 from ...canopen.master_node import MasterNode
 
-from ...common.OreSatFile import OreSatFile
+from ...common.oresat_file import OreSatFile
 
 class UpdaterService(Service):
     """Service for interacting with the updater"""
