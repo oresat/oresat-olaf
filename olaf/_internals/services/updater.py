@@ -7,8 +7,8 @@ from loguru import logger
 
 from time import monotonic
 
-from ...common.oresat_file import OreSatFile
 from ...common.service import Service
+from ...common.oresat_file import OreSatFile
 from ..updater import Updater, UpdaterError
 from ...canopen.master_node import MasterNode
 
@@ -67,7 +67,7 @@ class UpdaterService(Service):
 
     def send_update(self, i: OreSatFile) -> None:
         try:
-            self.node.od_db[i.card_underscore].node_id
+            remote_node_id = self.node.od_db[i.card_underscore].node_id
         except KeyError:
             logger.error(
                 f"Could not find node for update {i.card_underscore} in object dictionary db"
@@ -91,6 +91,7 @@ class UpdaterService(Service):
             data = f.read()
 
         # transfer the file
+        logger.info(f"Sending {i.name} to remote node {remote_node_id}")
         self.node.sdo_write(i.card_underscore, "fwrite_cache", "file_name", i.name)
         self.node.sdo_write(i.card_underscore, "fwrite_cache", "file_data", data)
 
