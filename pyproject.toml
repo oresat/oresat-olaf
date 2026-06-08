@@ -23,7 +23,7 @@ dependencies = [
     "loguru",
     "psutil",
     "python-can>=4.3.0",
-    "oresat-configs>=0.8.0,<1.0.0",
+    "oresat-configs>=1.1.1",
 ]
 
 dynamic = ["version"]
