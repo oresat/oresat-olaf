@@ -59,6 +59,7 @@ class Eeprom:
         self.is_oresat_card = False
         self.major = 0
         self.minor = 0
+        self.board = 0
 
         if self.serial_id != "PSAS":
             if self.nice_name == "pocketbeagle":
@@ -73,3 +74,4 @@ class Eeprom:
                 self.device_tree = f"{self.nice_name}-{self.version}.dtb"
             self.major = int(data[12:14])
             self.minor = int(data[14:16])
+            self.board = int(self.id)

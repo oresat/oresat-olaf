@@ -174,7 +174,8 @@ def olaf_setup(name: str, args: Namespace | None = None) -> tuple[Namespace, Ore
         try:
             eeprom = Eeprom()
             version = f"{eeprom.major}.{eeprom.minor}"
-            logger.info(f"detected v{version} card")
+            logger.info(f"detected v{version} card number {eeprom.board}")
+            od["versions"]["board_number"] = eeprom.board
         except (PermissionError, FileNotFoundError, OSError, UnicodeDecodeError):
             logger.warning("could not read hardware info from eeprom")
     if args.hardware_version != "0.0":
