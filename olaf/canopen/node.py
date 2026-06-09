@@ -78,7 +78,7 @@ class Node:
 
         self._event = Event()
         self._od = od
-        self._node: LocalNode | None = None
+        self._node = LocalNode(self._od.node_id, self._od)
         self._network: CanNetwork = network
         self._read_cbs: dict[tuple[str, str | None], Callable[[], Any]] = {}
         self._write_cbs: dict[tuple[str, str | None], Callable[[Any], None]] = {}
@@ -160,7 +160,6 @@ class Node:
         if self._od.node_id is None:
             self._od.node_id = 0x7C
 
-        self._node = LocalNode(self._od.node_id, self._od)
         self._network.add_node(self._node)
         self._node.nmt.state = "OPERATIONAL"
 
@@ -175,7 +174,7 @@ class Node:
     def _destroy_node(self) -> None:
         """Destroy the CANopen node."""
 
-        self._node = None
+        self._node.remove_network()
 
     def run(self) -> NodeStop:
         """
