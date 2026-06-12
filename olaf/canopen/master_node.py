@@ -73,6 +73,7 @@ class MasterNode(Node):
             self.node_status[key] = NodeHeartbeatInfo(0xFF, 0.0, 0.0)
 
         for remote_node in self._remote_nodes.values():
+            remote_node.remove_network()
             self._network.add_node(remote_node)
 
     def _on_heartbeat(self, cob_id: int, data: bytes, timestamp: float) -> None:
