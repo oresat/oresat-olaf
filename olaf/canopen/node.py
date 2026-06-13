@@ -160,6 +160,7 @@ class Node:
         if self._od.node_id is None:
             self._od.node_id = 0x7C
 
+        self._node.remove_network()
         self._network.add_node(self._node)
         self._node.nmt.state = "OPERATIONAL"
 
