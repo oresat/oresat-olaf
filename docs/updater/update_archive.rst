@@ -98,5 +98,5 @@ order.
         {
             "type": "DPKG_PURGE",
             "items": ["package5", "package6"]
-        },
+        }
     ]
