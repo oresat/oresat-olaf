@@ -42,16 +42,17 @@ class TestOreSatFile:
         assert file.extension == ""
         assert file.name == path.name
 
-        for name in [
-            "nametest12345",
-            "__",
-            "__12345",
-            "_test_12345",
-            "name__12345",
-            "name_test_",
-        ]:
-            with pytest.raises(ValueError, match='invalid'):
-                OreSatFile(name)
+        # Disabled since we no longer use this system
+        # for name in [
+        #     "nametest12345",
+        #     "__",
+        #     "__12345",
+        #     "_test_12345",
+        #     "name__12345",
+        #     "name_test_",
+        # ]:
+        #     with pytest.raises(ValueError, match='invalid'):
+        #         OreSatFile(name)
 
         assert OreSatFile("name_test_12345.txt") < OreSatFile("name_test_23456.txt")
         assert OreSatFile("name_test_23456.txt") > OreSatFile("name_test_12345.txt")

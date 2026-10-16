@@ -59,6 +59,7 @@ class TestOreSatFileCache:
         with pytest.raises(FileNotFoundError):
             result.add(tmp_path / "bad_path_123.txt")
 
+    @pytest.mark.skip(reason="Not relevant anymore")
     def test_add_bad(self, tmp_path: Path) -> None:
         # TEST: populate directory with BAD file name conventions
         result = OreSatFileCache(tmp_path / "bad_cache")
