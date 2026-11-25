@@ -21,18 +21,27 @@ class Gpio:
     Quick GPIO legacy sysfs wrapper class that can handle issues with gpio pin on the OreSat cards
     when those pins are configured with device tree and/or device tree overlays.
 
-    Also supports mocking.
+    Also supports mocking. GPIO labels are discovered only when a real pin is requested by name,
+    so importing this module or using mocked pins does not access GPIO files.
     """
 
     _GPIO_DIR_PATH = "/sys/class/gpio"
 
-    _LABELS = {}
-    if os.path.isdir(_GPIO_DIR_PATH):
-        for i in os.listdir(_GPIO_DIR_PATH):
-            if i.startswith("gpiochip") or i in ["export", "unexport"]:
-                continue
-            with open(f"{_GPIO_DIR_PATH}/{i}/label") as f:
-                _LABELS[f.read()[:-1]] = int(i[4:])  # remove the trailing '\n'
+    _LABELS: dict[str, int] = {}
+
+    @classmethod
+    def _load_labels(cls) -> None:
+        labels = {}
+        if os.path.isdir(cls._GPIO_DIR_PATH):
+            for i in os.listdir(cls._GPIO_DIR_PATH):
+                if i.startswith("gpiochip") or i in ["export", "unexport"]:
+                    continue
+                try:
+                    with open(f"{cls._GPIO_DIR_PATH}/{i}/label") as f:
+                        labels[f.read()[:-1]] = int(i[4:])  # remove the trailing '\n'
+                except FileNotFoundError:
+                    continue
+        cls._LABELS = labels
 
     def __init__(self, pin: str, mock: bool = False) -> None:
         """
@@ -59,6 +68,8 @@ class Gpio:
             if mock:
                 self._name = pin
             else:
+                if not self._LABELS:
+                    self._load_labels()
                 self._pin = self._LABELS[pin]
         else:
             raise GpioError(f"invalid pin {pin}")
